@@ -826,10 +826,12 @@ function wallTangent(from, dir, now){
   if (wallT && now - wallT.t < 350 && C.Cartesian3.dot(wallT.dir, dir) > 0.95) return wallT.v;
   const upv = C.Ellipsoid.WGS84.geodeticSurfaceNormal(from, new C.Cartesian3());
   const rot = a => C.Matrix3.multiplyByVector(C.Matrix3.fromQuaternion(C.Quaternion.fromAxisAngle(upv, a)), dir, new C.Cartesian3());
-  const h1 = castFree(from, rot(0.3)), h2 = castFree(from, rot(-0.3));
+  const h0 = castFree(from, dir), h1 = castFree(from, rot(0.12)), h2 = castFree(from, rot(-0.12));
+  /* zwei Treffer auf derselben Wand: nur nahe Treffer zählen */
+  const near = [h1, h0, h2].filter(h => h && C.Cartesian3.distance(h.position, from) < 4);
   let v = null;
-  if (h1 && h2) {
-    v = C.Cartesian3.subtract(h1.position, h2.position, new C.Cartesian3());
+  if (near.length >= 2) {
+    v = C.Cartesian3.subtract(near[0].position, near[near.length - 1].position, new C.Cartesian3());
     C.Cartesian3.subtract(v, C.Cartesian3.multiplyByScalar(upv, C.Cartesian3.dot(v, upv), new C.Cartesian3()), v);
     if (C.Cartesian3.magnitude(v) > 1e-3) C.Cartesian3.normalize(v, v); else v = null;
   }
