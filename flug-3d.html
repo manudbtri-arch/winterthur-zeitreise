@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Winterthur 3D-Flug</title>
+<script>window.CESIUM_BASE_URL = 'https://cdn.jsdelivr.net/npm/cesium@1.120.0/Build/Cesium/';</script>
+<script src="https://cdn.jsdelivr.net/npm/cesium@1.120.0/Build/Cesium/Cesium.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cesium@1.120.0/Build/Cesium/Widgets/widgets.css">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: ruhig, kartografisch – ein Kartenblatt, das man betreten kann
+   IDEA: Randlegende eines Siegfriedblatts als Cockpit
+   PICTURE: das 3D-Relief mit drapierter Karte, randlos
+   COLOUR and TYPE: Papierweiss/Tusche, Gewässerblau als Akzent, Höhenkurven-Braun; Archivo
+   LAYOUT: Szene füllt alles, Steuerleiste links, Tastenhilfe unten rechts */
+:root{color-scheme:light dark;--bg:light-dark(#fff,#14171a);--ink:light-dark(#151515,#ecebe7);--mute:light-dark(#5b5b5b,#a7a6a1);--line:light-dark(#dcdcd6,#2c3136);--blue:light-dark(#1f5fa8,#6fa8e6);--brown:light-dark(#8a5a2b,#d29a62);--panel:light-dark(rgba(255,255,255,.95),rgba(20,23,26,.94))}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:#000;color:var(--ink);font:16px/1.5 Archivo,system-ui,sans-serif}
+#scene{position:absolute;inset:0}
+.cesium-viewer-bottom{display:none}
+.panel{position:absolute;z-index:10;top:16px;left:16px;width:320px;max-height:calc(100% - 32px);overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;box-shadow:0 6px 24px rgba(0,0,0,.3)}
+h1{font-size:22px;line-height:1.1;margin:0 0 4px;font-weight:800}
+.sub{color:var(--mute);font-size:14px;margin:0 0 10px}
+.year{font-size:56px;font-weight:800;line-height:1;color:var(--brown);font-variant-numeric:tabular-nums;margin:6px 0 0}
+.yl{font-size:13px;color:var(--mute);margin:0 0 6px}
+label{display:block;font-size:14px;font-weight:600;margin:12px 0 6px}
+select,input[type=range]{width:100%}
+select{font:16px Archivo,sans-serif;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-height:44px}
+input[type=range]{accent-color:var(--blue);height:32px}
+.chk{display:flex;gap:10px;align-items:center;font-weight:400;min-height:36px;margin:6px 0}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+.btn{border:1px solid var(--line);background:var(--bg);color:var(--ink);font:600 15px Archivo,sans-serif;border-radius:6px;padding:10px 14px;min-height:44px;cursor:pointer;width:100%;margin-top:8px}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.seg{display:flex;gap:4px;background:var(--line);padding:4px;border-radius:8px}
+.seg button{flex:1;border:0;background:transparent;color:var(--ink);font:600 15px Archivo,sans-serif;padding:8px;border-radius:6px;cursor:pointer;min-height:40px}
+.seg button[aria-pressed=true]{background:var(--bg);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.note{font-size:13px;color:var(--mute);margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+.note a{color:var(--blue)}
+.keys{position:absolute;z-index:10;right:16px;bottom:16px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14px;max-width:300px}
+.keys b{display:inline-block;min-width:26px;padding:1px 6px;margin:2px 4px 2px 0;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;text-align:center;font-weight:600;background:var(--bg)}
+.hud{position:absolute;z-index:10;top:16px;right:16px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+#cross{position:absolute;z-index:9;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;pointer-events:none}
+#cross::before,#cross::after{content:"";position:absolute;background:#fff;box-shadow:0 0 2px #000}
+#cross::before{left:6px;top:0;width:2px;height:14px}#cross::after{top:6px;left:0;height:2px;width:14px}
+[hidden]{display:none!important}
+@media(max-width:700px){.panel{top:auto;left:8px;right:8px;bottom:8px;width:auto;max-height:45vh}.keys{display:none}.year{font-size:44px}}
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<div id="cross" hidden></div>
+<div class="hud" id="hud">Lädt …</div>
+
+<aside class="panel" aria-label="Steuerung">
+  <h1>Winterthur in 3D</h1>
+  <p class="sub"><a href="./" style="color:var(--blue)">← Übersicht</a> · <a href="karte-2d.html" style="color:var(--blue)">2D-Karte</a></p>
+  <p class="sub">Historische Karten auf dem echten Gelände – zum Durchfliegen</p>
+
+  <div class="year" id="yBig">1880</div>
+  <p class="yl" id="yLbl">Siegfriedkarte</p>
+
+  <label for="src">Oberfläche</label>
+  <select id="src"></select>
+  <div id="yWrap">
+    <label for="yr">Jahr</label>
+    <input type="range" id="yr">
+  </div>
+
+  <label class="chk"><input type="checkbox" id="bld"> Heutige Gebäude (swissBUILDINGS3D)</label>
+  <label class="chk"><input type="checkbox" id="veg"> Heutige Bäume</label>
+
+  <label>Bewegung</label>
+  <div class="seg" role="group" aria-label="Bewegungsart">
+    <button id="mFly" aria-pressed="true">Fliegen</button>
+    <button id="mWalk" aria-pressed="false">Gehen</button>
+  </div>
+  <button class="btn primary" id="go">Steuerung übernehmen</button>
+  <button class="btn" id="home">Zurück zur Altstadt</button>
+
+  <p class="note" id="terrMsg" hidden style="color:var(--brown)">Das 3D-Gelände konnte nicht geladen werden. Öffne die Seite über ihre Webadresse statt als Datei, und lade sie neu.</p>
+  <p class="note">Die alten Karten liegen als Bild auf dem heutigen Relief. Gebäude von damals sind noch nicht dreidimensional – das ist der nächste Schritt. Nicht jedes Jahr gibt es Luftbilder über Winterthur.<br>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a></p>
+</aside>
+
+<div class="keys" id="keys">
+  <div><b>W</b><b>A</b><b>S</b><b>D</b> bewegen</div>
+  <div><b>Maus</b> umschauen</div>
+  <div><b>Leer</b> hoch · <b>C</b> runter</div>
+  <div><b>Shift</b> schneller · <b>F</b> Fliegen/Gehen</div>
+  <div><b>Esc</b> Maus freigeben</div>
+</div>
+
+<script>
+{
+const SRC = {
+  sieg:  {name:'Siegfriedkarte', layer:'ch.swisstopo.hiks-siegfried', fmt:'png', min:1870, max:1949, ts:y=>String(y), nz:16, def:1880},
+  zeit:  {name:'Landeskarte-Zeitreihe', layer:'ch.swisstopo.zeitreihen', fmt:'png', min:1844, max:1960, ts:y=>y+'1231', nz:16, def:1900},
+  dufour:{name:'Dufourkarte (1845–65)', layer:'ch.swisstopo.hiks-dufour', fmt:'png', fixed:'current', nz:15},
+  luft:  {name:'Luftbild (Archiv)', layer:'ch.swisstopo.swissimage-product', fmt:'png', min:1926, max:2025, ts:y=>String(y===1928?1927:y), nz:18, def:1946},
+  foto:  {name:'Heute: Luftbild', layer:'ch.swisstopo.swissimage', fmt:'jpeg', fixed:'current', nz:19},
+  karte: {name:'Heute: Landeskarte', layer:'ch.swisstopo.pixelkarte-farbe', fmt:'jpeg', fixed:'current', nz:18}
+};
+const $ = id => document.getElementById(id);
+const C = Cesium;
+/* Höhe über Ellipsoid: Winterthur liegt rund 500 m darüber, also 300 m über Boden */
+const HOME = {lon:8.7290, lat:47.4890, h:800, heading:15, pitch:-22};
+
+const viewer = new C.Viewer('scene', {
+  baseLayer:false, geocoder:false, baseLayerPicker:false, timeline:false, animation:false,
+  homeButton:false, sceneModePicker:false, navigationHelpButton:false, fullscreenButton:false,
+  infoBox:false, selectionIndicator:false
+});
+const scene = viewer.scene, camera = scene.camera, globe = scene.globe;
+let terrainOk = false;
+
+/* Gelände nachladen; schlägt es fehl, bleibt die Karte flach sichtbar */
+if (location.protocol === 'file:') {
+  $('hud').textContent = 'Als Datei geöffnet – Gelände braucht eine Webadresse';
+}
+C.CesiumTerrainProvider.fromUrl('https://3d.geo.admin.ch/ch.swisstopo.terrain.3d/v1/', {requestVertexNormals:true})
+  .then(tp => { viewer.terrainProvider = tp; terrainOk = true; globe.enableLighting = false; })
+  .catch(err => {
+    console.error(err);
+    $('hud').textContent = 'Gelände nicht erreichbar – flache Ansicht';
+    $('terrMsg').hidden = false;
+  });
+globe.depthTestAgainstTerrain = true;
+globe.baseColor = C.Color.fromCssColorString('#cfcabf');
+globe.maximumScreenSpaceError = 1.5;
+
+/* Unterlage, damit Lücken nicht schwarz bleiben */
+const tile = (key, year) => {
+  const s = SRC[key], t = s.fixed || s.ts(year);
+  return new C.UrlTemplateImageryProvider({
+    url:`https://wmts.geo.admin.ch/1.0.0/${s.layer}/default/${t}/3857/{z}/{x}/{y}.${s.fmt}`,
+    tilingScheme:new C.WebMercatorTilingScheme(), maximumLevel:s.nz, credit:'© swisstopo'
+  });
+};
+viewer.imageryLayers.addImageryProvider(tile('karte'));
+let top = null;
+
+/* Oberfläche & Jahr */
+$('src').innerHTML = Object.keys(SRC).map(k=>`<option value="${k}">${SRC[k].name}</option>`).join('');
+$('src').value = 'sieg';
+function setRange(){
+  const s = SRC[$('src').value];
+  $('yWrap').hidden = !!s.fixed;
+  if (!s.fixed){ $('yr').min = s.min; $('yr').max = s.max; $('yr').value = s.def; }
+}
+function showLayer(){
+  const key = $('src').value, s = SRC[key], y = +$('yr').value;
+  $('yBig').textContent = s.fixed ? (key==='dufour' ? '1850' : 'heute') : (key==='luft' && y===1928 ? 1927 : y);
+  $('yLbl').textContent = s.name;
+  const next = viewer.imageryLayers.addImageryProvider(tile(key, y));
+  const old = top; top = next;
+  if (old) setTimeout(() => { if (old !== top) viewer.imageryLayers.remove(old, true); }, 1500);
+}
+let deb;
+$('src').addEventListener('change', () => { setRange(); showLayer(); });
+$('yr').addEventListener('input', () => { $('yBig').textContent = $('yr').value; clearTimeout(deb); deb = setTimeout(showLayer, 250); });
+setRange(); showLayer();
+
+/* Heutige 3D-Objekte (aus, damit 1880 nicht mit Neubauten zugestellt ist) */
+const tiles = {};
+async function toggleTiles(id, url, on){
+  try {
+    if (!tiles[id]) { tiles[id] = await C.Cesium3DTileset.fromUrl(url); scene.primitives.add(tiles[id]); }
+    tiles[id].show = on;
+  } catch(e){ $('hud').textContent = '3D-Daten nicht erreichbar'; }
+}
+$('bld').addEventListener('change', e => toggleTiles('b','https://3d.geo.admin.ch/ch.swisstopo.swissbuildings3d.3d/v1/tileset.json', e.target.checked));
+$('veg').addEventListener('change', e => toggleTiles('v','https://3d.geo.admin.ch/ch.swisstopo.vegetation.3d/v1/tileset.json', e.target.checked));
+
+/* Kamera */
+function goHome(dur){
+  camera.flyTo({destination:C.Cartesian3.fromDegrees(HOME.lon,HOME.lat,HOME.h),
+    orientation:{heading:C.Math.toRadians(HOME.heading),pitch:C.Math.toRadians(HOME.pitch),roll:0}, duration:dur});
+}
+goHome(0);
+$('home').addEventListener('click', () => goHome(2));
+
+/* Ego-Steuerung wie in Minecraft */
+let walk = false, locked = false;
+const keys = {};
+const canvas = viewer.canvas;
+function setMode(w){
+  walk = w;
+  $('mFly').setAttribute('aria-pressed', !w); $('mWalk').setAttribute('aria-pressed', w);
+}
+$('mFly').addEventListener('click', () => setMode(false));
+$('mWalk').addEventListener('click', () => setMode(true));
+$('go').addEventListener('click', () => { try { canvas.requestPointerLock(); } catch(e){} });
+canvas.addEventListener('click', () => { if (!locked) try { canvas.requestPointerLock(); } catch(e){} });
+
+const ctl = scene.screenSpaceCameraController;
+document.addEventListener('pointerlockchange', () => {
+  locked = document.pointerLockElement === canvas;
+  ctl.enableInputs = !locked;
+  $('cross').hidden = !locked;
+});
+document.addEventListener('mousemove', e => {
+  if (!locked) return;
+  const heading = camera.heading + e.movementX * 0.0022;
+  const pitch = C.Math.clamp(camera.pitch - e.movementY * 0.0022, -1.55, 1.55);
+  camera.setView({orientation:{heading, pitch, roll:0}});
+});
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+  keys[e.code] = true;
+  if (e.code === 'KeyF') setMode(!walk);
+  if (locked && e.code === 'Space') e.preventDefault();
+});
+document.addEventListener('keyup', e => { keys[e.code] = false; });
+window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+
+const up = new C.Cartesian3(), fwd = new C.Cartesian3();
+let last = performance.now();
+scene.preRender.addEventListener(() => {
+  const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now;
+  const carto = C.Cartographic.fromCartesian(camera.position);
+  const ground = globe.getHeight(carto);
+  const agl = ground === undefined ? carto.height : carto.height - ground;
+
+  if (locked) {
+    let v = walk ? 5 : Math.max(15, Math.min(400, agl * 0.8));
+    if (keys.ShiftLeft || keys.ShiftRight) v *= 4;
+    const d = v * dt;
+    C.Ellipsoid.WGS84.geodeticSurfaceNormal(camera.position, up);
+    if (walk) {
+      /* beim Gehen nur waagrecht vorwärts */
+      C.Cartesian3.multiplyByScalar(up, C.Cartesian3.dot(camera.direction, up), fwd);
+      C.Cartesian3.subtract(camera.direction, fwd, fwd);
+      C.Cartesian3.normalize(fwd, fwd);
+      if (keys.KeyW) camera.move(fwd, d);
+      if (keys.KeyS) camera.move(fwd, -d);
+    } else {
+      if (keys.KeyW) camera.moveForward(d);
+      if (keys.KeyS) camera.moveBackward(d);
+    }
+    if (keys.KeyA) camera.moveLeft(d);
+    if (keys.KeyD) camera.moveRight(d);
+    if (!walk && keys.Space) camera.move(up, d);
+    if (!walk && keys.KeyC) camera.move(up, -d);
+  }
+
+  /* Boden halten: Gehen auf Augenhöhe, Fliegen nie unter 3 m */
+  const c2 = C.Cartographic.fromCartesian(camera.position);
+  const g2 = globe.getHeight(c2);
+  if (g2 !== undefined) {
+    const min = g2 + (walk ? 1.7 : 3);
+    if ((walk && locked) || c2.height < min) {
+      c2.height = min;
+      camera.setView({destination:C.Cartographic.toCartesian(c2), orientation:{heading:camera.heading, pitch:camera.pitch, roll:0}});
+    }
+  }
+  if (terrainOk || !$('terrMsg').hidden) $('hud').textContent = `${walk ? 'Gehen' : 'Fliegen'} · ${Math.round(agl)} m über Boden${terrainOk ? '' : ' (flach)'}`;
+});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Winterthur Zeitreise</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: ruhig, kartografisch, wie ein Kartenblatt mit Randlegende
+   IDEA: der Blattrand einer Siegfriedkarte – Legende und Jahrzahl am Rand
+   PICTURE: die Karte selbst, randlos, mit grosser Jahrzahl
+   COLOUR and TYPE: Weiss/Papier, Tusche-Schwarz, Gewässerblau als Akzent, Höhenkurven-Braun; Archivo
+   LAYOUT: Karte füllt alles, Steuerung als Randleiste links (unten auf dem Handy) */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#14171a);--ink:light-dark(#151515,#ecebe7);--mute:light-dark(#5b5b5b,#a7a6a1);--line:light-dark(#dcdcd6,#2c3136);--blue:light-dark(#1f5fa8,#6fa8e6);--brown:light-dark(#8a5a2b,#d29a62);--panel:light-dark(rgba(255,255,255,.96),rgba(20,23,26,.95))}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 Archivo,system-ui,sans-serif;overflow:hidden}
+#map{position:absolute;inset:0}
+.panel{position:absolute;z-index:1000;top:16px;left:16px;bottom:16px;width:340px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;overflow-y:auto;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+h1{font-size:22px;line-height:1.1;margin:0 0 4px;font-weight:800}
+.sub{color:var(--mute);font-size:14px;margin:0 0 16px}
+.year{font-size:clamp(44px,8vw,64px);font-weight:800;line-height:1;color:var(--brown);font-variant-numeric:tabular-nums;margin:8px 0 2px}
+.yl{font-size:13px;color:var(--mute);margin:0 0 12px}
+.tabs{display:flex;gap:4px;background:var(--line);padding:4px;border-radius:8px;margin-bottom:16px}
+.tabs button{flex:1;border:0;background:transparent;color:var(--ink);font:600 15px Archivo,sans-serif;padding:10px;border-radius:6px;cursor:pointer;min-height:44px}
+.tabs button[aria-pressed=true]{background:var(--bg);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+label{display:block;font-size:14px;font-weight:600;margin:14px 0 6px}
+select,input[type=range]{width:100%}
+select{font:16px Archivo,sans-serif;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-height:44px}
+input[type=range]{accent-color:var(--blue);height:32px}
+.row{display:flex;gap:8px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--bg);color:var(--ink);font:600 15px Archivo,sans-serif;border-radius:6px;padding:10px 14px;min-height:44px;cursor:pointer}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.places{display:flex;flex-wrap:wrap;gap:6px}
+.places .btn{padding:8px 10px;font-size:14px;min-height:40px}
+.note{font-size:13px;color:var(--mute);margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+.note a{color:var(--blue)}
+.side{border-left:4px solid var(--blue);padding-left:10px;margin-top:12px}
+.side.r{border-color:var(--brown)}
+[hidden]{display:none!important}
+#divider{position:absolute;top:0;bottom:0;width:4px;margin-left:-2px;background:#fff;z-index:900;box-shadow:0 0 0 1px rgba(0,0,0,.35);cursor:ew-resize;touch-action:none}
+#divider span{position:absolute;top:50%;left:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:#fff;border:2px solid #151515;display:grid;place-items:center;font:800 16px Archivo,sans-serif;color:#151515}
+.tag{position:absolute;z-index:901;top:16px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:14px;font-weight:600;pointer-events:none;white-space:nowrap}
+#tagL{border-left:4px solid var(--blue)}#tagR{border-right:4px solid var(--brown)}
+@media(max-width:600px){.panel{top:auto;left:8px;right:8px;bottom:8px;width:auto;max-height:46vh;padding:14px}.year{margin-top:0}.tag{top:8px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="divider" hidden><span>⇔</span></div>
+<div id="tagL" class="tag" hidden></div><div id="tagR" class="tag" hidden></div>
+
+<aside class="panel" aria-label="Steuerung">
+  <h1>Winterthur Zeitreise</h1>
+  <p class="sub"><a href="./" style="color:var(--blue)">← Übersicht</a> · <a href="flug-3d.html" style="color:var(--blue)">3D-Flug</a></p>
+  <p class="sub">Historische Karten und Luftbilder von swisstopo, 1844 bis heute</p>
+
+  <div class="tabs" role="group" aria-label="Modus">
+    <button id="mTime" aria-pressed="true">Zeitregler</button>
+    <button id="mCmp" aria-pressed="false">Vergleich</button>
+  </div>
+
+  <section id="pTime">
+    <div class="year" id="yBig">1900</div>
+    <p class="yl" id="yLbl">Landeskarte-Zeitreihe</p>
+    <label for="tSrc">Quelle</label>
+    <select id="tSrc"></select>
+    <label for="tYear">Jahr</label>
+    <input type="range" id="tYear">
+    <div class="row">
+      <button class="btn" id="prev" aria-label="Ein Jahr zurück">−1</button>
+      <button class="btn primary" id="play" style="flex:1">▶ Abspielen</button>
+      <button class="btn" id="next" aria-label="Ein Jahr vor">+1</button>
+    </div>
+    <label for="tOp">Durchsicht auf heute: <span id="opV">0 %</span></label>
+    <input type="range" id="tOp" min="0" max="100" value="0">
+  </section>
+
+  <section id="pCmp" hidden>
+    <div class="side">
+      <label for="lSrc">Links</label>
+      <select id="lSrc"></select>
+      <label for="lYear">Jahr: <span id="lYv"></span></label>
+      <input type="range" id="lYear">
+    </div>
+    <div class="side r">
+      <label for="rSrc">Rechts</label>
+      <select id="rSrc"></select>
+      <label for="rYear">Jahr: <span id="rYv"></span></label>
+      <input type="range" id="rYear">
+    </div>
+  </section>
+
+  <label>Springen zu</label>
+  <div class="places" id="places"></div>
+
+  <p class="note">Luftbilder gibt es nicht für jedes Jahr: Ist die Karte leer, wurde Winterthur in diesem Jahr nicht beflogen. Die Zeitreihe zeigt jeweils den Kartenstand am 31. Dezember.<br>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a></p>
+</aside>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+{
+const SRC = {
+  zeit:  {name:'Landeskarte-Zeitreihe', layer:'ch.swisstopo.zeitreihen', fmt:'png', min:1844, max:1960, ts:y=>y+'1231', nz:16},
+  sieg:  {name:'Siegfriedkarte', layer:'ch.swisstopo.hiks-siegfried', fmt:'png', min:1870, max:1949, ts:y=>String(y), nz:16},
+  luft:  {name:'Luftbild (Archiv)', layer:'ch.swisstopo.swissimage-product', fmt:'png', min:1926, max:2025, ts:y=>String(y===1928?1927:y), nz:18},
+  dufour:{name:'Dufourkarte', layer:'ch.swisstopo.hiks-dufour', fmt:'png', fixed:'current', nz:15},
+  karte: {name:'Heute: Landeskarte', layer:'ch.swisstopo.pixelkarte-farbe', fmt:'jpeg', fixed:'current', nz:18},
+  foto:  {name:'Heute: Luftbild', layer:'ch.swisstopo.swissimage', fmt:'jpeg', fixed:'current', nz:19}
+};
+const PLACES = [
+  ['Altstadt',[47.4998,8.7290]],['Bahnhof & Sulzer-Areal',[47.4985,8.7215]],
+  ['Töss',[47.4880,8.7080]],['Wülflingen',[47.5100,8.6880]],
+  ['Veltheim',[47.5150,8.7180]],['Oberwinterthur',[47.5080,8.7590]]
+];
+const ATTR = '© <a href="https://www.swisstopo.admin.ch">swisstopo</a>';
+const $ = id => document.getElementById(id);
+
+const map = L.map('map',{zoomControl:true,minZoom:12,maxZoom:19}).setView(PLACES[0][1],15);
+const mk = (key,year,pane) => {
+  const s = SRC[key], t = s.fixed || s.ts(year);
+  return L.tileLayer(`https://wmts.geo.admin.ch/1.0.0/${s.layer}/default/${t}/3857/{z}/{x}/{y}.${s.fmt}`,
+    {maxNativeZoom:s.nz,maxZoom:19,attribution:ATTR,pane:pane||'tilePane'});
+};
+const fill = (sel,keys,val) => { sel.innerHTML = keys.map(k=>`<option value="${k}">${SRC[k].name}</option>`).join(''); sel.value = val; };
+const setRange = (inp,key,keep) => {
+  const s = SRC[key];
+  inp.disabled = !!s.fixed;
+  if (s.fixed) return;
+  inp.min = s.min; inp.max = s.max;
+  inp.value = Math.min(s.max, Math.max(s.min, +keep || s.min));
+};
+
+/* weicher Wechsel: neue Ebene erst einblenden, wenn sie geladen ist */
+function swap(holder, layer, onReady){
+  const old = holder.cur;
+  holder.cur = layer;
+  layer.addTo(map);
+  layer.once('load', () => { if (old && old !== holder.cur) map.removeLayer(old); onReady && onReady(); });
+  if (old) setTimeout(() => { if (old !== holder.cur && map.hasLayer(old)) map.removeLayer(old); }, 4000);
+}
+const debounce = (fn,ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(()=>fn(...a), ms); }; };
+
+/* ---------- Zeitregler ---------- */
+const base = mk('karte').addTo(map);
+const hist = {cur:null};
+const tKeys = ['zeit','sieg','luft'];
+fill($('tSrc'), tKeys, 'zeit');
+setRange($('tYear'),'zeit',1900);
+
+function showTime(after){
+  const key = $('tSrc').value, y = +$('tYear').value, s = SRC[key];
+  $('yBig').textContent = (key==='luft' && y===1928) ? '1927' : y;
+  $('yLbl').textContent = s.name;
+  const l = mk(key,y); l.setOpacity(1 - $('tOp').value/100);
+  swap(hist, l, after);
+}
+const showTimeD = debounce(()=>showTime(),180);
+$('tSrc').addEventListener('change', () => { setRange($('tYear'),$('tSrc').value,$('tYear').value); showTime(); });
+$('tYear').addEventListener('input', () => { $('yBig').textContent = $('tYear').value; showTimeD(); });
+$('tOp').addEventListener('input', () => { $('opV').textContent = $('tOp').value+' %'; hist.cur && hist.cur.setOpacity(1 - $('tOp').value/100); });
+const step = d => { const i = $('tYear'); const v = Math.min(+i.max, Math.max(+i.min, +i.value + d)); if (v === +i.value) return false; i.value = v; return true; };
+$('prev').addEventListener('click', () => { if (step(-1)) showTime(); });
+$('next').addEventListener('click', () => { if (step(1)) showTime(); });
+
+let playing = false;
+function tick(){
+  if (!playing) return;
+  if (!step(1)) { stop(); return; }
+  showTime(() => setTimeout(tick, 500));
+}
+function stop(){ playing = false; $('play').textContent = '▶ Abspielen'; }
+$('play').addEventListener('click', () => {
+  if (playing) return stop();
+  const i = $('tYear'); if (+i.value >= +i.max) i.value = i.min;
+  playing = true; $('play').textContent = '❚❚ Pause';
+  showTime(() => setTimeout(tick, 500));
+});
+
+/* ---------- Vergleich (Wischen) ---------- */
+map.createPane('left').style.zIndex = 250;
+map.createPane('right').style.zIndex = 251;
+const L_ = {cur:null}, R_ = {cur:null};
+const cKeys = ['zeit','sieg','dufour','luft','karte','foto'];
+fill($('lSrc'), cKeys, 'sieg'); setRange($('lYear'),'sieg',1880);
+fill($('rSrc'), cKeys, 'foto'); setRange($('rYear'),'foto');
+let frac = 0.5;
+
+function label(side){
+  const key = $(side+'Src').value, s = SRC[key];
+  const y = s.fixed ? (key==='dufour' ? '1845–65' : 'heute') : $(side+'Year').value;
+  $(side+'Yv').textContent = s.fixed ? '–' : y;
+  $(side==='l'?'tagL':'tagR').textContent = s.name.replace('Heute: ','') + ' · ' + y;
+}
+function showSide(side){
+  label(side);
+  swap(side==='l'?L_:R_, mk($(side+'Src').value, +$(side+'Year').value, side==='l'?'left':'right'));
+}
+function clip(){
+  if ($('pCmp').hidden) return;
+  const size = map.getSize(), nw = map.containerPointToLayerPoint([0,0]), se = map.containerPointToLayerPoint(size);
+  const x = nw.x + size.x*frac;
+  map.getPane('left').style.clip  = `rect(${nw.y}px, ${x}px, ${se.y}px, ${nw.x}px)`;
+  map.getPane('right').style.clip = `rect(${nw.y}px, ${se.x}px, ${se.y}px, ${x}px)`;
+  $('divider').style.left = (size.x*frac)+'px';
+  const tl = $('tagL'), tr = $('tagR');
+  tl.style.left = Math.max(8, size.x*frac - tl.offsetWidth - 12)+'px';
+  tr.style.left = Math.min(size.x - tr.offsetWidth - 8, size.x*frac + 12)+'px';
+}
+map.on('move zoom resize zoomend', clip);
+['l','r'].forEach(s => {
+  $(s+'Src').addEventListener('change', () => { setRange($(s+'Year'),$(s+'Src').value,$(s+'Year').value); showSide(s); clip(); });
+  const d = debounce(()=>{ showSide(s); clip(); },180);
+  $(s+'Year').addEventListener('input', () => { label(s); clip(); d(); });
+});
+const dv = $('divider');
+dv.addEventListener('pointerdown', e => {
+  dv.setPointerCapture(e.pointerId); map.dragging.disable();
+  const mv = ev => { const r = map.getContainer().getBoundingClientRect(); frac = Math.min(.98, Math.max(.02, (ev.clientX - r.left)/r.width)); clip(); };
+  const up = () => { dv.removeEventListener('pointermove', mv); map.dragging.enable(); };
+  dv.addEventListener('pointermove', mv);
+  dv.addEventListener('pointerup', up, {once:true});
+});
+
+/* ---------- Modus ---------- */
+function mode(cmp){
+  stop();
+  $('mTime').setAttribute('aria-pressed', !cmp); $('mCmp').setAttribute('aria-pressed', cmp);
+  $('pTime').hidden = cmp; $('pCmp').hidden = !cmp;
+  [dv,$('tagL'),$('tagR')].forEach(el => el.hidden = !cmp);
+  if (cmp){
+    map.removeLayer(base); if (hist.cur) { map.removeLayer(hist.cur); hist.cur = null; }
+    showSide('l'); showSide('r'); clip();
+  } else {
+    [L_,R_].forEach(h => { if (h.cur) { map.removeLayer(h.cur); h.cur = null; } });
+    base.addTo(map); showTime();
+  }
+}
+$('mTime').addEventListener('click', () => mode(false));
+$('mCmp').addEventListener('click', () => mode(true));
+
+$('places').innerHTML = PLACES.map((p,i)=>`<button class="btn" data-i="${i}">${p[0]}</button>`).join('');
+$('places').addEventListener('click', e => { const b = e.target.closest('button'); if (b) map.setView(PLACES[+b.dataset.i][1], 16); });
+
+showTime();
+}
+</script>
+</body>
+</html>

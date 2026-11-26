@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Winterthur Zeitreise</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: ruhig, kartografisch
+   IDEA: Titelblatt eines Kartenwerks
+   PICTURE: zwei grosse Kartenblätter als Einstieg
+   COLOUR and TYPE: Weiss, Tusche, Gewässerblau, Höhenkurven-Braun; Archivo
+   LAYOUT: Titel oben, zwei Blätter nebeneinander, gestapelt auf dem Handy */
+:root{color-scheme:light dark;--bg:light-dark(#fff,#14171a);--ink:light-dark(#151515,#ecebe7);--mute:light-dark(#5b5b5b,#a7a6a1);--line:light-dark(#dcdcd6,#2c3136);--blue:light-dark(#1f5fa8,#6fa8e6);--brown:light-dark(#8a5a2b,#d29a62)}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 Archivo,system-ui,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:clamp(28px,6vw,72px) max(5vw,16px)}
+h1{font-size:clamp(36px,6vw,52px);line-height:1.05;margin:0 0 12px;font-weight:800;text-wrap:balance}
+p.lead{color:var(--mute);max-width:62ch;margin:0 0 36px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px}
+a.card{display:block;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:12px;overflow:hidden;transition:transform .15s}
+a.card:hover{transform:translateY(-2px)}a.card:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.art{height:180px;display:block;width:100%}
+.txt{padding:18px 20px 22px}
+.txt h2{margin:0 0 6px;font-size:22px}
+.txt p{margin:0;color:var(--mute);font-size:16px}
+footer{margin-top:40px;font-size:14px;color:var(--mute)}
+footer a{color:var(--blue)}
+@media(prefers-reduced-motion:reduce){a.card{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Winterthur Zeitreise</h1>
+  <p class="lead">Winterthur zwischen 1844 und heute, mit historischen Karten und Luftbildern von swisstopo. Vergleiche die Jahrgänge auf der Karte oder flieg in 3D durch die Stadt.</p>
+  <div class="grid">
+    <a class="card" href="karte-2d.html">
+      <svg class="art" viewBox="0 0 400 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <rect width="400" height="180" fill="#f3efe6"/>
+        <g fill="none" stroke="#8a5a2b" stroke-width="1.2" opacity=".7">
+          <path d="M-10 40 C80 20 140 70 230 50 S360 20 420 45"/><path d="M-10 70 C90 50 150 100 240 80 S360 55 420 75"/>
+          <path d="M-10 140 C70 120 160 160 250 135 S370 120 420 140"/></g>
+        <path d="M-10 110 C60 100 120 120 200 108 S330 95 420 112" stroke="#1f5fa8" stroke-width="5" fill="none"/>
+        <g fill="#151515"><rect x="170" y="70" width="14" height="10"/><rect x="190" y="74" width="10" height="8"/><rect x="176" y="86" width="12" height="9"/><rect x="205" y="64" width="16" height="11"/></g>
+        <rect x="200" y="0" width="200" height="180" fill="#3b4a3a" opacity=".55"/>
+        <line x1="200" y1="0" x2="200" y2="180" stroke="#fff" stroke-width="3"/>
+        <circle cx="200" cy="90" r="14" fill="#fff" stroke="#151515" stroke-width="2"/>
+      </svg>
+      <div class="txt"><h2>2D-Karte</h2><p>Zeitregler über 180 Jahre, Zeitraffer und Vergleich mit Trennstrich, zum Beispiel Siegfried 1880 neben dem heutigen Luftbild.</p></div>
+    </a>
+    <a class="card" href="flug-3d.html">
+      <svg class="art" viewBox="0 0 400 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9cc3e6"/><stop offset="1" stop-color="#e8eef2"/></linearGradient></defs>
+        <rect width="400" height="180" fill="url(#sky)"/>
+        <path d="M0 120 L70 80 L130 105 L200 60 L270 100 L330 75 L400 110 L400 180 L0 180Z" fill="#c9bfa8"/>
+        <path d="M0 140 L90 115 L180 135 L260 118 L400 140 L400 180 L0 180Z" fill="#e9e2d0"/>
+        <g stroke="#8a5a2b" stroke-width="1" fill="none" opacity=".6"><path d="M20 150 L120 130 L220 148 L330 132 L400 150"/><path d="M0 165 L110 150 L230 163 L400 158"/></g>
+        <path d="M0 158 C100 150 200 168 400 155" stroke="#1f5fa8" stroke-width="4" fill="none"/>
+        <g stroke="#fff" stroke-width="2.5"><line x1="200" y1="82" x2="200" y2="98"/><line x1="192" y1="90" x2="208" y2="90"/></g>
+      </svg>
+      <div class="txt"><h2>3D-Flug</h2><p>Die Siegfriedkarte auf dem echten Gelände. Mit WASD und Maus durchfliegen oder auf Augenhöhe durch die Strassen gehen.</p></div>
+    </a>
+  </div>
+  <footer>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a>, offene Geodaten des Bundes. Ein privates Projekt.</footer>
+</main>
+</body>
+</html>
