@@ -872,9 +872,8 @@ function densestStreet(lon, lat){
   const occ = (x, y) => x < 0 || y < 0 || x >= cw || y >= ch ? 0 : (Number.isNaN(R[y * cw + x]) ? 0 : 1);
   let best = null, bestS = -1;
   for (let y = cy0 - 60; y <= cy0 + 60; y++) for (let x = cx0 - 60; x <= cx0 + 60; x++) {
-    let free = true;
-    for (let k = -1; k <= 1 && free; k++) for (let j = -1; j <= 1; j++) if (occ(x + j, y + k)) { free = false; break; }
-    if (!free) continue;
+    /* frei, mit Durchgang in einer Richtung (Gassen sind auf der Karte schmal) */
+    if (occ(x, y) || !((!occ(x - 1, y) && !occ(x + 1, y)) || (!occ(x, y - 1) && !occ(x, y + 1)))) continue;
     let sc = 0;
     for (let k = -5; k <= 5; k++) for (let j = -5; j <= 5; j++) sc += occ(x + j, y + k);
     sc -= Math.hypot(x - cx0, y - cy0) * 0.15;                 /* nahe der Mitte bevorzugen */
@@ -890,10 +889,8 @@ async function spawn(at){
   const inside = (a, b) => { const x = (lon2x(a) - city.px0) / CELL, y = (lat2y(b) - city.py0) / CELL; return x >= 0 && y >= 0 && x < city.cw && y < city.ch; };
   if (!inside(lon, lat)) [lon, lat] = city.center;
   const sx = Math.floor((lon2x(lon) - city.px0) / CELL), sy = Math.floor((lat2y(lat) - city.py0) / CELL);
-  const free = (x, y) => { for (let k = -1; k <= 1; k++) for (let j = -1; j <= 1; j++) {
-      const xx = x + j, yy = y + k;
-      if (xx < 0 || yy < 0 || xx >= city.cw || yy >= city.ch || !Number.isNaN(city.roof[yy * city.cw + xx])) return false; }
-    return true; };
+  const isOcc = (x, y) => x < 0 || y < 0 || x >= city.cw || y >= city.ch || !Number.isNaN(city.roof[y * city.cw + x]);
+  const free = (x, y) => !isOcc(x, y) && ((!isOcc(x - 1, y) && !isOcc(x + 1, y)) || (!isOcc(x, y - 1) && !isOcc(x, y + 1)));
   let best = null;
   for (let r = 0; r < 80 && !best; r++)
     for (let dy = -r; dy <= r && !best; dy++) for (let dx = -r; dx <= r; dx++)
