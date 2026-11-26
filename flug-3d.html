@@ -75,7 +75,9 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
   <button class="btn" id="spawn">Auf die Strasse stellen</button>
   <p class="sub" id="bStat" style="margin:8px 0 0">Liest die Hausflächen aus der Siegfriedkarte des gewählten Jahres, rund 1,3 km rund um die Bildmitte.</p>
 
-  <label class="chk"><input type="checkbox" id="bld"> Heutige Gebäude (swissBUILDINGS3D)</label>
+  <label class="chk"><input type="checkbox" id="oldOn" checked> Echte Altbauten (Baujahr bis zum Jahr)</label>
+  <label class="chk"><input type="checkbox" id="genOn" checked> Nachgebaute Häuser (heute abgerissen)</label>
+  <label class="chk"><input type="checkbox" id="bld"> Alle heutigen Gebäude</label>
   <label class="chk"><input type="checkbox" id="veg"> Heutige Bäume</label>
 
   <label>Bewegung</label>
@@ -180,7 +182,71 @@ async function toggleTiles(id, url, on){
     tiles[id].show = on;
   } catch(e){ $('hud').textContent = '3D-Daten nicht erreichbar'; }
 }
-$('bld').addEventListener('change', e => toggleTiles('b','https://3d.geo.admin.ch/ch.swisstopo.swissbuildings3d.3d/v1/tileset.json', e.target.checked));
+/* swissBUILDINGS3D: echte Häuser, gefiltert nach Baujahr aus dem Gebäuderegister (GWR) */
+const BLD_URL = 'https://3d.geo.admin.ch/ch.swisstopo.swissbuildings3d.3d/v1/tileset.json';
+const OLD_WALL = ['#e3d6bd','#d8c7a6','#ebe1cf','#cfbf9f','#dccfb9'];
+const gwr = {years:new Map(), year:1880};
+let bldTs = null;
+async function buildingLayer(){
+  if (!bldTs) {
+    bldTs = await C.Cesium3DTileset.fromUrl(BLD_URL);
+    scene.primitives.add(bldTs);
+    bldTs.style = new C.Cesium3DTileStyle();
+    bldTs.style.show = { evaluate: f => {
+      if ($('bld').checked) return true;
+      if (!$('oldOn').checked) return false;
+      const y = gwr.years.get(Number(f.getProperty('EGID')));
+      return y !== undefined && y <= gwr.year;
+    }};
+    bldTs.style.color = { evaluateColor: (f, res) => {
+      if ($('bld').checked) return C.Color.clone(C.Color.WHITE, res);
+      const e = Number(f.getProperty('EGID')) || 0;
+      return C.Color.fromCssColorString(OLD_WALL[e % OLD_WALL.length], res);
+    }};
+  }
+  bldTs.show = $('bld').checked || $('oldOn').checked;
+  bldTs.makeStyleDirty();
+}
+$('bld').addEventListener('change', () => buildingLayer().catch(() => { $('hud').textContent = '3D-Gebäude nicht erreichbar'; }));
+$('oldOn').addEventListener('change', () => buildingLayer().catch(() => {}));
+$('genOn').addEventListener('change', e => { if (city && city.prim) city.prim.show = e.target.checked; });
+
+/* LV95 → WGS84 (Näherungsformel von swisstopo) */
+function lv95(E, N){
+  const y = (E - 2600000) / 1e6, x = (N - 1200000) / 1e6;
+  const l = 2.6779094 + 4.728982*y + 0.791484*y*x + 0.1306*y*x*x - 0.0436*y*y*y;
+  const p = 16.9023892 + 3.238272*x - 0.270978*y*y - 0.002528*x*x - 0.0447*y*y*x - 0.0140*x*x*x;
+  return [l * 100 / 36, p * 100 / 36];
+}
+/* Gebäuderegister im Gebiet abfragen: EGID → Baujahr und Lage */
+const PERIOD = {8011:1880, 8012:1932, 8013:1953, 8014:1966, 8015:1976, 8016:1983, 8017:1988, 8018:1993, 8019:1998, 8020:2003, 8021:2008, 8022:2013, 8023:2018};
+async function loadGwr(w, s, e, n, onProgress){
+  const boxes = [], N = 4;
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++)
+    boxes.push([w + (e-w)*i/N, s + (n-s)*j/N, w + (e-w)*(i+1)/N, s + (n-s)*(j+1)/N]);
+  const out = new Map(); let done = 0;
+  const one = async b => {
+    const env = b.join(',');
+    for (let off = 0; off < 6000; off += 200) {
+      const u = `https://api3.geo.admin.ch/rest/services/ech/MapServer/identify?layers=all:ch.bfs.gebaeude_wohnungs_register&geometryType=esriGeometryEnvelope&geometry=${env}&sr=4326&tolerance=0&returnGeometry=false&limit=200&offset=${off}&mapExtent=${env}&imageDisplay=100,100,96`;
+      let res = [];
+      try { res = (await (await fetch(u)).json()).results || []; } catch (err) { break; }
+      for (const r of res) {
+        const a = r.attributes, id = Number(a.egid);
+        if (!id || out.has(id) || (a.gstat && a.gstat !== 1004)) continue;
+        const y = a.gbauj || PERIOD[a.gbaup];
+        if (!y || !a.gkode) continue;
+        const [lo, la] = lv95(a.gkode, a.gkodn);
+        out.set(id, {y, lon:lo, lat:la});
+      }
+      if (res.length < 200) break;
+    }
+    onProgress(++done, boxes.length);
+  };
+  const queue = boxes.slice();
+  await Promise.all(Array.from({length:6}, async () => { while (queue.length) await one(queue.shift()); }));
+  return out;
+}
 $('veg').addEventListener('change', e => toggleTiles('v','https://3d.geo.admin.ch/ch.swisstopo.vegetation.3d/v1/tileset.json', e.target.checked));
 
 /* ---------- Häuser aus der Siegfriedkarte bauen ---------- */
@@ -272,8 +338,26 @@ async function buildHouses(center){
       comps.push({n, cx: sx / n, cy: sy / n});
     }
     const keep = comps.map(c => c.n >= 6);
+
+    /* 3b. Gebäuderegister: welche Häuser von damals stehen heute noch? */
+    say('Frage das Gebäuderegister nach Baujahren ab …');
+    const reg = await loadGwr(lon - dLon, lat - dLat, lon + dLon, lat + dLat, (d, t) => say(`Gebäuderegister: ${d} von ${t} Teilgebieten …`));
+    gwr.years = new Map([...reg].map(([id, r]) => [id, r.y]));
+    gwr.year = year;
+    const real = new Uint8Array(comps.length);       /* 1 = durch echtes Altbau-Modell ersetzt */
+    let nOld = 0;
+    for (const r of reg.values()) {
+      if (r.y > year) continue;
+      nOld++;
+      const cx = Math.floor((lon2x(r.lon) - px0) / CELL), cy = Math.floor((lat2y(r.lat) - py0) / CELL);
+      for (let k = -1; k <= 1; k++) for (let j = -1; j <= 1; j++) {
+        const xx = cx + j, yy = cy + k;
+        if (xx >= 0 && yy >= 0 && xx < cw && yy < ch) { const id = comp[yy * cw + xx]; if (id >= 0) real[id] = 1; }
+      }
+    }
     const nHouses = keep.filter(Boolean).length;
-    if (!nHouses) { say('Keine Häuser gefunden. Steht die Bildmitte über Winterthur?'); return; }
+    const nGen = keep.filter((k, i) => k && !real[i]).length;
+    if (!nHouses && !nOld) { say('Keine Häuser gefunden. Steht die Bildmitte über Winterthur?'); return; }
 
     /* 4. Bodenhöhe je Haus */
     say(`${nHouses} Häuser erkannt, messe das Gelände …`);
@@ -308,6 +392,7 @@ async function buildHouses(center){
         let n = 1; while (x + n < cw && comp[cy * cw + x + n] === id) n++;
         const c = comps[id];
         for (let k = 0; k < n; k++) roof[cy * cw + x + k] = c.base + c.h + 0.8;
+        if (real[id]) { x += n; continue; }   /* steht noch: das echte Modell übernimmt */
         const lonC = x2lon(px0 + (x + n / 2) * CELL), latC = y2lat(py0 + (cy + .5) * CELL);
         const shade = 0.93 + hash(cy * 7919 + x) * 0.12;          /* leichte Block-Textur */
         const wc = C.Color.fromCssColorString(c.wall), rc = C.Color.fromCssColorString(c.roof);
@@ -317,17 +402,18 @@ async function buildHouses(center){
       }
     }
 
-    say(`Baue ${nHouses} Häuser aus ${inst.length} Blöcken …`);
+    say(`Baue ${nGen} abgerissene Häuser aus ${inst.length} Blöcken nach …`);
     if (city && city.prim) scene.primitives.remove(city.prim);
-    const prim = scene.primitives.add(new C.Primitive({
+    const prim = inst.length ? scene.primitives.add(new C.Primitive({
       geometryInstances: inst,
       appearance: new C.PerInstanceColorAppearance({flat:false, translucent:false}),
       asynchronous: true
-    }));
+    })) : null;
+    if (prim) prim.show = $('genOn').checked;
     city = {px0, py0, cw, ch, roof, prim, center:[lon, lat]};
-    await prim.readyPromise?.catch?.(() => {});
-    say(`${nHouses} Häuser nach der Siegfriedkarte ${year} gebaut. Mit «Auf die Strasse stellen» gehst du hinein.`);
-    if ($('bld').checked) { $('bld').checked = false; toggleTiles('b','https://3d.geo.admin.ch/ch.swisstopo.swissbuildings3d.3d/v1/tileset.json', false); }
+    $('bld').checked = false;
+    await buildingLayer().catch(() => {});
+    say(`${year}: ${nOld} echte Altbauten aus dem Gebäuderegister und ${nGen} nachgebaute, heute abgerissene Häuser. Mit «Auf die Strasse stellen» gehst du hinein.`);
   } catch (e) {
     console.error(e);
     say('Bauen fehlgeschlagen: ' + (e && e.message ? e.message : e));
