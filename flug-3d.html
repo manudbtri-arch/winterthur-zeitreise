@@ -540,7 +540,8 @@ async function buildEdition(area, year, reg, token){
     }
     comps.push({n, cx: sx / n, cy: sy / n, x0, x1, y0, y1});
   }
-  const keep = comps.map(c => c.n >= 6);
+  /* Häuser sind kompakt; Gleisfelder und Strassennetze sind dünn gefüllte Gitter */
+  const keep = comps.map(c => c.n >= 6 && !(c.n > 200 && c.n / ((c.x1 - c.x0 + 1) * (c.y1 - c.y0 + 1)) < 0.3));
 
   /* heute noch stehende Häuser übernimmt das echte 3D-Modell */
   const real = new Uint8Array(comps.length);
@@ -870,12 +871,18 @@ function densestStreet(lon, lat){
   const R = city.roof, cw = city.cw, ch = city.ch;
   const cx0 = Math.floor((lon2x(lon) - city.px0) / CELL), cy0 = Math.floor((lat2y(lat) - city.py0) / CELL);
   const occ = (x, y) => x < 0 || y < 0 || x >= cw || y >= ch ? 0 : (Number.isNaN(R[y * cw + x]) ? 0 : 1);
+  /* echte Altbauten des gewählten Jahres je Rasterzelle: dort ist die Altstadt */
+  const old = new Map();
+  if (gwr.info) for (const r of gwr.info.values()) if (r.y <= gwr.year) {
+    const i = Math.floor((lat2y(r.lat) - city.py0) / CELL) * cw + Math.floor((lon2x(r.lon) - city.px0) / CELL);
+    old.set(i, (old.get(i) || 0) + 1);
+  }
   let best = null, bestS = -1;
   for (let y = cy0 - 60; y <= cy0 + 60; y++) for (let x = cx0 - 60; x <= cx0 + 60; x++) {
     /* frei, mit Durchgang in einer Richtung (Gassen sind auf der Karte schmal) */
     if (occ(x, y) || !((!occ(x - 1, y) && !occ(x + 1, y)) || (!occ(x, y - 1) && !occ(x, y + 1)))) continue;
     let sc = 0;
-    for (let k = -5; k <= 5; k++) for (let j = -5; j <= 5; j++) sc += occ(x + j, y + k);
+    for (let k = -5; k <= 5; k++) for (let j = -5; j <= 5; j++) sc += old.get((y + k) * cw + x + j) || 0;
     sc -= Math.hypot(x - cx0, y - cy0) * 0.15;                 /* nahe der Mitte bevorzugen */
     if (sc > bestS) { bestS = sc; best = [x, y]; }
   }
