@@ -47,7 +47,40 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 #cross::before,#cross::after{content:"";position:absolute;background:#fff;box-shadow:0 0 2px #000}
 #cross::before{left:6px;top:0;width:2px;height:14px}#cross::after{top:6px;left:0;height:2px;width:14px}
 [hidden]{display:none!important}
-@media(max-width:700px){.panel{top:auto;left:8px;right:8px;bottom:8px;width:auto;max-height:45vh}.keys{display:none}.year{font-size:44px}}
+.panel{transition:transform .25s ease,opacity .25s ease}
+.panel.off{transform:translateX(-110%);opacity:0;pointer-events:none}
+.keys.off{display:none}
+details.more{margin-top:14px;border-top:1px solid var(--line);padding-top:6px}
+details.more summary{cursor:pointer;font-weight:600;font-size:15px;min-height:40px;display:flex;align-items:center;list-style:none}
+details.more summary::after{content:"▾";margin-left:auto;color:var(--mute)}
+details.more[open] summary::after{content:"▴"}
+.prog{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:10px}
+.prog i{display:block;height:100%;width:0;background:var(--brown);transition:width .3s}
+.timeline{position:absolute;z-index:11;left:50%;transform:translateX(-50%);bottom:16px;width:min(760px,calc(100% - 32px));background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 18px 12px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 18px;align-items:center;box-shadow:0 6px 24px rgba(0,0,0,.3)}
+.timeline .year{grid-row:span 2;margin:0;font-size:clamp(40px,6vw,56px)}
+.timeline .yl{margin:0;font-size:13px}
+.track{position:relative;padding-bottom:18px}
+.track input{display:block;height:28px;margin:0}
+.ticks{position:absolute;left:10px;right:10px;bottom:0;height:16px;pointer-events:none}
+.ticks span{position:absolute;transform:translateX(-50%);font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
+.ticks span::before{content:"";position:absolute;left:50%;top:-6px;width:1px;height:5px;background:var(--mute)}
+.pill{position:absolute;z-index:11;left:16px;bottom:16px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:8px 14px;font-size:14px;cursor:pointer;color:var(--ink);font-family:inherit}
+.keys{bottom:auto;top:60px}
+.intro{position:absolute;z-index:20;inset:0;display:grid;place-items:center;padding:24px;background:linear-gradient(180deg,rgba(20,18,14,.55),rgba(20,18,14,.8));color:#f3eee3;transition:opacity .4s}
+.intro.off{opacity:0;pointer-events:none}
+.intro .card{max-width:560px;text-align:left}
+.intro .kicker{font-size:15px;color:#d9b98f;margin:0 0 10px;font-weight:600}
+.intro h2{font-size:clamp(40px,7vw,64px);line-height:1.02;margin:0 0 14px;font-weight:800;text-wrap:balance}
+.intro p{font-size:17px;line-height:1.55;margin:0 0 22px;color:#e6dfd2;max-width:52ch}
+.intro .row{display:flex;flex-wrap:wrap;gap:10px}
+.intro .btn{width:auto;margin:0;padding:12px 20px;font-size:16px}
+.intro .btn.primary{background:#c8803f;border-color:#c8803f}
+.intro .btn.ghost{background:transparent;color:#f3eee3;border-color:rgba(243,238,227,.5)}
+.intro .btn:disabled{opacity:.6;cursor:wait}
+.intro .prog{max-width:360px;background:rgba(255,255,255,.2)}
+.intro .st{font-size:14px;color:#cfc6b6;margin-top:8px;min-height:21px}
+@media(max-width:700px){.panel{top:8px;left:8px;right:8px;width:auto;max-height:42vh}.keys{display:none}.timeline{bottom:8px;width:calc(100% - 16px);padding:8px 12px 10px;gap:2px 12px}.pill{bottom:auto;top:8px;left:8px}}
+@media(prefers-reduced-motion:reduce){.panel,.intro{transition:none}}
 </style>
 </head>
 <body>
@@ -55,54 +88,75 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 <div id="cross" hidden></div>
 <div class="hud" id="hud">Lädt …</div>
 
-<aside class="panel" aria-label="Steuerung">
+<aside class="panel" id="panel" aria-label="Steuerung">
   <h1>Winterthur in 3D</h1>
   <p class="sub"><a href="./" style="color:var(--blue)">← Übersicht</a> · <a href="karte-2d.html" style="color:var(--blue)">2D-Karte</a></p>
-  <p class="sub">Historische Karten auf dem echten Gelände – zum Durchfliegen</p>
 
-  <div class="year" id="yBig">1880</div>
-  <p class="yl" id="yLbl">Siegfriedkarte</p>
+  <button class="btn primary" id="spawn">Losgehen</button>
+  <button class="btn" id="build">Hier neu bauen</button>
+  <div class="prog" aria-hidden="true"><i id="progBar"></i></div>
+  <p class="sub" id="bStat" style="margin:8px 0 0">Baue Winterthur …</p>
 
-  <label for="src">Oberfläche</label>
-  <select id="src"></select>
-  <div id="yWrap">
-    <label for="yr">Jahr</label>
-    <input type="range" id="yr">
-  </div>
+  <details class="more">
+    <summary>Einstellungen</summary>
+    <label for="src">Kartengrund</label>
+    <select id="src"></select>
 
-  <label>Häuser von damals</label>
-  <button class="btn primary" id="build">Häuser hier bauen</button>
-  <button class="btn" id="spawn">Auf die Strasse stellen</button>
-  <p class="sub" id="bStat" style="margin:8px 0 0">Echte Altbauten nach Baujahr, dazu abgerissene Häuser aus der Siegfriedkarte, rund 1,3 km um die Bildmitte.</p>
+    <label class="chk"><input type="checkbox" id="oldOn" checked> Echte Altbauten nach Baujahr</label>
+    <label class="chk"><input type="checkbox" id="genOn" checked> Nachgebaute, abgerissene Häuser</label>
+    <label class="chk"><input type="checkbox" id="groundOn" checked> Boden mit Pflaster und Wiese</label>
+    <label class="chk"><input type="checkbox" id="bld"> Alle heutigen Gebäude</label>
+    <label class="chk"><input type="checkbox" id="veg"> Heutige Bäume</label>
 
-  <label class="chk"><input type="checkbox" id="oldOn" checked> Echte Altbauten (Baujahr bis zum Jahr)</label>
-  <label class="chk"><input type="checkbox" id="genOn" checked> Nachgebaute Häuser (heute abgerissen)</label>
-  <label class="chk"><input type="checkbox" id="groundOn" checked> Boden mit Pflaster und Wiese</label>
-  <label class="chk"><input type="checkbox" id="bld"> Alle heutigen Gebäude</label>
-  <label class="chk"><input type="checkbox" id="veg"> Heutige Bäume</label>
+    <label>Bewegung</label>
+    <div class="seg" role="group" aria-label="Bewegungsart">
+      <button id="mFly" aria-pressed="true">Fliegen</button>
+      <button id="mWalk" aria-pressed="false">Gehen</button>
+    </div>
+    <button class="btn" id="go">Maus übernehmen</button>
+    <button class="btn" id="home">Blick von oben auf die Altstadt</button>
 
-  <label>Bewegung</label>
-  <div class="seg" role="group" aria-label="Bewegungsart">
-    <button id="mFly" aria-pressed="true">Fliegen</button>
-    <button id="mWalk" aria-pressed="false">Gehen</button>
-  </div>
-  <button class="btn primary" id="go">Steuerung übernehmen</button>
-  <button class="btn" id="home">Zurück zur Altstadt</button>
-
-  <p class="note" id="terrMsg" hidden style="color:var(--brown)">Das 3D-Gelände konnte nicht geladen werden. Öffne die Seite über ihre Webadresse statt als Datei, und lade sie neu.</p>
-  <p class="note">Häuser, die heute noch stehen, sind die echten 3D-Modelle von swisstopo, ausgewählt nach Baujahr im Gebäuderegister. Abgerissene Häuser sind aus der Karte nachgebaut (Höhe geschätzt). Schrift und dicke Linien können als Klötze erscheinen. Nicht jedes Jahr gibt es Luftbilder über Winterthur.<br>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a></p>
+    <p class="note" id="terrMsg" hidden style="color:var(--brown)">Das 3D-Gelände konnte nicht geladen werden. Öffne die Seite über ihre Webadresse statt als Datei, und lade sie neu.</p>
+    <p class="note">Häuser, die heute noch stehen, sind die echten 3D-Modelle von swisstopo, ausgewählt nach Baujahr im Gebäuderegister. Abgerissene Häuser sind aus der Siegfriedkarte nachgebaut, ihre Höhe ist geschätzt. Schrift und dicke Linien der Karte können als Klötze erscheinen.<br>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a>, BFS Gebäuderegister</p>
+  </details>
 </aside>
+
+<button class="pill" id="pill" hidden>☰ Menü <span style="color:var(--mute)">(Tab)</span></button>
 
 <div class="keys" id="keys">
   <div><b>W</b><b>A</b><b>S</b><b>D</b> bewegen</div>
-  <div><b>Maus</b> umschauen</div>
+  <div><b>Maus</b> umschauen (erst ins Bild klicken)</div>
   <div><b>Leer</b> hoch · <b>C</b> runter</div>
   <div><b>Shift</b> schneller · <b>F</b> Fliegen/Gehen</div>
-  <div><b>Esc</b> Maus freigeben</div>
+  <div><b>Tab</b> Menü · <b>Esc</b> Maus freigeben</div>
+</div>
+
+<div class="timeline" aria-label="Zeitregler">
+  <div class="year" id="yBig">1880</div>
+  <p class="yl" id="yLbl">Siegfriedkarte</p>
+  <div class="track" id="yWrap">
+    <input type="range" id="yr" aria-label="Jahr">
+    <div class="ticks" id="ticks"></div>
+  </div>
+</div>
+
+<div class="intro" id="intro">
+  <div class="card">
+    <p class="kicker">Eine Zeitreise mit Karten von swisstopo</p>
+    <h2>Winterthur um 1880</h2>
+    <p>Die Altstadt, wie sie auf der Siegfriedkarte steht: echte Häuser, die heute noch stehen, und nachgebaute, die längst abgerissen sind. Geh durch die Gassen und zieh unten am Zeitregler bis 1940.</p>
+    <div class="row">
+      <button class="btn primary" id="introWalk" disabled>Durch die Gassen gehen</button>
+      <button class="btn ghost" id="introFly">Von oben ansehen</button>
+    </div>
+    <div class="prog" aria-hidden="true"><i id="introBar"></i></div>
+    <p class="st" id="introSt">Lade Gelände und Häuser …</p>
+  </div>
 </div>
 
 <script>
 {
+const EDITIONS_MARKS = [1880, 1900, 1920, 1940];
 const SRC = {
   sieg:  {name:'Siegfriedkarte', layer:'ch.swisstopo.hiks-siegfried', fmt:'png', min:1870, max:1949, ts:y=>String(y), nz:16, def:1880},
   zeit:  {name:'Landeskarte-Zeitreihe', layer:'ch.swisstopo.zeitreihen', fmt:'png', min:1844, max:1960, ts:y=>y+'1231', nz:16, def:1900},
@@ -161,6 +215,9 @@ function setRange(){
   const s = SRC[$('src').value];
   $('yWrap').hidden = !!s.fixed;
   if (!s.fixed){ $('yr').min = s.min; $('yr').max = s.max; $('yr').value = s.def; }
+  /* Markierungen: die Kartenausgaben, aus denen Häuser gebaut werden */
+  const marks = s.fixed ? [] : (EDITIONS_MARKS.filter(e => e >= s.min && e <= s.max));
+  $('ticks').innerHTML = marks.map(e => `<span style="left:${((e - s.min) / (s.max - s.min) * 100).toFixed(2)}%">${e}</span>`).join('');
 }
 function showLayer(){
   const key = $('src').value, s = SRC[key], y = +$('yr').value;
@@ -290,7 +347,8 @@ function roofAt(lon, lat){
   return Number.isNaN(r) ? null : r;
 }
 const loadImg = url => new Promise(res => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = () => res(null); i.src = url; });
-const say = t => { $('bStat').textContent = t; };
+const say = t => { $('bStat').textContent = t; if (!$('intro').classList.contains('off')) $('introSt').textContent = t; };
+const setProg = f => { const w = Math.round(Math.max(0, Math.min(1, f)) * 100) + '%'; $('progBar').style.width = w; $('introBar').style.width = w; };
 const hash = n => ((n * 2654435761) >>> 0) / 4294967296;
 
 function centerLonLat(){
@@ -566,7 +624,7 @@ async function buildHouses(center){
     city = {px0, py0, cw: area.cw, ch: area.ch, roof: new Float32Array(area.cw * area.ch).fill(NaN), eds: new Map(), center:[lon, lat]};
 
     say('Frage das Gebäuderegister nach Baujahren ab …');
-    const reg = await loadGwr(lon - dLon, lat - dLat, lon + dLon, lat + dLat, (d, t) => say(`Gebäuderegister: ${d} von ${t} Teilgebieten …`));
+    const reg = await loadGwr(lon - dLon, lat - dLat, lon + dLon, lat + dLat, (d, t) => { say(`Gebäuderegister: ${d} von ${t} Teilgebieten …`); setProg(0.3 * d / t); });
     if (token !== buildToken) return;
     gwr.years = new Map([...reg].map(([id, r]) => [id, r.y]));
     $('bld').checked = false;
@@ -581,7 +639,9 @@ async function buildHouses(center){
       const ed = await buildEdition(area, e, reg, token);
       if (!ed || token !== buildToken) return;
       city.eds.set(e, ed);
+      setProg(0.3 + 0.7 * city.eds.size / EDITIONS.length);
       applyYear(+$('yr').value || 1880);
+      if (city.eds.size === 1) { $('introWalk').disabled = false; }
       await new Promise(r => setTimeout(r, 50));
     }
   } catch (e) {
@@ -592,9 +652,9 @@ async function buildHouses(center){
 $('build').addEventListener('click', () => buildHouses());
 
 /* Auf eine freie Strassenstelle setzen, Blick nach Osten */
-async function spawn(){
+async function spawn(at){
   if (!city) { say('Zuerst «Häuser hier bauen».'); return; }
-  let [lon, lat] = centerLonLat();
+  let [lon, lat] = at || centerLonLat();
   const inside = (a, b) => { const x = (lon2x(a) - city.px0) / CELL, y = (lat2y(b) - city.py0) / CELL; return x >= 0 && y >= 0 && x < city.cw && y < city.ch; };
   if (!inside(lon, lat)) [lon, lat] = city.center;
   const sx = Math.floor((lon2x(lon) - city.px0) / CELL), sy = Math.floor((lat2y(lat) - city.py0) / CELL);
@@ -612,9 +672,23 @@ async function spawn(){
   p.height = (p.height || 0) + 1.7;
   camera.setView({destination:C.Cartographic.toCartesian(p), orientation:{heading:C.Math.toRadians(90), pitch:0, roll:0}});
   setMode(true);
-  say('Du stehst auf der Strasse. Klick ins Bild und lauf mit WASD los.');
+  /* in die Richtung schauen, in der die Gasse am längsten frei ist */
+  let bestH = 90, bestD = -1;
+  for (let h = 0; h < 360; h += 20) {
+    camera.setView({orientation:{heading:C.Math.toRadians(h), pitch:0, roll:0}});
+    try {
+      const hit = scene.pickFromRay(new C.Ray(C.Cartesian3.clone(camera.position), C.Cartesian3.clone(camera.direction)), ground.prim ? [ground.prim] : []);
+      const d = hit && hit.object && hit.position ? C.Cartesian3.distance(hit.position, camera.position) : 300;
+      if (d > bestD && d <= 300) { bestD = d; bestH = h; }
+    } catch (e) {}
+  }
+  camera.setView({orientation:{heading:C.Math.toRadians(bestH), pitch:C.Math.toRadians(2), roll:0}});
+  setPanel(false);
+  say('Du stehst in der Gasse. WASD zum Gehen, ins Bild klicken zum Umschauen, Tab für das Menü.');
 }
-$('spawn').addEventListener('click', spawn);
+$('spawn').addEventListener('click', () => spawn());
+$('introWalk').addEventListener('click', async () => { $('intro').classList.add('off'); await spawn([8.7290, 47.4997]); });
+$('introFly').addEventListener('click', () => { $('intro').classList.add('off'); goHome(1.5); });
 
 /* Kamera */
 function goHome(dur){
@@ -637,11 +711,18 @@ $('mWalk').addEventListener('click', () => setMode(true));
 $('go').addEventListener('click', () => { try { canvas.requestPointerLock(); } catch(e){} });
 canvas.addEventListener('click', () => { if (!locked) try { canvas.requestPointerLock(); } catch(e){} });
 
+function setPanel(show){
+  $('panel').classList.toggle('off', !show);
+  $('keys').classList.toggle('off', !show);
+  $('pill').hidden = show;
+}
+$('pill').addEventListener('click', () => setPanel(true));
 const ctl = scene.screenSpaceCameraController;
 document.addEventListener('pointerlockchange', () => {
   locked = document.pointerLockElement === canvas;
   ctl.enableInputs = !locked;
   $('cross').hidden = !locked;
+  if (locked) setPanel(false);
 });
 document.addEventListener('mousemove', e => {
   if (!locked) return;
@@ -651,6 +732,7 @@ document.addEventListener('mousemove', e => {
 });
 document.addEventListener('keydown', e => {
   if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+  if (e.code === 'Tab') { e.preventDefault(); setPanel($('panel').classList.contains('off')); return; }
   keys[e.code] = true;
   if (e.code === 'KeyF') setMode(!walk);
   if (locked && e.code === 'Space') e.preventDefault();
