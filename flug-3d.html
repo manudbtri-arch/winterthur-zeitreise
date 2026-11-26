@@ -191,6 +191,8 @@ async function buildingLayer(){
   if (!bldTs) {
     bldTs = await C.Cesium3DTileset.fromUrl(BLD_URL);
     scene.primitives.add(bldTs);
+    bldTs.colorBlendMode = C.Cesium3DTileColorBlendMode.MIX;   /* Putzfarbe einmischen, Dachfarben bleiben erkennbar */
+    bldTs.colorBlendAmount = 0.55;
     bldTs.style = new C.Cesium3DTileStyle();
     bldTs.style.show = { evaluate: f => {
       if ($('bld').checked) return true;
