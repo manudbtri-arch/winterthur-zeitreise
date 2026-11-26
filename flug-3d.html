@@ -864,6 +864,25 @@ async function teleport(lon, lat){
   say('Ausserhalb des gebauten Gebiets. «Hier neu bauen» baut die Häuser um diese Stelle.');
 }
 
+/* Die engste, dichteste Gasse in der Nähe suchen: freie Stelle mit möglichst vielen Häusern rundherum */
+function densestStreet(lon, lat){
+  if (!city) return [lon, lat];
+  const R = city.roof, cw = city.cw, ch = city.ch;
+  const cx0 = Math.floor((lon2x(lon) - city.px0) / CELL), cy0 = Math.floor((lat2y(lat) - city.py0) / CELL);
+  const occ = (x, y) => x < 0 || y < 0 || x >= cw || y >= ch ? 0 : (Number.isNaN(R[y * cw + x]) ? 0 : 1);
+  let best = null, bestS = -1;
+  for (let y = cy0 - 60; y <= cy0 + 60; y++) for (let x = cx0 - 60; x <= cx0 + 60; x++) {
+    let free = true;
+    for (let k = -1; k <= 1 && free; k++) for (let j = -1; j <= 1; j++) if (occ(x + j, y + k)) { free = false; break; }
+    if (!free) continue;
+    let sc = 0;
+    for (let k = -5; k <= 5; k++) for (let j = -5; j <= 5; j++) sc += occ(x + j, y + k);
+    sc -= Math.hypot(x - cx0, y - cy0) * 0.15;                 /* nahe der Mitte bevorzugen */
+    if (sc > bestS) { bestS = sc; best = [x, y]; }
+  }
+  return best ? [x2lon(city.px0 + (best[0] + .5) * CELL), y2lat(city.py0 + (best[1] + .5) * CELL)] : [lon, lat];
+}
+
 /* Auf eine freie Strassenstelle setzen, Blick nach Osten */
 async function spawn(at){
   if (!city) { say('Zuerst «Häuser hier bauen».'); return; }
@@ -901,7 +920,7 @@ async function spawn(at){
 }
 $('spawn').addEventListener('click', () => spawn());
 const closeIntro = () => { $('intro').classList.add('off'); document.body.classList.remove('intro-on'); };
-$('introWalk').addEventListener('click', async () => { closeIntro(); await spawn([8.73290, 47.498289]); });   /* Marktgasse */
+$('introWalk').addEventListener('click', async () => { closeIntro(); await spawn(densestStreet(8.7300, 47.4995)); });
 $('introFly').addEventListener('click', () => { closeIntro(); goHome(1.5); });
 
 /* Kamera */
