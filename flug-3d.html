@@ -64,7 +64,7 @@ details.more[open] summary::after{content:"▴"}
 .ticks{position:absolute;left:10px;right:10px;bottom:0;height:16px;pointer-events:none}
 .ticks span{position:absolute;transform:translateX(-50%);font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
 .ticks span::before{content:"";position:absolute;left:50%;top:-6px;width:1px;height:5px;background:var(--mute)}
-.openfull{left:auto;right:16px;top:auto;bottom:118px;text-decoration:none;font-weight:600}
+
 .pill{position:absolute;z-index:11;left:16px;top:16px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:8px 14px;font-size:14px;cursor:pointer;color:var(--ink);font-family:inherit}
 .keys{bottom:auto;top:60px}
 .search{position:relative;margin:10px 0 4px}
@@ -109,6 +109,8 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
 .intro .st{font-size:14px;color:#cfc6b6;margin-top:8px;min-height:21px}
 @media(max-width:700px){.panel{top:8px;left:8px;right:8px;width:auto;max-height:42vh}.keys{display:none}.timeline{bottom:8px;width:calc(100% - 16px);padding:8px 12px 10px;gap:2px 12px}.pill{top:8px;left:8px}}
 @media(prefers-reduced-motion:reduce){.panel,.intro{transition:none}}
+.pill.openfull{left:auto;right:16px;top:16px;bottom:auto;text-decoration:none;font-weight:600}
+@media(max-width:700px){.pill.openfull{right:8px;top:8px;left:auto;bottom:auto}}
 </style>
 </head>
 <body class="intro-on">
