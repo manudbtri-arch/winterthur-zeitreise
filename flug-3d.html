@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Winterthur 3D-Flug</title>
+<title>Zeitreise Schweiz 3D</title>
 <script>window.CESIUM_BASE_URL = 'https://cdn.jsdelivr.net/npm/cesium@1.120.0/Build/Cesium/';</script>
 <script src="https://cdn.jsdelivr.net/npm/cesium@1.120.0/Build/Cesium/Cesium.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cesium@1.120.0/Build/Cesium/Widgets/widgets.css">
@@ -66,8 +66,20 @@ details.more[open] summary::after{content:"▴"}
 .ticks span::before{content:"";position:absolute;left:50%;top:-6px;width:1px;height:5px;background:var(--mute)}
 .pill{position:absolute;z-index:11;left:16px;top:16px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:8px 14px;font-size:14px;cursor:pointer;color:var(--ink);font-family:inherit}
 .keys{bottom:auto;top:60px}
+.search{position:relative;margin:10px 0 4px}
+.search input{width:100%;font:16px Archivo,sans-serif;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-height:44px}
+.search ul{position:absolute;z-index:40;left:0;right:0;top:100%;margin:4px 0 0;padding:4px;list-style:none;background:var(--bg);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-height:280px;overflow:auto}
+.search li{padding:8px 10px;border-radius:6px;cursor:pointer;font-size:15px;color:var(--ink)}
+.search li small{display:block;color:var(--mute);font-size:12px}
+.search li:hover,.search li[aria-selected=true]{background:var(--line)}
+.intro-search{max-width:440px;margin:0 0 14px}
+.intro-search input{background:rgba(255,255,255,.95);color:#151515;border-color:transparent}
+.timeline{grid-template-columns:auto minmax(0,1fr) auto}
+.timeline .track{grid-column:2}
+.nowbtn{grid-row:span 2;grid-column:3;width:auto;margin:0;align-self:center}
+.nowbtn[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.row2 .btn{margin-top:8px}
-.f3{position:absolute;z-index:12;left:16px;top:60px;margin:0;background:rgba(0,0,0,.55);color:#fff;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;padding:8px 12px;border-radius:6px;white-space:pre;pointer-events:none}
+.f3{position:absolute;z-index:12;left:16px;bottom:118px;margin:0;background:rgba(0,0,0,.55);color:#fff;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;padding:8px 12px;border-radius:6px;white-space:pre;pointer-events:none}
 .toast{position:absolute;z-index:13;left:50%;top:22%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;padding:8px 16px;border-radius:20px;font-weight:600;pointer-events:none}
 .mapov{position:absolute;inset:0;z-index:30;background:var(--bg);display:grid;grid-template-rows:auto minmax(0,1fr) auto}
 #omap{grid-row:2;min-height:0}
@@ -104,7 +116,8 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
 <div class="hud" id="hud">Lädt …</div>
 
 <aside class="panel" id="panel" aria-label="Steuerung">
-  <h1>Winterthur in 3D</h1>
+  <h1>Zeitreise Schweiz</h1>
+  <div class="search"><input id="q" type="search" placeholder="Ort oder Adresse suchen …" autocomplete="off" aria-label="Ort suchen"><ul id="qres" hidden></ul></div>
   <p class="sub"><a href="./" style="color:var(--blue)">← Übersicht</a> · <a href="karte-2d.html" style="color:var(--blue)">2D-Karte</a></p>
 
   <button class="btn primary" id="spawn">Losgehen</button>
@@ -173,6 +186,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
 <div class="timeline" aria-label="Zeitregler">
   <div class="year" id="yBig">1880</div>
   <p class="yl" id="yLbl">Siegfriedkarte</p>
+  <button class="btn nowbtn" id="nowBtn" aria-pressed="false">Heute</button>
   <div class="track" id="yWrap">
     <input type="range" id="yr" aria-label="Jahr">
     <div class="ticks" id="ticks"></div>
@@ -184,6 +198,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
     <p class="kicker">Eine Zeitreise mit Karten von swisstopo</p>
     <h2>Winterthur um 1880</h2>
     <p>Die Altstadt, wie sie auf der Siegfriedkarte steht: echte Häuser, die heute noch stehen, und nachgebaute, die längst abgerissen sind. Geh durch die Gassen und zieh unten am Zeitregler bis 1940.</p>
+    <div class="search intro-search"><input id="q2" type="search" placeholder="Oder einen Ort in der Schweiz suchen …" autocomplete="off" aria-label="Ort suchen"><ul id="qres2" hidden></ul></div>
     <div class="row">
       <button class="btn primary" id="introWalk" disabled>Durch die Gassen gehen</button>
       <button class="btn ghost" id="introFly">Von oben ansehen</button>
@@ -755,11 +770,12 @@ function applyYear(y){
   const avail = [...city.eds.keys()].sort((a, b) => a - b);
   if (!avail.length) return;
   const pick = avail.filter(e => e <= y).pop() ?? avail[0];
-  for (const [e, ed] of city.eds) if (ed.prim) ed.prim.show = (e === pick) && $('genOn').checked;
+  for (const [e, ed] of city.eds) if (ed.prim) ed.prim.show = (e === pick) && $('genOn').checked && !present;
   city.roof = city.eds.get(pick).roof;
   city.edition = pick;
   if (city.groundFor !== pick) makeGround(city.eds.get(pick));
   const ed = city.eds.get(pick);
+  if (present) { say('Heute: Luftbild, alle 3D-Gebäude und Bäume von swisstopo.'); return; }
   const nOldNow = [...gwr.years.values()].filter(v => v <= y).length;
   say(`${y}: ${nOldNow} echte Altbauten und ${ed.nGen} nachgebaute Häuser (Karte ${pick}).` + (avail.length < EDITIONS.length ? ' Weitere Jahrgänge werden noch gebaut …' : ' Zieh am Jahr-Regler für den Zeitsprung.'));
 }
@@ -769,6 +785,7 @@ async function buildHouses(center){
   const token = ++buildToken;
   try {
     const [lon, lat] = center || centerLonLat();
+    if (bldTs && bldTs.customShader) bldTs.customShader.setUniform('u_up', C.Ellipsoid.WGS84.geodeticSurfaceNormal(C.Cartesian3.fromDegrees(lon, lat), new C.Cartesian3()));
     const dLat = 650 / 111320, dLon = 650 / (111320 * Math.cos(lat * Math.PI / 180));
     const px0 = Math.floor(lon2x(lon - dLon)), px1 = Math.ceil(lon2x(lon + dLon));
     const py0 = Math.floor(lat2y(lat + dLat)), py1 = Math.ceil(lat2y(lat - dLat));
@@ -806,6 +823,80 @@ async function buildHouses(center){
   } finally { if (token === buildToken) btn.disabled = false; }
 }
 $('build').addEventListener('click', () => buildHouses());
+
+/* ---------- Ortssuche ganze Schweiz (geo.admin.ch) ---------- */
+const plain = t => String(t || '').replace(/<[^>]+>/g, '').trim();
+function attachSearch(inp, list, onPick){
+  let timer, items = [], sel = -1;
+  const render = () => {
+    list.innerHTML = '';
+    items.forEach((it, i) => {
+      const li = document.createElement('li');
+      li.setAttribute('role', 'option'); li.setAttribute('aria-selected', i === sel);
+      li.textContent = it.name;
+      const sm = document.createElement('small'); sm.textContent = it.kind; li.appendChild(sm);
+      li.addEventListener('mousedown', e => { e.preventDefault(); pick(i); });
+      list.appendChild(li);
+    });
+    list.hidden = !items.length;
+  };
+  const pick = i => { const it = items[i]; if (!it) return; list.hidden = true; inp.value = it.name; inp.blur(); onPick(it); };
+  inp.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = inp.value.trim();
+    if (q.length < 2) { items = []; render(); return; }
+    timer = setTimeout(async () => {
+      try {
+        const u = `https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(q)}&type=locations&sr=4326&limit=8`;
+        const j = await (await fetch(u)).json();
+        const KIND = {gg25: 'Gemeinde', address: 'Adresse', zipcode: 'Postleitzahl', sn25: 'Ort/Flurname', kantone: 'Kanton', district: 'Bezirk', parcel: 'Parzelle', gazetteer: 'Ort'};
+        items = (j.results || []).map(r => ({name: plain(r.attrs.label), kind: KIND[r.attrs.origin] || 'Ort', lon: +r.attrs.lon, lat: +r.attrs.lat}))
+          .filter(it => Number.isFinite(it.lon) && Number.isFinite(it.lat));
+        sel = -1; render();
+      } catch (e) { items = []; render(); }
+    }, 220);
+  });
+  inp.addEventListener('keydown', e => {
+    e.stopPropagation();                        /* WASD beim Tippen nicht als Steuerung werten */
+    if (e.key === 'ArrowDown') { sel = Math.min(items.length - 1, sel + 1); render(); e.preventDefault(); }
+    if (e.key === 'ArrowUp') { sel = Math.max(0, sel - 1); render(); e.preventDefault(); }
+    if (e.key === 'Enter') { pick(sel < 0 ? 0 : sel); e.preventDefault(); }
+    if (e.key === 'Escape') { list.hidden = true; }
+  });
+  inp.addEventListener('blur', () => setTimeout(() => { list.hidden = true; }, 150));
+}
+function goPlace(it){
+  closeIntro && closeIntro();
+  setMode(false);
+  const dest = C.Cartesian3.fromDegrees(it.lon, it.lat - 0.0055, 1050);
+  camera.flyTo({destination: dest, orientation: {heading: 0, pitch: C.Math.toRadians(-38), roll: 0}, duration: 2.5,
+    complete: () => { if (!present) buildHouses([it.lon, it.lat]); }});
+  toast(it.name);
+}
+attachSearch($('q'), $('qres'), goPlace);
+attachSearch($('q2'), $('qres2'), goPlace);
+
+/* ---------- «Heute»: saubere Gegenwart mit Luftbild, allen Gebäuden und Bäumen ---------- */
+let present = false;
+function setPresent(on){
+  present = on;
+  $('nowBtn').setAttribute('aria-pressed', on);
+  $('nowBtn').textContent = on ? 'Zurück in die Zeit' : 'Heute';
+  $('src').value = on ? 'foto' : 'sieg';
+  setRange(); showLayer();
+  $('yWrap').hidden = on;
+  $('bld').checked = on;
+  $('genOn').checked = !on;
+  $('groundOn').checked = !on;
+  $('veg').checked = on;
+  buildingLayer().catch(() => {});
+  toggleTiles('v', 'https://3d.geo.admin.ch/ch.swisstopo.vegetation.3d/v1/tileset.json', on);
+  if (city && city.edition) makeGround(city.eds.get(city.edition));
+  applyYear(on ? 2100 : +$('yr').value);
+  $('yBig').textContent = on ? 'Heute' : $('yr').value;
+  $('yLbl').textContent = on ? 'Luftbild und 3D-Gebäude von swisstopo' : 'Siegfriedkarte';
+}
+$('nowBtn').addEventListener('click', () => setPresent(!present));
 
 /* ---------- Übersichtskarte mit Teleport (wie bei «Blocks») ---------- */
 let omap = null, photoLayer = null, siegLayer = null, meMark = null, areaRect = null;
