@@ -125,6 +125,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
     <label class="chk"><input type="checkbox" id="genOn" checked> Nachgebaute, abgerissene Häuser</label>
     <label class="chk"><input type="checkbox" id="groundOn" checked> Boden mit Pflaster und Wiese</label>
     <label class="chk"><input type="checkbox" id="blockOn" checked> Minecraft-Look (Pixeltexturen)</label>
+    <label class="chk"><input type="checkbox" id="shadowOn" checked> Schatten (schöner, etwas langsamer)</label>
     <label class="chk"><input type="checkbox" id="bld"> Alle heutigen Gebäude</label>
     <label class="chk"><input type="checkbox" id="veg"> Heutige Bäume</label>
 
@@ -215,7 +216,7 @@ const viewer = new C.Viewer('scene', {
 });
 const scene = viewer.scene, camera = scene.camera, globe = scene.globe;
 /* fester Sommervormittag, damit die Hauswände schön schattiert sind */
-viewer.clock.currentTime = C.JulianDate.fromIso8601('2026-06-21T09:00:00Z');
+viewer.clock.currentTime = C.JulianDate.fromIso8601('2026-06-21T13:30:00Z');   /* Sommernachmittag, warmes Licht aus Südwest */
 viewer.clock.shouldAnimate = false;
 let terrainOk = false;
 window.__viewer = viewer;   /* für Fehlersuche in der Konsole */
@@ -235,6 +236,13 @@ globe.depthTestAgainstTerrain = true;
 globe.baseColor = C.Color.fromCssColorString('#cfcabf');
 globe.maximumScreenSpaceError = 2;
 globe.tileCacheSize = 400;
+/* Schatten: macht Gassen und Fassaden plastisch */
+viewer.shadows = true;
+viewer.terrainShadows = C.ShadowMode.RECEIVE_ONLY;
+scene.shadowMap.softShadows = true;
+scene.shadowMap.size = 2048;
+scene.shadowMap.maximumDistance = 300;
+scene.shadowMap.darkness = 0.45;
 scene.fog.enabled = true;
 scene.postProcessStages.fxaa.enabled = false;
 /* Fernsicht (J): mehr Details in der Ferne gegen etwas weniger Bilder pro Sekunde */
@@ -295,31 +303,68 @@ async function toggleTiles(id, url, on){
 const BLD_URL = 'https://3d.geo.admin.ch/ch.swisstopo.swissbuildings3d.3d/v1/tileset.json';
 const FACADE_FS = `
   float hsh(float n){ return fract(sin(n * 12.9898) * 43758.5453); }
+  float h2(vec2 v){ return fract(sin(dot(v, vec2(12.9898, 78.233))) * 43758.5453); }
   void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
     vec3 nWC = normalize((czm_inverseView * vec4(fsInput.attributes.normalEC, 0.0)).xyz);
-    if (abs(dot(nWC, u_up)) > 0.35) { return; }                 /* Dächer bleiben, wie sie sind */
     float id = float(fsInput.featureIds.featureId_0);
-    float r = hsh(id + 1.0), r2 = hsh(id + 7.0);
-    vec3 upMC = normalize((czm_inverseModel * vec4(u_up, 0.0)).xyz);
-    vec3 alongMC = normalize((czm_inverseModel * vec4(cross(u_up, nWC), 0.0)).xyz);
+    float r = hsh(id + 1.0), r2 = hsh(id + 7.0), r3 = hsh(id + 13.0);
     vec3 p = fsInput.attributes.positionMC;
-    float fy = fract(dot(p, upMC) / 3.2), fx = fract(dot(p, alongMC) / 2.6);
-    vec3 plaster = r < 0.2 ? vec3(0.92,0.84,0.66) : r < 0.4 ? vec3(0.95,0.92,0.85) : r < 0.6 ? vec3(0.88,0.76,0.66)
-                 : r < 0.8 ? vec3(0.90,0.88,0.76) : vec3(0.84,0.82,0.78);
-    if (u_blocky > 0.5) {                                        /* Minecraft-Look: Pixel à 1/16 m */
-      vec2 q = floor(vec2(dot(p, alongMC), dot(p, upMC)) * 16.0);
-      float pn = fract(sin(dot(q, vec2(12.9898, 78.233))) * 43758.5453);
-      plaster *= 0.88 + 0.16 * pn;
-      fx = (floor(fx * 16.0) + 0.5) / 16.0; fy = (floor(fy * 16.0) + 0.5) / 16.0;
+    vec3 upMC = normalize((czm_inverseModel * vec4(u_up, 0.0)).xyz);
+    float nu = dot(nWC, u_up);
+
+    /* ---- Dach: Biberschwanz-Ziegel in versetzten Reihen ---- */
+    if (nu > 0.35) {
+      vec3 alongW = cross(u_up, nWC);
+      if (nu > 0.97 || length(alongW) < 0.05) {                 /* Flachdach: Kies */
+        float g = h2(floor(vec2(dot(p, vec3(1.0, 0.0, 0.0)), dot(p, vec3(0.0, 1.0, 0.0))) * 4.0));
+        material.diffuse = vec3(0.50, 0.48, 0.45) * (0.9 + 0.12 * g);
+        return;
+      }
+      alongW = normalize(alongW);
+      vec3 downW = normalize(cross(nWC, alongW));
+      float a = dot(p, normalize((czm_inverseModel * vec4(alongW, 0.0)).xyz));
+      float d = dot(p, normalize((czm_inverseModel * vec4(downW, 0.0)).xyz));
+      if (u_blocky > 0.5) { a = (floor(a * 16.0) + 0.5) / 16.0; d = (floor(d * 16.0) + 0.5) / 16.0; }
+      vec3 tile = r3 < 0.5 ? vec3(0.64, 0.29, 0.19) : r3 < 0.78 ? vec3(0.55, 0.25, 0.17) : r3 < 0.92 ? vec3(0.47, 0.33, 0.27) : vec3(0.38, 0.36, 0.35);
+      float rowI = floor(d / 0.26);
+      float row = fract(d / 0.26);
+      float colF = fract(a / 0.17 + 0.5 * mod(rowI, 2.0));
+      float tn = h2(vec2(floor(a / 0.17 + 0.5 * mod(rowI, 2.0)), rowI) + id);
+      vec3 c = tile * (0.84 + 0.26 * tn);
+      c *= 1.0 - 0.30 * smoothstep(0.72, 1.0, row);              /* Schattenkante unter jeder Reihe */
+      c *= 1.0 - 0.10 * (step(colF, 0.05) + step(0.95, colF));
+      material.diffuse = c;
+      return;
     }
-    material.diffuse = plaster;
-    float win = step(0.32, fy) * step(fy, 0.78) * step(0.30, fx) * step(fx, 0.70);
-    float frame = step(0.29, fy) * step(fy, 0.81) * step(0.27, fx) * step(fx, 0.73) * (1.0 - win);
-    float shutter = step(0.32, fy) * step(fy, 0.78) * (step(0.18, fx) * step(fx, 0.27) + step(0.73, fx) * step(fx, 0.82));
-    vec3 shutCol = r2 < 0.55 ? vec3(0.20,0.36,0.22) : r2 < 0.8 ? vec3(0.52,0.24,0.17) : vec3(0.32,0.32,0.30);
-    material.diffuse = mix(material.diffuse, vec3(0.97,0.96,0.93), frame);
-    material.diffuse = mix(material.diffuse, shutCol, shutter * step(0.35, r2));
-    material.diffuse = mix(material.diffuse, vec3(0.13, 0.16, 0.20), win);
+    if (nu < -0.35) { return; }
+
+    /* ---- Wand: Putz, Fenster mit Sprossen, Sims und Läden ---- */
+    vec3 alongMC = normalize((czm_inverseModel * vec4(cross(u_up, nWC), 0.0)).xyz);
+    float s = dot(p, alongMC), hgt = dot(p, upMC);
+    if (u_blocky > 0.5) { s = (floor(s * 16.0) + 0.5) / 16.0; hgt = (floor(hgt * 16.0) + 0.5) / 16.0; }
+    float fy = fract(hgt / 3.2), fx = fract(s / 2.6);
+    vec2 cell = floor(vec2(s / 2.6, hgt / 3.2));
+    vec3 plaster = r < 0.18 ? vec3(0.93, 0.82, 0.60) : r < 0.36 ? vec3(0.96, 0.94, 0.88) : r < 0.50 ? vec3(0.91, 0.74, 0.64)
+                 : r < 0.66 ? vec3(0.94, 0.89, 0.72) : r < 0.80 ? vec3(0.80, 0.82, 0.76) : vec3(0.87, 0.79, 0.69);
+    float dirt = u_blocky > 0.5 ? h2(floor(vec2(s, hgt) * 16.0)) : h2(floor(vec2(s, hgt) * 1.5));
+    plaster *= 0.95 + 0.06 * dirt;
+    float win   = step(0.34, fy) * step(fy, 0.80) * step(0.31, fx) * step(fx, 0.69);
+    float frame = step(0.31, fy) * step(fy, 0.83) * step(0.28, fx) * step(fx, 0.72) * (1.0 - win);
+    float sill  = step(0.29, fy) * step(fy, 0.33) * step(0.26, fx) * step(fx, 0.74);
+    float shut  = step(0.34, fy) * step(fy, 0.80) * (step(0.17, fx) * step(fx, 0.27) + step(0.73, fx) * step(fx, 0.83));
+    float bars  = win * max(step(abs(fx - 0.5), 0.014), step(abs(fy - 0.62), 0.012));
+    vec3 shutCol = r2 < 0.55 ? vec3(0.22, 0.38, 0.24) : r2 < 0.8 ? vec3(0.55, 0.26, 0.18) : vec3(0.34, 0.33, 0.31);
+    shutCol *= 0.92 + 0.12 * step(0.5, fract(fy * 9.0));          /* Lamellen */
+    float wr = h2(cell + id);
+    vec3 glass = mix(vec3(0.10, 0.14, 0.19), vec3(0.42, 0.52, 0.62), clamp((fy - 0.34) / 0.46, 0.0, 1.0) * (0.35 + 0.5 * wr));
+    vec3 c = plaster;
+    c = mix(c, vec3(0.97, 0.96, 0.92), frame);
+    c = mix(c, vec3(0.80, 0.78, 0.74), sill);
+    c = mix(c, shutCol, shut * step(0.35, r2));
+    c = mix(c, glass, win);
+    c = mix(c, vec3(0.95, 0.94, 0.90), bars);
+    c *= 1.0 - 0.18 * step(0.80, fy) * step(fy, 0.83) * step(0.28, fx) * step(fx, 0.72);   /* Schatten unter dem Sturz */
+    material.diffuse = c;
   }`;
 const gwr = {years:new Map(), year:1880};
 let bldTs = null;
@@ -363,6 +408,7 @@ $('bld').addEventListener('change', () => buildingLayer().catch(() => { $('hud')
 $('oldOn').addEventListener('change', () => buildingLayer().catch(() => {}));
 $('genOn').addEventListener('change', () => applyYear(+$('yr').value || gwr.year));
 $('blockOn').addEventListener('change', e => setBlocky(e.target.checked));
+$('shadowOn').addEventListener('change', e => { viewer.shadows = e.target.checked; });
 $('groundOn').addEventListener('change', () => { if (city && city.edition) makeGround(city.eds.get(city.edition)); });
 
 /* LV95 → WGS84 (Näherungsformel von swisstopo) */
@@ -502,7 +548,7 @@ async function buildEdition(area, year, reg, token){
     if (r.y > year) continue;
     nOld++;
     const cx = Math.floor((lon2x(r.lon) - px0) / CELL), cy = Math.floor((lat2y(r.lat) - py0) / CELL);
-    for (let k = -1; k <= 1; k++) for (let j = -1; j <= 1; j++) {
+    for (let k = -2; k <= 2; k++) for (let j = -2; j <= 2; j++) {
       const xx = cx + j, yy = cy + k;
       if (xx >= 0 && yy >= 0 && xx < cw && yy < ch) { const id = comp[yy * cw + xx]; if (id >= 0) real[id] = 1; }
     }
@@ -600,7 +646,8 @@ async function buildEdition(area, year, reg, token){
   const prim = inst.length ? scene.primitives.add(new C.Primitive({
     geometryInstances: inst,
     appearance: new C.PerInstanceColorAppearance({flat:false, translucent:false}),
-    asynchronous: true
+    asynchronous: true,
+    shadows: C.ShadowMode.ENABLED
   })) : null;
   if (prim) prim.show = false;
   return {year, prim, roof, nGen, nOld, occ, wat};
@@ -640,8 +687,12 @@ czm_material czm_getMaterial(czm_materialInput mi) {
     float pn2 = fract(sin(dot(floor(pxc / 4.0), vec2(7.13, 3.71))) * 9631.17);
     vec2 inb = fract(mtr);
     float seam = 1.0 - 0.18 * (step(inb.x, 1.0/16.0) + step(inb.y, 1.0/16.0));
-    cob = mix(vec3(0.42, 0.42, 0.42), vec3(0.62, 0.62, 0.61), pn) * (pn2 < 0.18 ? 0.72 : 1.0) * seam;
-    grass = vec3(0.36, 0.56, 0.20) * (0.78 + 0.34 * pn) * (pn2 < 0.12 ? 0.85 : 1.0);
+    /* Steine à 4 x 4 Pixel mit dunkler Fuge, wie Minecraft-Pflasterstein */
+    vec2 sp = fract(pxc / 4.0);
+    float fuge = step(sp.x, 0.2) + step(sp.y, 0.2);
+    float sn = fract(sin(dot(floor(pxc / 4.0), vec2(3.7, 9.1))) * 7351.3);
+    cob = mix(vec3(0.52, 0.50, 0.47), vec3(0.66, 0.64, 0.60), sn) * (0.95 + 0.07 * pn) * (fuge > 0.5 ? 0.78 : 1.0) * seam;
+    grass = vec3(0.40, 0.56, 0.27) * (0.86 + 0.2 * pn) * (pn2 < 0.12 ? 0.9 : 1.0);
     water = vec3(0.20, 0.34, 0.75) * (0.85 + 0.2 * pn);
   }
   float far = smoothstep(25.0, 120.0, length(mi.positionToEyeEC));
