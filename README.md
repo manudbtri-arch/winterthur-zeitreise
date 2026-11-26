@@ -4,7 +4,7 @@ Winterthur zwischen 1844 und heute: historische Karten und Luftbilder von swisst
 
 - `index.html` – Übersicht
 - `karte-2d.html` – Zeitregler, Zeitraffer und Vergleich mit Trennstrich (Leaflet)
-- `flug-3d.html` – Siegfriedkarte auf dem swisstopo-Gelände, Ego-Steuerung mit WASD und Maus (CesiumJS)
+- `flug-3d.html` – Siegfriedkarte auf dem swisstopo-Gelände, Ego-Steuerung mit WASD und Maus (CesiumJS). «Häuser hier bauen» liest die schwarzen Hausflächen der Siegfriedkarte im Browser aus (Schwellwert + morphologisches Öffnen, Blöcke à ca. 3 m) und stellt sie als Blockhäuser mit geschätzter Höhe (2–4 Geschosse) auf das Gelände. Beim Gehen sind die Wände fest.
 
 Läuft über GitHub Pages. Lokal geöffnet (Doppelklick auf die Datei) lädt das 3D-Gelände nicht, weil der Browser von einer lokalen Datei aus keine Daten fremder Server nachladen darf.
 
