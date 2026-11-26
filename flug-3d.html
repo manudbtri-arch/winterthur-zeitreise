@@ -491,6 +491,10 @@ czm_material czm_getMaterial(czm_materialInput mi) {
   vec3 grass = vec3(0.34, 0.50, 0.24) * (0.82 + 0.22 * gn) * (0.9 + 0.15 * gn2);
   float wv = 0.5 + 0.5 * sin(dot(st * repeat, vec2(0.9, 0.4)));
   vec3 water = mix(vec3(0.20, 0.36, 0.48), vec3(0.30, 0.48, 0.60), wv);
+  /* in der Ferne Muster ausblenden, sonst flimmert es */
+  float far = smoothstep(25.0, 120.0, length(mi.positionToEyeEC));
+  cob = mix(cob, vec3(0.50, 0.48, 0.44), far);
+  grass = mix(grass, vec3(0.36, 0.50, 0.26), far * 0.8);
   vec3 col = mix(grass, cob, cls.r);
   col = mix(col, water, cls.g);
   m.diffuse = col;
@@ -521,7 +525,7 @@ function makeGround(ed){
   g.putImageData(img, 0, 0);
   const west = x2lon(px0), east = x2lon(px0 + cw * CELL), north = y2lat(py0), south = y2lat(py0 + ch * CELL);
   const mpp = 156543.03392 * Math.cos(city.center[1] * Math.PI / 180) / 2 ** Z;
-  const stone = 0.32;                                         /* Pflasterstein in Metern */
+  const stone = 0.22;                                         /* Pflasterstein in Metern */
   const material = new C.Material({ fabric: { uniforms: { image: cv, repeat: new C.Cartesian2(cw * CELL * mpp / stone, ch * CELL * mpp / stone) }, source: GROUND_FS } });
   ground.prim = scene.primitives.add(new C.GroundPrimitive({
     geometryInstances: new C.GeometryInstance({ geometry: new C.RectangleGeometry({ rectangle: C.Rectangle.fromDegrees(west, south, east, north), vertexFormat: C.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat }) }),
