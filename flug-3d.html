@@ -73,7 +73,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
   <label>Häuser von damals</label>
   <button class="btn primary" id="build">Häuser hier bauen</button>
   <button class="btn" id="spawn">Auf die Strasse stellen</button>
-  <p class="sub" id="bStat" style="margin:8px 0 0">Liest die Hausflächen aus der Siegfriedkarte des gewählten Jahres, rund 1,3 km rund um die Bildmitte.</p>
+  <p class="sub" id="bStat" style="margin:8px 0 0">Echte Altbauten nach Baujahr, dazu abgerissene Häuser aus der Siegfriedkarte, rund 1,3 km um die Bildmitte.</p>
 
   <label class="chk"><input type="checkbox" id="oldOn" checked> Echte Altbauten (Baujahr bis zum Jahr)</label>
   <label class="chk"><input type="checkbox" id="genOn" checked> Nachgebaute Häuser (heute abgerissen)</label>
@@ -89,7 +89,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
   <button class="btn" id="home">Zurück zur Altstadt</button>
 
   <p class="note" id="terrMsg" hidden style="color:var(--brown)">Das 3D-Gelände konnte nicht geladen werden. Öffne die Seite über ihre Webadresse statt als Datei, und lade sie neu.</p>
-  <p class="note">Die Häuser sind automatisch aus der Karte erzeugt: Grundriss aus den schwarzen Flächen, Höhe geschätzt (2–4 Geschosse). Auch Schrift und dicke Linien können als Klötze erscheinen. Nicht jedes Jahr gibt es Luftbilder über Winterthur.<br>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a></p>
+  <p class="note">Häuser, die heute noch stehen, sind die echten 3D-Modelle von swisstopo, ausgewählt nach Baujahr im Gebäuderegister. Abgerissene Häuser sind aus der Karte nachgebaut (Höhe geschätzt). Schrift und dicke Linien können als Klötze erscheinen. Nicht jedes Jahr gibt es Luftbilder über Winterthur.<br>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a></p>
 </aside>
 
 <div class="keys" id="keys">
@@ -184,7 +184,7 @@ async function toggleTiles(id, url, on){
 }
 /* swissBUILDINGS3D: echte Häuser, gefiltert nach Baujahr aus dem Gebäuderegister (GWR) */
 const BLD_URL = 'https://3d.geo.admin.ch/ch.swisstopo.swissbuildings3d.3d/v1/tileset.json';
-const OLD_WALL = ['#e3d6bd','#d8c7a6','#ebe1cf','#cfbf9f','#dccfb9'];
+const OLD_WALL = ['#fbf5ea','#f6eddc','#fffaf0','#f2e8d6','#f8f1e4'];
 const gwr = {years:new Map(), year:1880};
 let bldTs = null;
 async function buildingLayer(){

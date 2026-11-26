@@ -4,7 +4,7 @@ Winterthur zwischen 1844 und heute: historische Karten und Luftbilder von swisst
 
 - `index.html` – Übersicht
 - `karte-2d.html` – Zeitregler, Zeitraffer und Vergleich mit Trennstrich (Leaflet)
-- `flug-3d.html` – Siegfriedkarte auf dem swisstopo-Gelände, Ego-Steuerung mit WASD und Maus (CesiumJS). «Häuser hier bauen» liest die schwarzen Hausflächen der Siegfriedkarte im Browser aus (Schwellwert + morphologisches Öffnen, Blöcke à ca. 3 m) und stellt sie als Blockhäuser mit geschätzter Höhe (2–4 Geschosse) auf das Gelände. Beim Gehen sind die Wände fest.
+- `flug-3d.html` – Siegfriedkarte auf dem swisstopo-Gelände, Ego-Steuerung mit WASD und Maus (CesiumJS). «Häuser hier bauen» zeigt die heute noch stehenden Gebäude als echte swissBUILDINGS3D-Modelle, gefiltert nach Baujahr aus dem Gebäuderegister (GWR, über `api3.geo.admin.ch`, Verknüpfung über EGID). Für abgerissene Häuser liest es die schwarzen Hausflächen der Siegfriedkarte im Browser aus (Schwellwert + morphologisches Öffnen, Blöcke à ca. 3 m) und stellt sie als Blockhäuser mit geschätzter Höhe (2–4 Geschosse) auf das Gelände. Beim Gehen sind die Wände fest.
 
 Läuft über GitHub Pages. Lokal geöffnet (Doppelklick auf die Datei) lädt das 3D-Gelände nicht, weil der Browser von einer lokalen Datei aus keine Daten fremder Server nachladen darf.
 
@@ -19,4 +19,5 @@ Alle Daten: © swisstopo, offene Geodaten (OGD), über `wmts.geo.admin.ch` und `
 | Dufourkarte | `ch.swisstopo.hiks-dufour` | 1845–1865 |
 | Luftbilder (Archiv) | `ch.swisstopo.swissimage-product` | 1926–2025 |
 | Gelände | `ch.swisstopo.terrain.3d` | aktuell |
+| Baujahre | `ch.bfs.gebaeude_wohnungs_register` (GWR) | aktuell |
 | Gebäude / Bäume | `ch.swisstopo.swissbuildings3d.3d`, `ch.swisstopo.vegetation.3d` | aktuell |
