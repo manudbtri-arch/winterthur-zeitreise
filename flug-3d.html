@@ -64,6 +64,7 @@ details.more[open] summary::after{content:"▴"}
 .ticks{position:absolute;left:10px;right:10px;bottom:0;height:16px;pointer-events:none}
 .ticks span{position:absolute;transform:translateX(-50%);font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
 .ticks span::before{content:"";position:absolute;left:50%;top:-6px;width:1px;height:5px;background:var(--mute)}
+.openfull{left:auto;right:16px;top:auto;bottom:118px;text-decoration:none;font-weight:600}
 .pill{position:absolute;z-index:11;left:16px;top:16px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:8px 14px;font-size:14px;cursor:pointer;color:var(--ink);font-family:inherit}
 .keys{bottom:auto;top:60px}
 .search{position:relative;margin:10px 0 4px}
@@ -170,6 +171,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
 </div>
 <div class="info" id="info" hidden role="status"><b id="iTitle"></b><span id="iText"></span></div>
 
+<a class="pill openfull" id="openFull" href="flug-3d.html" target="_blank" rel="noopener" hidden>↗ Im Vollbild öffnen</a>
 <button class="pill" id="pill" hidden>☰ Menü <span style="color:var(--mute)">(Tab)</span></button>
 
 <div class="keys" id="keys">
@@ -1023,6 +1025,14 @@ async function spawn(at){
 }
 $('spawn').addEventListener('click', () => spawn());
 const closeIntro = () => { $('intro').classList.add('off'); document.body.classList.remove('intro-on'); };
+
+/* Einbettungsmodus (?embed=1): ohne Startbildschirm, Menü eingeklappt, Knopf für das Vollbild */
+if (new URLSearchParams(location.search).get('embed') === '1') {
+  closeIntro();
+  setPanel(false);
+  $('openFull').hidden = false;
+  goHome(0);
+}
 $('introWalk').addEventListener('click', async () => { closeIntro(); await spawn(densestStreet(8.7300, 47.4995)); });
 $('introFly').addEventListener('click', () => { closeIntro(); goHome(1.5); });
 

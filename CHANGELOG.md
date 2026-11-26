@@ -1,6 +1,8 @@
 # Änderungen
 
 ## 2026-11-26
+- Neue Produkt-Webseite mit eingebettetem 3D-Flug, Zielgruppen, Funktionen, Datenerklärung und Pilotangebot.
+- Einbettungsmodus `flug-3d.html?embed=1`.
 - Schweizweite Ortssuche, «Heute»-Ansicht mit Luftbild, allen 3D-Gebäuden und Bäumen.
 - Weniger Flackern: Kantenglättung, Muster in der Ferne ausgeblendet, Schatten und Pixel-Look optional.
 - Blocks-ähnliche Steuerung: Karte mit Teleport (M), Flugtempo (I/U), Fernsicht (J), Koordinaten (F3), Vollbild.

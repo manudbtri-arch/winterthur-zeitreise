@@ -18,7 +18,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [ ] Gebäude-Export des gebauten Gebiets als CSV und GeoJSON (EGID, Adresse, Baujahr, Status belegt/rekonstruiert, Koordinaten).
 - [ ] Analyse-Modus: Gebäude nach Bauepoche einfärben (Legende), Statistik der Bauepochen im Gebiet.
 - [ ] Minikarte unten links mit Standort und Blickrichtung.
-- [ ] Einbettung: `?embed=1` blendet Menü aus; Knopf «Einbetten» liefert iframe-Code.
+- [x] Einbettung: `?embed=1` ohne Startbildschirm, Menü eingeklappt, Knopf «Im Vollbild öffnen».
+- [ ] Knopf «Einbetten» im Menü liefert den iframe-Code zum Kopieren.
 
 ## 3. Inhalte
 - [ ] Geschichten an Orten: `stories/winterthur.json` (Titel, Text, Jahr von–bis, Koordinaten, Quelle); Marker im 3D-Bild, Infokarte beim Anklicken. Nur gesicherte, mit Quelle belegte Fakten.
@@ -28,7 +29,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 ## 4. Einsatz bei Kunden
 - [ ] Kiosk-Modus `?kiosk=1`: automatischer Rundflug, Neustart nach 2 Minuten ohne Eingabe, grosse Touch-Knöpfe.
 - [ ] Handy-Steuerung: virtueller Joystick zum Gehen, Wischen zum Umschauen.
-- [ ] Übersichtsseite als Produktseite: Nutzen für Gemeinden/Museen/Schulen, Bilder, Kontakt für Pilotprojekte.
+- [x] Übersichtsseite als Produktseite mit eingebettetem 3D-Flug, Zielgruppen, Funktionen, Daten, Pilotangebot.
+- [ ] (Manuel) Kontaktadresse für Pilotanfragen in `index.html` (Konstante CONTACT) eintragen.
 - [ ] (Manuel) Impressum und Datenschutzerklärung mit echten Angaben.
 - [ ] (Manuel) Eigene Domain.
 
