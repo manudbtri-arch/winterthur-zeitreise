@@ -66,6 +66,17 @@ details.more[open] summary::after{content:"▴"}
 .ticks span::before{content:"";position:absolute;left:50%;top:-6px;width:1px;height:5px;background:var(--mute)}
 .pill{position:absolute;z-index:11;left:16px;top:16px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:8px 14px;font-size:14px;cursor:pointer;color:var(--ink);font-family:inherit}
 .keys{bottom:auto;top:60px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.row2 .btn{margin-top:8px}
+.f3{position:absolute;z-index:12;left:16px;top:60px;margin:0;background:rgba(0,0,0,.55);color:#fff;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;padding:8px 12px;border-radius:6px;white-space:pre;pointer-events:none}
+.toast{position:absolute;z-index:13;left:50%;top:22%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;padding:8px 16px;border-radius:20px;font-weight:600;pointer-events:none}
+.mapov{position:absolute;inset:0;z-index:30;background:var(--bg);display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+#omap{grid-row:2;min-height:0}
+.mapbar{grid-row:1;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line)}
+.mapbar b{font-size:17px}.mapbar .btn{width:auto;margin:0}
+#mapCoord{font:13px ui-monospace,Menlo,Consolas,monospace;color:var(--mute);min-width:260px}
+.mslide{display:flex;align-items:center;gap:8px;margin:0 auto 0 0;font-weight:600}.mslide input{width:160px}
+.maphint{grid-row:3;margin:0;padding:8px 16px;font-size:14px;color:var(--mute);border-top:1px solid var(--line)}
+.leaflet-container{cursor:crosshair;background:#eee}
 .info{position:absolute;z-index:12;left:50%;transform:translateX(-50%);bottom:118px;max-width:min(520px,calc(100% - 32px));background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--brown);border-radius:10px;padding:10px 16px;box-shadow:0 6px 24px rgba(0,0,0,.3);display:grid;gap:2px}
 .info b{font-size:17px}.info span{font-size:14px;color:var(--mute)}
 @media(max-width:700px){.info{bottom:96px}}
@@ -97,6 +108,10 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
   <p class="sub"><a href="./" style="color:var(--blue)">← Übersicht</a> · <a href="karte-2d.html" style="color:var(--blue)">2D-Karte</a></p>
 
   <button class="btn primary" id="spawn">Losgehen</button>
+  <div class="row2">
+    <button class="btn" id="mapBtn">Karte (M)</button>
+    <button class="btn" id="fullBtn">Vollbild</button>
+  </div>
   <button class="btn" id="build">Hier neu bauen</button>
   <div class="prog" aria-hidden="true"><i id="progBar"></i></div>
   <p class="sub" id="bStat" style="margin:8px 0 0">Baue Winterthur …</p>
@@ -109,6 +124,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
     <label class="chk"><input type="checkbox" id="oldOn" checked> Echte Altbauten nach Baujahr</label>
     <label class="chk"><input type="checkbox" id="genOn" checked> Nachgebaute, abgerissene Häuser</label>
     <label class="chk"><input type="checkbox" id="groundOn" checked> Boden mit Pflaster und Wiese</label>
+    <label class="chk"><input type="checkbox" id="blockOn" checked> Minecraft-Look (Pixeltexturen)</label>
     <label class="chk"><input type="checkbox" id="bld"> Alle heutigen Gebäude</label>
     <label class="chk"><input type="checkbox" id="veg"> Heutige Bäume</label>
 
@@ -125,6 +141,19 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
   </details>
 </aside>
 
+<pre class="f3" id="f3" hidden></pre>
+<div class="toast" id="toast" hidden></div>
+<div class="mapov" id="mapov" hidden>
+  <div id="omap"></div>
+  <div class="mapbar">
+    <b>Winterthur von oben</b>
+    <span id="mapCoord">Mit der Maus über die Karte fahren</span>
+    <label class="mslide">Luftbild heute <input type="range" id="mapPhoto" min="0" max="100" value="0" aria-label="Luftbild einblenden"></label>
+    <button class="btn" id="mapFull">Vollbild</button>
+    <button class="btn" id="mapClose">Schliessen (M)</button>
+  </div>
+  <p class="maphint">Klick auf die Karte: Du wirst dorthin teleportiert und stehst auf der Strasse. Gestrichelt: das gebaute Gebiet.</p>
+</div>
 <div class="info" id="info" hidden role="status"><b id="iTitle"></b><span id="iText"></span></div>
 
 <button class="pill" id="pill" hidden>☰ Menü <span style="color:var(--mute)">(Tab)</span></button>
@@ -133,7 +162,9 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
   <div><b>W</b><b>A</b><b>S</b><b>D</b> bewegen</div>
   <div><b>Maus</b> umschauen (erst ins Bild klicken)</div>
   <div><b>Leer</b> hoch · <b>C</b> runter</div>
-  <div><b>Shift</b> schneller · <b>F</b> Fliegen/Gehen</div>
+  <div><b>Shift</b> rennen · <b>F</b> Fliegen/Gehen</div>
+  <div><b>I</b>/<b>U</b> Flugtempo 1–100× · <b>J</b> Fernsicht</div>
+  <div><b>M</b> Karte · <b>F3</b> Koordinaten · <b>B</b> Look</div>
   <div><b>Klick</b> auf ein Haus: Infos</div>
   <div><b>Tab</b> Menü · <b>Esc</b> Maus freigeben</div>
 </div>
@@ -202,7 +233,20 @@ C.CesiumTerrainProvider.fromUrl('https://3d.geo.admin.ch/ch.swisstopo.terrain.3d
   });
 globe.depthTestAgainstTerrain = true;
 globe.baseColor = C.Color.fromCssColorString('#cfcabf');
-globe.maximumScreenSpaceError = 1.5;
+globe.maximumScreenSpaceError = 2;
+globe.tileCacheSize = 400;
+scene.fog.enabled = true;
+scene.postProcessStages.fxaa.enabled = false;
+/* Fernsicht (J): mehr Details in der Ferne gegen etwas weniger Bilder pro Sekunde */
+let farView = true;
+function setFarView(on){
+  farView = on;
+  globe.maximumScreenSpaceError = on ? 2 : 4;
+  scene.fog.density = on ? 1.2e-4 : 6e-4;
+  for (const t of [bldTs, specTs]) if (t) t.maximumScreenSpaceError = on ? 16 : 32;
+}
+let toastT;
+function toast(t){ const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 1600); }
 
 /* Unterlage, damit Lücken nicht schwarz bleiben */
 const tile = (key, year) => {
@@ -262,6 +306,12 @@ const FACADE_FS = `
     float fy = fract(dot(p, upMC) / 3.2), fx = fract(dot(p, alongMC) / 2.6);
     vec3 plaster = r < 0.2 ? vec3(0.92,0.84,0.66) : r < 0.4 ? vec3(0.95,0.92,0.85) : r < 0.6 ? vec3(0.88,0.76,0.66)
                  : r < 0.8 ? vec3(0.90,0.88,0.76) : vec3(0.84,0.82,0.78);
+    if (u_blocky > 0.5) {                                        /* Minecraft-Look: Pixel à 1/16 m */
+      vec2 q = floor(vec2(dot(p, alongMC), dot(p, upMC)) * 16.0);
+      float pn = fract(sin(dot(q, vec2(12.9898, 78.233))) * 43758.5453);
+      plaster *= 0.88 + 0.16 * pn;
+      fx = (floor(fx * 16.0) + 0.5) / 16.0; fy = (floor(fy * 16.0) + 0.5) / 16.0;
+    }
     material.diffuse = plaster;
     float win = step(0.32, fy) * step(fy, 0.78) * step(0.30, fx) * step(fx, 0.70);
     float frame = step(0.29, fy) * step(fy, 0.81) * step(0.27, fx) * step(fx, 0.73) * (1.0 - win);
@@ -288,7 +338,8 @@ async function buildingLayer(){
     scene.primitives.add(bldTs);
     /* Fassaden: Putzfarbe je Haus, Fenster mit Rahmen und Läden pro Geschoss (im Shader, keine Zusatzgeometrie) */
     bldTs.customShader = new C.CustomShader({
-      uniforms: { u_up: { type: C.UniformType.VEC3, value: C.Ellipsoid.WGS84.geodeticSurfaceNormal(C.Cartesian3.fromDegrees(8.729, 47.4997), new C.Cartesian3()) } },
+      uniforms: { u_up: { type: C.UniformType.VEC3, value: C.Ellipsoid.WGS84.geodeticSurfaceNormal(C.Cartesian3.fromDegrees(8.729, 47.4997), new C.Cartesian3()) },
+                  u_blocky: { type: C.UniformType.FLOAT, value: blocky ? 1 : 0 } },
       fragmentShaderText: FACADE_FS
     });
     bldTs.style = new C.Cesium3DTileStyle();
@@ -311,6 +362,7 @@ async function buildingLayer(){
 $('bld').addEventListener('change', () => buildingLayer().catch(() => { $('hud').textContent = '3D-Gebäude nicht erreichbar'; }));
 $('oldOn').addEventListener('change', () => buildingLayer().catch(() => {}));
 $('genOn').addEventListener('change', () => applyYear(+$('yr').value || gwr.year));
+$('blockOn').addEventListener('change', e => setBlocky(e.target.checked));
 $('groundOn').addEventListener('change', () => { if (city && city.edition) makeGround(city.eds.get(city.edition)); });
 
 /* LV95 → WGS84 (Näherungsformel von swisstopo) */
@@ -556,6 +608,12 @@ async function buildEdition(area, year, reg, token){
 
 /* ---------- Boden: Pflaster in Gassen und auf Plätzen, sonst Wiese, Bäche blau ---------- */
 const ground = {prim:null};
+let blocky = true;
+function setBlocky(on){
+  blocky = on; $('blockOn').checked = on;
+  if (bldTs && bldTs.customShader) bldTs.customShader.setUniform('u_blocky', on ? 1 : 0);
+  if (city && city.edition) makeGround(city.eds.get(city.edition));
+}
 const GROUND_FS = `
 czm_material czm_getMaterial(czm_materialInput mi) {
   czm_material m = czm_getDefaultMaterial(mi);
@@ -574,6 +632,18 @@ czm_material czm_getMaterial(czm_materialInput mi) {
   float wv = 0.5 + 0.5 * sin(dot(st * repeat, vec2(0.9, 0.4)));
   vec3 water = mix(vec3(0.20, 0.36, 0.48), vec3(0.30, 0.48, 0.60), wv);
   /* in der Ferne Muster ausblenden, sonst flimmert es */
+  /* Minecraft-Look: 1-m-Blöcke mit 16 x 16 Pixeln, jedes Pixel leicht anders getönt */
+  if (blocky > 0.5) {
+    vec2 mtr = st * repeat * 0.22;                     /* Meter */
+    vec2 pxc = floor(mtr * 16.0);
+    float pn = fract(sin(dot(pxc, vec2(12.9898, 78.233))) * 43758.5453);
+    float pn2 = fract(sin(dot(floor(pxc / 4.0), vec2(7.13, 3.71))) * 9631.17);
+    vec2 inb = fract(mtr);
+    float seam = 1.0 - 0.18 * (step(inb.x, 1.0/16.0) + step(inb.y, 1.0/16.0));
+    cob = mix(vec3(0.42, 0.42, 0.42), vec3(0.62, 0.62, 0.61), pn) * (pn2 < 0.18 ? 0.72 : 1.0) * seam;
+    grass = vec3(0.36, 0.56, 0.20) * (0.78 + 0.34 * pn) * (pn2 < 0.12 ? 0.85 : 1.0);
+    water = vec3(0.20, 0.34, 0.75) * (0.85 + 0.2 * pn);
+  }
   float far = smoothstep(25.0, 120.0, length(mi.positionToEyeEC));
   cob = mix(cob, vec3(0.50, 0.48, 0.44), far);
   grass = mix(grass, vec3(0.36, 0.50, 0.26), far * 0.8);
@@ -608,7 +678,7 @@ function makeGround(ed){
   const west = x2lon(px0), east = x2lon(px0 + cw * CELL), north = y2lat(py0), south = y2lat(py0 + ch * CELL);
   const mpp = 156543.03392 * Math.cos(city.center[1] * Math.PI / 180) / 2 ** Z;
   const stone = 0.22;                                         /* Pflasterstein in Metern */
-  const material = new C.Material({ fabric: { uniforms: { image: cv, repeat: new C.Cartesian2(cw * CELL * mpp / stone, ch * CELL * mpp / stone) }, source: GROUND_FS } });
+  const material = new C.Material({ fabric: { uniforms: { blocky: blocky ? 1 : 0, image: cv, repeat: new C.Cartesian2(cw * CELL * mpp / stone, ch * CELL * mpp / stone) }, source: GROUND_FS } });
   ground.prim = scene.primitives.add(new C.GroundPrimitive({
     geometryInstances: new C.GeometryInstance({ geometry: new C.RectangleGeometry({ rectangle: C.Rectangle.fromDegrees(west, south, east, north), vertexFormat: C.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat }) }),
     appearance: new C.MaterialAppearance({ material, materialSupport: C.MaterialAppearance.MaterialSupport.TEXTURED }),
@@ -675,6 +745,72 @@ async function buildHouses(center){
   } finally { if (token === buildToken) btn.disabled = false; }
 }
 $('build').addEventListener('click', () => buildHouses());
+
+/* ---------- Übersichtskarte mit Teleport (wie bei «Blocks») ---------- */
+let omap = null, photoLayer = null, siegLayer = null, meMark = null, areaRect = null;
+const loadCss = href => new Promise(res => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = href; l.onload = res; l.onerror = res; document.head.appendChild(l); });
+const loadJs = src => new Promise((res, rej) => { const t = document.createElement('script'); t.src = src; t.onload = res; t.onerror = rej; document.head.appendChild(t); });
+async function openMap(){
+  if (document.pointerLockElement) document.exitPointerLock();
+  $('mapov').hidden = false;
+  if (!window.L) {
+    await loadCss('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+    await loadJs('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+  }
+  const here = C.Cartographic.fromCartesian(camera.position);
+  const lat = C.Math.toDegrees(here.latitude), lon = C.Math.toDegrees(here.longitude);
+  const year = Math.min(1949, Math.max(1870, +$('yr').value || 1880));
+  const wm = (layer, t, fmt) => `https://wmts.geo.admin.ch/1.0.0/${layer}/default/${t}/3857/{z}/{x}/{y}.${fmt}`;
+  if (!omap) {
+    omap = L.map('omap', {minZoom: 11, maxZoom: 19, zoomControl: true}).setView([lat, lon], 16);
+    photoLayer = L.tileLayer(wm('ch.swisstopo.swissimage', 'current', 'jpeg'), {maxNativeZoom: 19, maxZoom: 19, opacity: 0, attribution: '© swisstopo'});
+    omap.on('mousemove', e => {
+      const [E, N] = toLV95(e.latlng.lng, e.latlng.lat);
+      $('mapCoord').textContent = `E ${fmt(E)}  N ${fmt(N)}  · Klick = hierhin teleportieren`;
+    });
+    omap.on('click', e => { closeMap(); teleport(e.latlng.lng, e.latlng.lat); });
+    $('mapPhoto').addEventListener('input', () => {
+      const v = +$('mapPhoto').value / 100;
+      if (v > 0 && !omap.hasLayer(photoLayer)) photoLayer.addTo(omap);   /* Luftbild erst laden, wenn gewünscht */
+      photoLayer.setOpacity(v);
+    });
+  } else {
+    omap.setView([lat, lon], omap.getZoom());
+  }
+  if (siegLayer) omap.removeLayer(siegLayer);
+  siegLayer = L.tileLayer(wm('ch.swisstopo.hiks-siegfried', String(year), 'png'), {maxNativeZoom: 16, maxZoom: 19, attribution: '© swisstopo'}).addTo(omap);
+  siegLayer.bringToBack();
+  if (meMark) omap.removeLayer(meMark);
+  const hdg = (C.Math.toDegrees(camera.heading) + 360) % 360;
+  meMark = L.marker([lat, lon], {icon: L.divIcon({className: '', iconSize: [28, 28], iconAnchor: [14, 14],
+    html: `<svg width="28" height="28" viewBox="0 0 28 28" style="transform:rotate(${hdg}deg)"><circle cx="14" cy="14" r="7" fill="#c8803f" stroke="#fff" stroke-width="2"/><path d="M14 1 L19 10 L9 10Z" fill="#c8803f" stroke="#fff" stroke-width="1.5"/></svg>`})}).addTo(omap);
+  if (areaRect) omap.removeLayer(areaRect);
+  if (city) {
+    areaRect = L.rectangle([[y2lat(city.py0 + city.ch * CELL), x2lon(city.px0)], [y2lat(city.py0), x2lon(city.px0 + city.cw * CELL)]],
+      {color: '#8a5a2b', weight: 2, dashArray: '8 6', fill: false, interactive: false}).addTo(omap);
+  }
+  setTimeout(() => omap.invalidateSize(), 50);
+}
+function closeMap(){ $('mapov').hidden = true; }
+$('mapClose').addEventListener('click', closeMap);
+$('mapBtn').addEventListener('click', openMap);
+const goFull = () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) {} };
+$('fullBtn').addEventListener('click', goFull);
+$('mapFull').addEventListener('click', goFull);
+
+/* Teleport: im gebauten Gebiet auf eine freie Strassenstelle, sonst einfach auf den Boden */
+async function teleport(lon, lat){
+  if (city) {
+    const x = (lon2x(lon) - city.px0) / CELL, y = (lat2y(lat) - city.py0) / CELL;
+    if (x >= 0 && y >= 0 && x < city.cw && y < city.ch) { await spawn([lon, lat]); return; }
+  }
+  const p = C.Cartographic.fromDegrees(lon, lat);
+  if (terrainOk) await C.sampleTerrainMostDetailed(viewer.terrainProvider, [p]);
+  p.height = (p.height || 0) + 1.7;
+  camera.setView({destination: C.Cartographic.toCartesian(p), orientation: {heading: camera.heading, pitch: 0, roll: 0}});
+  setMode(true); setPanel(false);
+  say('Ausserhalb des gebauten Gebiets. «Hier neu bauen» baut die Häuser um diese Stelle.');
+}
 
 /* Auf eine freie Strassenstelle setzen, Blick nach Osten */
 async function spawn(at){
@@ -774,132 +910,129 @@ document.addEventListener('pointerlockchange', () => {
   $('cross').hidden = !locked;
   if (locked) setPanel(false);
 });
+/* Blickziel: die Maus setzt das Ziel, die Kamera folgt weich */
+const look = {h: 0, p: 0, active: false};
 document.addEventListener('mousemove', e => {
   if (!locked) return;
-  const heading = camera.heading + e.movementX * 0.0022;
-  const pitch = C.Math.clamp(camera.pitch - e.movementY * 0.0022, -1.55, 1.55);
-  camera.setView({orientation:{heading, pitch, roll:0}});
+  if (!look.active) { look.h = camera.heading; look.p = camera.pitch; look.active = true; }
+  look.h += e.movementX * 0.0022;
+  look.p = C.Math.clamp(look.p - e.movementY * 0.0022, -1.55, 1.55);
 });
 document.addEventListener('keydown', e => {
   if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
   if (e.code === 'Tab') { e.preventDefault(); setPanel($('panel').classList.contains('off')); return; }
   keys[e.code] = true;
   if (e.code === 'KeyF') setMode(!walk);
+  if (e.code === 'KeyI') { speedIdx = Math.min(SPEEDS.length - 1, speedIdx + 1); toast(`Fluggeschwindigkeit ${SPEEDS[speedIdx]}×`); }
+  if (e.code === 'KeyU') { speedIdx = Math.max(0, speedIdx - 1); toast(`Fluggeschwindigkeit ${SPEEDS[speedIdx]}×`); }
+  if (e.code === 'KeyJ') { setFarView(!farView); toast(`Fernsicht ${farView ? 'an' : 'aus'}`); }
+  if (e.code === 'F3') { e.preventDefault(); $('f3').hidden = !$('f3').hidden; }
+  if (e.code === 'KeyM') { e.preventDefault(); $('mapov').hidden ? openMap() : closeMap(); }
+  if (e.code === 'KeyB') { setBlocky(!blocky); toast(`Minecraft-Look ${blocky ? 'an' : 'aus'}`); }
   if (locked && e.code === 'Space') e.preventDefault();
 });
 document.addEventListener('keyup', e => { keys[e.code] = false; });
 window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 
 const up = new C.Cartesian3(), fwd = new C.Cartesian3(), prevPos = new C.Cartesian3();
-const probes = [];
-let wallT = null;
+const vel = new C.Cartesian3();            /* x = rechts, y = vorwärts, z = hoch (m/s) */
+const SPEEDS = [1, 2, 5, 10, 20, 50, 100];
+let speedIdx = 2, smoothH = null, bob = 0, fps = 60;
 const gridFree = pos => {
   const c = C.Cartographic.fromCartesian(pos);
   const r = roofAt(C.Math.toDegrees(c.longitude), C.Math.toDegrees(c.latitude));
   return r === null || c.height >= r + 0.5;
 };
-const castFree = (from, dir) => {
-  try {
-    const hit = scene.pickFromRay(new C.Ray(C.Cartesian3.clone(from), dir), ground.prim ? [ground.prim] : []);
-    return hit && hit.object && hit.position ? hit : null;
-  } catch (e) { return null; }
-};
-/* freie Strecke in eine Richtung, Strahlen werden kurz zwischengespeichert (ein Strahl kostet ~20 ms) */
-function rayRoom(from, dir, now){
-  let pr = probes.find(p => C.Cartesian3.dot(p.dir, dir) > 0.97 && now - p.t < 350 && C.Cartesian3.distance(p.from, from) < 2);
-  if (!pr) {
-    const hit = castFree(from, dir);
-    pr = {dir: C.Cartesian3.clone(dir), t: now, from: C.Cartesian3.clone(from), dist: hit ? C.Cartesian3.distance(hit.position, from) : Infinity};
-    probes.push(pr); if (probes.length > 8) probes.shift();
-  }
-  return pr.dist - C.Cartesian3.dot(C.Cartesian3.subtract(from, pr.from, new C.Cartesian3()), dir);
-}
-function stepOk(from, v, now){
-  const len = C.Cartesian3.magnitude(v);
-  if (len < 1e-4) return false;
-  if (!gridFree(C.Cartesian3.add(from, v, new C.Cartesian3()))) return false;
-  if (!walk) return true;
-  return rayRoom(from, C.Cartesian3.normalize(v, new C.Cartesian3()), now) > len + 0.6;
-}
-/* Wandrichtung aus zwei leicht gedrehten Strahlen */
-function wallTangent(from, dir, now){
-  if (wallT && now - wallT.t < 350 && C.Cartesian3.dot(wallT.dir, dir) > 0.95) return wallT.v;
-  const upv = C.Ellipsoid.WGS84.geodeticSurfaceNormal(from, new C.Cartesian3());
-  const rot = a => C.Matrix3.multiplyByVector(C.Matrix3.fromQuaternion(C.Quaternion.fromAxisAngle(upv, a)), dir, new C.Cartesian3());
-  const h0 = castFree(from, dir), h1 = castFree(from, rot(0.12)), h2 = castFree(from, rot(-0.12));
-  /* zwei Treffer auf derselben Wand: nur nahe Treffer zählen */
-  const near = [h1, h0, h2].filter(h => h && C.Cartesian3.distance(h.position, from) < 4);
-  let v = null;
-  if (near.length >= 2) {
-    v = C.Cartesian3.subtract(near[0].position, near[near.length - 1].position, new C.Cartesian3());
-    C.Cartesian3.subtract(v, C.Cartesian3.multiplyByScalar(upv, C.Cartesian3.dot(v, upv), new C.Cartesian3()), v);
-    if (C.Cartesian3.magnitude(v) > 1e-3) C.Cartesian3.normalize(v, v); else v = null;
-  }
-  wallT = {t: now, dir: C.Cartesian3.clone(dir), v};
-  return v;
-}
-function tryStep(from, want, now){
-  if (stepOk(from, want, now)) return want;
-  const dir = C.Cartesian3.normalize(want, new C.Cartesian3());
-  const cands = [];
-  if (walk) { const t = wallTangent(from, dir, now); if (t) cands.push(t); }
+/* Minecraft-artig: Ost- und Nordanteil getrennt prüfen, dann gleitet man an Wänden entlang */
+function collide(from, disp){
+  const to = C.Cartesian3.add(from, disp, new C.Cartesian3());
+  if (gridFree(to)) return to;
   const enu = C.Transforms.eastNorthUpToFixedFrame(from);
-  cands.push(new C.Cartesian3(enu[0], enu[1], enu[2]), new C.Cartesian3(enu[4], enu[5], enu[6]));
-  for (const ax of cands) {
-    const s = C.Cartesian3.multiplyByScalar(ax, C.Cartesian3.dot(want, ax), new C.Cartesian3());
-    if (C.Cartesian3.magnitude(s) > C.Cartesian3.magnitude(want) * 0.2 && stepOk(from, s, now)) return s;
+  const e = new C.Cartesian3(enu[0], enu[1], enu[2]), n = new C.Cartesian3(enu[4], enu[5], enu[6]);
+  const de = C.Cartesian3.multiplyByScalar(e, C.Cartesian3.dot(disp, e), new C.Cartesian3());
+  const dn = C.Cartesian3.multiplyByScalar(n, C.Cartesian3.dot(disp, n), new C.Cartesian3());
+  const rest = C.Cartesian3.subtract(C.Cartesian3.subtract(disp, de, new C.Cartesian3()), dn, new C.Cartesian3());
+  let pos = C.Cartesian3.add(from, rest, new C.Cartesian3());
+  for (const part of [de, dn]) {
+    const t = C.Cartesian3.add(pos, part, new C.Cartesian3());
+    if (gridFree(t)) pos = t;
   }
-  return null;
+  return pos;
 }
-let last = performance.now();
+/* WGS84 → LV95 (Näherungsformel swisstopo) */
+function toLV95(lon, lat){
+  const p = (lat * 3600 - 169028.66) / 10000, l = (lon * 3600 - 26782.5) / 10000;
+  const E = 2600072.37 + 211455.93*l - 10938.51*l*p - 0.36*l*p*p - 44.54*l*l*l;
+  const N = 1200147.07 + 308807.95*p + 3745.25*l*l + 76.63*p*p - 194.56*l*l*p + 119.79*p*p*p;
+  return [E, N];
+}
+const fmt = n => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+const DIRS = ['N','NO','O','SO','S','SW','W','NW'];
 scene.preRender.addEventListener(() => {
   const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now;
+  fps = fps * 0.95 + (dt > 0 ? 1 / dt : 60) * 0.05;
   const carto = C.Cartographic.fromCartesian(camera.position);
-  const ground = globe.getHeight(carto);
-  const agl = ground === undefined ? carto.height : carto.height - ground;
+  const gnd = globe.getHeight(carto);
+  const agl = gnd === undefined ? carto.height : carto.height - gnd;
 
-  const prev = C.Cartesian3.clone(camera.position, prevPos);
-  const moving = keys.KeyW || keys.KeyA || keys.KeyS || keys.KeyD || keys.Space || keys.KeyC;
-  if (locked || moving) {   /* WASD geht auch ohne Mausübernahme */
-    let v = walk ? 5 : Math.max(15, Math.min(400, agl * 0.8));
-    if (keys.ShiftLeft || keys.ShiftRight) v *= 4;
-    const d = v * dt;
+  /* weiches Umschauen */
+  if (locked && look.active) {
+    const k = 1 - Math.exp(-dt * 30);
+    let dh = look.h - camera.heading;
+    dh = Math.atan2(Math.sin(dh), Math.cos(dh));
+    camera.setView({orientation:{heading: camera.heading + dh * k, pitch: camera.pitch + (look.p - camera.pitch) * k, roll:0}});
+  } else look.active = false;
+
+  /* Tempo mit Trägheit: beschleunigen und ausrollen statt ruckartig */
+  const sprint = keys.ShiftLeft || keys.ShiftRight;
+  const top = walk ? (sprint ? 9 : 4.5) : 10 * SPEEDS[speedIdx] * (sprint ? 3 : 1);
+  const want = new C.Cartesian3(
+    (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0),
+    (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0),
+    walk ? 0 : (keys.Space ? 1 : 0) - (keys.KeyC ? 1 : 0));
+  if (C.Cartesian3.magnitude(want) > 0) C.Cartesian3.multiplyByScalar(C.Cartesian3.normalize(want, want), top, want);
+  const k = 1 - Math.exp(-dt * (C.Cartesian3.magnitude(want) > 0 ? 9 : 7));
+  C.Cartesian3.lerp(vel, want, k, vel);
+  const speed = C.Cartesian3.magnitude(vel);
+
+  if (speed > 0.02) {
     C.Ellipsoid.WGS84.geodeticSurfaceNormal(camera.position, up);
-    if (walk) {
-      /* beim Gehen nur waagrecht vorwärts */
-      C.Cartesian3.multiplyByScalar(up, C.Cartesian3.dot(camera.direction, up), fwd);
-      C.Cartesian3.subtract(camera.direction, fwd, fwd);
-      C.Cartesian3.normalize(fwd, fwd);
-      if (keys.KeyW) camera.move(fwd, d);
-      if (keys.KeyS) camera.move(fwd, -d);
-    } else {
-      if (keys.KeyW) camera.moveForward(d);
-      if (keys.KeyS) camera.moveBackward(d);
-    }
-    if (keys.KeyA) camera.moveLeft(d);
-    if (keys.KeyD) camera.moveRight(d);
-    if (!walk && keys.Space) camera.move(up, d);
-    if (!walk && keys.KeyC) camera.move(up, -d);
-    /* Wände: geplanten Schritt prüfen; ist er versperrt, an der Wand entlanggleiten */
-    const want = C.Cartesian3.subtract(camera.position, prev, new C.Cartesian3());
-    camera.position = C.Cartesian3.clone(prev);
-    if (C.Cartesian3.magnitude(want) > 1e-4) {
-      const step = tryStep(prev, want, now);
-      if (step) camera.position = C.Cartesian3.add(prev, step, new C.Cartesian3());
-    }
+    const fw = walk ? (() => {          /* beim Gehen nur waagrecht */
+      const f = C.Cartesian3.subtract(camera.direction, C.Cartesian3.multiplyByScalar(up, C.Cartesian3.dot(camera.direction, up), new C.Cartesian3()), new C.Cartesian3());
+      return C.Cartesian3.normalize(f, f); })() : camera.direction;
+    const disp = new C.Cartesian3();
+    C.Cartesian3.add(disp, C.Cartesian3.multiplyByScalar(fw, vel.y * dt, new C.Cartesian3()), disp);
+    C.Cartesian3.add(disp, C.Cartesian3.multiplyByScalar(camera.right, vel.x * dt, new C.Cartesian3()), disp);
+    C.Cartesian3.add(disp, C.Cartesian3.multiplyByScalar(up, vel.z * dt, new C.Cartesian3()), disp);
+    camera.position = collide(camera.position, disp);
   }
 
-  /* Boden halten: Gehen auf Augenhöhe, Fliegen nie unter 3 m */
+  /* Boden halten: Gehen weich auf Augenhöhe mit leichtem Wippen, Fliegen nie unter 3 m */
   const c2 = C.Cartographic.fromCartesian(camera.position);
   const g2 = globe.getHeight(c2);
   if (g2 !== undefined) {
-    const min = g2 + (walk ? 1.7 : 3);
-    if (walk || c2.height < min) {
-      c2.height = min;
-      camera.setView({destination:C.Cartographic.toCartesian(c2), orientation:{heading:camera.heading, pitch:camera.pitch, roll:0}});
+    if (walk) {
+      bob += speed * dt * 1.9;
+      const target = g2 + 1.7 + (speed > 0.5 ? Math.sin(bob) * 0.035 : 0);
+      smoothH = smoothH === null || Math.abs(smoothH - target) > 8 ? target : smoothH + (target - smoothH) * (1 - Math.exp(-dt * 14));
+      c2.height = Math.max(smoothH, g2 + 1.2);
+      camera.position = C.Cartographic.toCartesian(c2);
+    } else {
+      smoothH = null;
+      if (c2.height < g2 + 3) { c2.height = g2 + 3; camera.position = C.Cartographic.toCartesian(c2); }
     }
   }
-  if (terrainOk || !$('terrMsg').hidden) $('hud').textContent = `${walk ? 'Gehen' : 'Fliegen'} · ${Math.round(agl)} m über Boden${terrainOk ? '' : ' (flach)'}`;
+
+  /* Anzeige */
+  if (terrainOk || !$('terrMsg').hidden) {
+    $('hud').textContent = walk ? `Gehen${sprint ? ' · rennen' : ''}` : `Fliegen ${SPEEDS[speedIdx]}× · ${Math.round(agl)} m über Boden`;
+  }
+  if (!$('f3').hidden) {
+    const lon = C.Math.toDegrees(c2.longitude), lat = C.Math.toDegrees(c2.latitude);
+    const [E, N] = toLV95(lon, lat);
+    const hdg = (C.Math.toDegrees(camera.heading) + 360) % 360;
+    $('f3').textContent = `E ${fmt(E)}   N ${fmt(N)}\nHöhe ${Math.round(c2.height)} m ü. M. · ${Math.round(agl)} m über Boden\nBlick ${DIRS[Math.round(hdg / 45) % 8]} (${Math.round(hdg)}°) · Tempo ${speed.toFixed(1)} m/s\n${Math.round(fps)} Bilder/s · Fernsicht ${farView ? 'an' : 'aus'}`;
+  }
 });
 }
 </script>
