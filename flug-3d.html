@@ -239,10 +239,11 @@ globe.tileCacheSize = 400;
 /* Schatten: macht Gassen und Fassaden plastisch */
 viewer.shadows = true;
 viewer.terrainShadows = C.ShadowMode.RECEIVE_ONLY;
-scene.shadowMap.softShadows = true;
-scene.shadowMap.size = 2048;
-scene.shadowMap.maximumDistance = 300;
-scene.shadowMap.darkness = 0.45;
+scene.shadowMap.softShadows = false;
+scene.shadowMap.size = 1024;
+scene.shadowMap.maximumDistance = 150;
+scene.shadowMap.darkness = 0.3;
+let slowSince = 0;
 scene.fog.enabled = true;
 scene.postProcessStages.fxaa.enabled = false;
 /* Fernsicht (J): mehr Details in der Ferne gegen etwas weniger Bilder pro Sekunde */
@@ -900,7 +901,7 @@ async function spawn(at){
 }
 $('spawn').addEventListener('click', () => spawn());
 const closeIntro = () => { $('intro').classList.add('off'); document.body.classList.remove('intro-on'); };
-$('introWalk').addEventListener('click', async () => { closeIntro(); await spawn([8.7290, 47.4997]); });
+$('introWalk').addEventListener('click', async () => { closeIntro(); await spawn([8.73290, 47.498289]); });   /* Marktgasse */
 $('introFly').addEventListener('click', () => { closeIntro(); goHome(1.5); });
 
 /* Kamera */
@@ -1023,6 +1024,11 @@ const DIRS = ['N','NO','O','SO','S','SW','W','NW'];
 scene.preRender.addEventListener(() => {
   const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now;
   fps = fps * 0.95 + (dt > 0 ? 1 / dt : 60) * 0.05;
+  /* ruckelt es länger als 3 s, Schatten automatisch abschalten */
+  if (viewer.shadows && !document.hidden && fps < 28) {
+    if (!slowSince) slowSince = now;
+    else if (now - slowSince > 3000) { viewer.shadows = false; $('shadowOn').checked = false; toast('Schatten aus, damit es flüssig bleibt'); slowSince = 0; }
+  } else slowSince = 0;
   const carto = C.Cartographic.fromCartesian(camera.position);
   const gnd = globe.getHeight(carto);
   const agl = gnd === undefined ? carto.height : carto.height - gnd;
