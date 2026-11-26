@@ -668,7 +668,8 @@ scene.preRender.addEventListener(() => {
   const agl = ground === undefined ? carto.height : carto.height - ground;
 
   const prev = C.Cartesian3.clone(camera.position, prevPos);
-  if (locked) {
+  const moving = keys.KeyW || keys.KeyA || keys.KeyS || keys.KeyD || keys.Space || keys.KeyC;
+  if (locked || moving) {   /* WASD geht auch ohne Mausübernahme */
     let v = walk ? 5 : Math.max(15, Math.min(400, agl * 0.8));
     if (keys.ShiftLeft || keys.ShiftRight) v *= 4;
     const d = v * dt;
