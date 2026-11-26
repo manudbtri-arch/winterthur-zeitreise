@@ -825,7 +825,7 @@ async function buildHouses(center){
 $('build').addEventListener('click', () => buildHouses());
 
 /* ---------- Ortssuche ganze Schweiz (geo.admin.ch) ---------- */
-const plain = t => String(t || '').replace(/<[^>]+>/g, '').trim();
+const plain = t => String(t || '').replace(/<[^>]+>/g, '').replace(/^[a-z_]+_\s*/, '').trim();
 function attachSearch(inp, list, onPick){
   let timer, items = [], sel = -1;
   const render = () => {
