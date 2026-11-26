@@ -123,6 +123,7 @@ const scene = viewer.scene, camera = scene.camera, globe = scene.globe;
 viewer.clock.currentTime = C.JulianDate.fromIso8601('2026-06-21T09:00:00Z');
 viewer.clock.shouldAnimate = false;
 let terrainOk = false;
+window.__viewer = viewer;   /* für Fehlersuche in der Konsole */
 
 /* Gelände nachladen; schlägt es fehl, bleibt die Karte flach sichtbar */
 if (location.protocol === 'file:') {
