@@ -77,6 +77,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 
   <label class="chk"><input type="checkbox" id="oldOn" checked> Echte Altbauten (Baujahr bis zum Jahr)</label>
   <label class="chk"><input type="checkbox" id="genOn" checked> Nachgebaute Häuser (heute abgerissen)</label>
+  <label class="chk"><input type="checkbox" id="groundOn" checked> Boden mit Pflaster und Wiese</label>
   <label class="chk"><input type="checkbox" id="bld"> Alle heutigen Gebäude</label>
   <label class="chk"><input type="checkbox" id="veg"> Heutige Bäume</label>
 
@@ -231,6 +232,7 @@ async function buildingLayer(){
 $('bld').addEventListener('change', () => buildingLayer().catch(() => { $('hud').textContent = '3D-Gebäude nicht erreichbar'; }));
 $('oldOn').addEventListener('change', () => buildingLayer().catch(() => {}));
 $('genOn').addEventListener('change', () => applyYear(+$('yr').value || gwr.year));
+$('groundOn').addEventListener('change', () => { if (city && city.edition) makeGround(city.eds.get(city.edition)); });
 
 /* LV95 → WGS84 (Näherungsformel von swisstopo) */
 function lv95(E, N){
@@ -335,11 +337,16 @@ async function buildEdition(area, year, reg, token){
   const solid = morph(morph(dark, true), false);
 
   /* Blockraster und zusammenhängende Häuser */
-  const occ = new Uint8Array(cw * ch);
+  const occ = new Uint8Array(cw * ch), wat = new Uint8Array(cw * ch);
   for (let cy = 0; cy < ch; cy++) for (let cx = 0; cx < cw; cx++) {
-    let s = 0;
-    for (let k = 0; k < CELL; k++) for (let j = 0; j < CELL; j++) s += solid[(cy * CELL + k) * W + cx * CELL + j];
+    let s = 0, bl = 0;
+    for (let k = 0; k < CELL; k++) for (let j = 0; j < CELL; j++) {
+      const q = (cy * CELL + k) * W + cx * CELL + j;
+      s += solid[q];
+      if (px[q*4+2] > px[q*4] + 35 && px[q*4+2] > 110) bl++;
+    }
     occ[cy * cw + cx] = s >= 3 ? 1 : 0;
+    wat[cy * cw + cx] = bl >= 2 ? 1 : 0;
   }
   const comp = new Int32Array(cw * ch).fill(-1), comps = [];
   for (let i = 0; i < cw * ch; i++) {
@@ -462,7 +469,65 @@ async function buildEdition(area, year, reg, token){
     asynchronous: true
   })) : null;
   if (prim) prim.show = false;
-  return {year, prim, roof, nGen, nOld};
+  return {year, prim, roof, nGen, nOld, occ, wat};
+}
+
+/* ---------- Boden: Pflaster in Gassen und auf Plätzen, sonst Wiese, Bäche blau ---------- */
+const ground = {prim:null};
+const GROUND_FS = `
+czm_material czm_getMaterial(czm_materialInput mi) {
+  czm_material m = czm_getDefaultMaterial(mi);
+  vec2 st = mi.st;
+  vec4 cls = texture(image, st);
+  vec2 g = st * repeat;
+  g.x += 0.5 * step(1.0, mod(floor(g.y), 2.0));
+  vec2 f = fract(g);
+  float edge = min(min(f.x, 1.0 - f.x), min(f.y, 1.0 - f.y));
+  float n = fract(sin(dot(floor(g), vec2(12.9898, 78.233))) * 43758.5453);
+  vec3 cob = mix(vec3(0.30, 0.29, 0.27), vec3(0.60, 0.57, 0.52) * (0.82 + 0.3 * n), smoothstep(0.04, 0.14, edge));
+  vec2 gq = floor(st * repeat * 0.5);
+  float gn = fract(sin(dot(gq, vec2(4.1, 7.7))) * 10000.0);
+  float gn2 = fract(sin(dot(floor(st * repeat * 0.05), vec2(2.3, 5.9))) * 10000.0);
+  vec3 grass = vec3(0.34, 0.50, 0.24) * (0.82 + 0.22 * gn) * (0.9 + 0.15 * gn2);
+  float wv = 0.5 + 0.5 * sin(dot(st * repeat, vec2(0.9, 0.4)));
+  vec3 water = mix(vec3(0.20, 0.36, 0.48), vec3(0.30, 0.48, 0.60), wv);
+  vec3 col = mix(grass, cob, cls.r);
+  col = mix(col, water, cls.g);
+  m.diffuse = col;
+  m.alpha = 1.0;
+  return m;
+}`;
+function makeGround(ed){
+  if (ground.prim) { scene.primitives.remove(ground.prim); ground.prim = null; }
+  city.groundFor = ed.year;
+  if (!$('groundOn').checked) return;
+  const {cw, ch, px0, py0} = city;
+  /* Abstand zum nächsten Haus: bis rund 19 m ist es Gasse oder Platz */
+  const dist = new Int16Array(cw * ch).fill(99), q = [];
+  for (let i = 0; i < cw * ch; i++) if (ed.occ[i]) { dist[i] = 0; q.push(i); }
+  for (let h = 0; h < q.length; h++) {
+    const i = q[h], x = i % cw, y = (i - x) / cw, dd = dist[i] + 1;
+    if (dd > 6) continue;
+    for (const [nx, ny] of [[x+1,y],[x-1,y],[x,y+1],[x,y-1]])
+      if (nx >= 0 && ny >= 0 && nx < cw && ny < ch && dist[ny * cw + nx] > dd) { dist[ny * cw + nx] = dd; q.push(ny * cw + nx); }
+  }
+  const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+  const g = cv.getContext('2d'), img = g.createImageData(cw, ch);
+  for (let i = 0; i < cw * ch; i++) {
+    img.data[i*4]   = dist[i] <= 6 ? 255 : 0;
+    img.data[i*4+1] = ed.wat[i] ? 255 : 0;
+    img.data[i*4+3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  const west = x2lon(px0), east = x2lon(px0 + cw * CELL), north = y2lat(py0), south = y2lat(py0 + ch * CELL);
+  const mpp = 156543.03392 * Math.cos(city.center[1] * Math.PI / 180) / 2 ** Z;
+  const stone = 0.32;                                         /* Pflasterstein in Metern */
+  const material = new C.Material({ fabric: { uniforms: { image: cv, repeat: new C.Cartesian2(cw * CELL * mpp / stone, ch * CELL * mpp / stone) }, source: GROUND_FS } });
+  ground.prim = scene.primitives.add(new C.GroundPrimitive({
+    geometryInstances: new C.GeometryInstance({ geometry: new C.RectangleGeometry({ rectangle: C.Rectangle.fromDegrees(west, south, east, north), vertexFormat: C.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat }) }),
+    appearance: new C.MaterialAppearance({ material, materialSupport: C.MaterialAppearance.MaterialSupport.TEXTURED }),
+    classificationType: C.ClassificationType.TERRAIN
+  }));
 }
 
 /* Jahr anwenden: echte Häuser nach Baujahr, nachgebaute aus der passenden Kartenausgabe */
@@ -476,6 +541,7 @@ function applyYear(y){
   for (const [e, ed] of city.eds) if (ed.prim) ed.prim.show = (e === pick) && $('genOn').checked;
   city.roof = city.eds.get(pick).roof;
   city.edition = pick;
+  if (city.groundFor !== pick) makeGround(city.eds.get(pick));
   const ed = city.eds.get(pick);
   const nOldNow = [...gwr.years.values()].filter(v => v <= y).length;
   say(`${y}: ${nOldNow} echte Altbauten und ${ed.nGen} nachgebaute Häuser (Karte ${pick}).` + (avail.length < EDITIONS.length ? ' Weitere Jahrgänge werden noch gebaut …' : ' Zieh am Jahr-Regler für den Zeitsprung.'));
@@ -589,6 +655,7 @@ document.addEventListener('keyup', e => { keys[e.code] = false; });
 window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 
 const up = new C.Cartesian3(), fwd = new C.Cartesian3(), prevPos = new C.Cartesian3();
+const probe = {dir:null, t:0, free:Infinity};
 let last = performance.now();
 scene.preRender.addEventListener(() => {
   const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now;
@@ -621,6 +688,23 @@ scene.preRender.addEventListener(() => {
     const nc = C.Cartographic.fromCartesian(camera.position);
     const roof = roofAt(C.Math.toDegrees(nc.longitude), C.Math.toDegrees(nc.latitude));
     if (roof !== null && nc.height < roof + 0.5) camera.position = C.Cartesian3.clone(prev);
+    /* echte Häuser: mehrmals pro Sekunde einen Strahl in Laufrichtung schicken */
+    if (walk) {
+      const disp = C.Cartesian3.subtract(camera.position, prev, new C.Cartesian3());
+      const len = C.Cartesian3.magnitude(disp);
+      if (len > 1e-4) {
+        const dir = C.Cartesian3.normalize(disp, new C.Cartesian3());
+        if (!probe.dir || C.Cartesian3.dot(dir, probe.dir) < 0.97 || now - probe.t > 250) {
+          probe.dir = dir; probe.t = now; probe.free = Infinity;
+          try {
+            const hit = scene.pickFromRay(new C.Ray(C.Cartesian3.clone(prev), dir), ground.prim ? [ground.prim] : []);
+            if (hit && hit.object && hit.position) probe.free = C.Cartesian3.distance(hit.position, prev);
+          } catch (e) {}
+        }
+        if (probe.free < len + 0.6) camera.position = C.Cartesian3.clone(prev);
+        else probe.free -= len;
+      }
+    }
   }
 
   /* Boden halten: Gehen auf Augenhöhe, Fliegen nie unter 3 m */
