@@ -938,6 +938,7 @@ const up = new C.Cartesian3(), fwd = new C.Cartesian3(), prevPos = new C.Cartesi
 const vel = new C.Cartesian3();            /* x = rechts, y = vorwärts, z = hoch (m/s) */
 const SPEEDS = [1, 2, 5, 10, 20, 50, 100];
 let speedIdx = 2, smoothH = null, bob = 0, fps = 60;
+let last = performance.now();
 const gridFree = pos => {
   const c = C.Cartographic.fromCartesian(pos);
   const r = roofAt(C.Math.toDegrees(c.longitude), C.Math.toDegrees(c.latitude));
