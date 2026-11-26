@@ -251,7 +251,7 @@ footer a{color:var(--mute)}
   const poster = document.getElementById('poster');
   poster.addEventListener('click', () => {
     const f = document.createElement('iframe');
-    f.src = 'flug-3d.html?embed=1';
+    f.src = 'flug-3d.html?embed=1&t=' + Date.now();   /* immer die aktuelle Fassung laden */
     f.title = 'Zeitreise Schweiz – 3D-Flug';
     f.allow = 'fullscreen';
     f.setAttribute('allowfullscreen', '');
