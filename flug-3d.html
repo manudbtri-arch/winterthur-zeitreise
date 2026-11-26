@@ -66,6 +66,9 @@ details.more[open] summary::after{content:"▴"}
 .ticks span::before{content:"";position:absolute;left:50%;top:-6px;width:1px;height:5px;background:var(--mute)}
 .pill{position:absolute;z-index:11;left:16px;top:16px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:8px 14px;font-size:14px;cursor:pointer;color:var(--ink);font-family:inherit}
 .keys{bottom:auto;top:60px}
+.info{position:absolute;z-index:12;left:50%;transform:translateX(-50%);bottom:118px;max-width:min(520px,calc(100% - 32px));background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--brown);border-radius:10px;padding:10px 16px;box-shadow:0 6px 24px rgba(0,0,0,.3);display:grid;gap:2px}
+.info b{font-size:17px}.info span{font-size:14px;color:var(--mute)}
+@media(max-width:700px){.info{bottom:96px}}
 .intro{position:absolute;z-index:20;inset:0;display:grid;place-items:center;padding:24px;background:linear-gradient(180deg,rgba(20,18,14,.55),rgba(20,18,14,.8));color:#f3eee3;transition:opacity .4s}
 .intro.off{opacity:0;pointer-events:none}
 body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timeline{visibility:hidden}
@@ -122,6 +125,8 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
   </details>
 </aside>
 
+<div class="info" id="info" hidden role="status"><b id="iTitle"></b><span id="iText"></span></div>
+
 <button class="pill" id="pill" hidden>☰ Menü <span style="color:var(--mute)">(Tab)</span></button>
 
 <div class="keys" id="keys">
@@ -129,6 +134,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
   <div><b>Maus</b> umschauen (erst ins Bild klicken)</div>
   <div><b>Leer</b> hoch · <b>C</b> runter</div>
   <div><b>Shift</b> schneller · <b>F</b> Fliegen/Gehen</div>
+  <div><b>Klick</b> auf ein Haus: Infos</div>
   <div><b>Tab</b> Menü · <b>Esc</b> Maus freigeben</div>
 </div>
 
@@ -267,6 +273,15 @@ const FACADE_FS = `
   }`;
 const gwr = {years:new Map(), year:1880};
 let bldTs = null;
+const PLAIN = new Set(['Gebaeude Einzelhaus', 'Hochhaus', 'Im Bau']);   /* nur diese bekommen Wohnhaus-Fenster */
+const isSpecial = f => !PLAIN.has(f.getProperty('OBJEKTART'));
+const yearOk = f => {
+  if ($('bld').checked) return true;
+  if (!$('oldOn').checked) return false;
+  const y = gwr.years.get(Number(f.getProperty('EGID')));
+  return y !== undefined && y <= gwr.year;
+};
+let specTs = null;
 async function buildingLayer(){
   if (!bldTs) {
     bldTs = await C.Cesium3DTileset.fromUrl(BLD_URL);
@@ -277,15 +292,21 @@ async function buildingLayer(){
       fragmentShaderText: FACADE_FS
     });
     bldTs.style = new C.Cesium3DTileStyle();
-    bldTs.style.show = { evaluate: f => {
-      if ($('bld').checked) return true;
-      if (!$('oldOn').checked) return false;
-      const y = gwr.years.get(Number(f.getProperty('EGID')));
-      return y !== undefined && y <= gwr.year;
-    }};
+    bldTs.style.show = { evaluate: f => !isSpecial(f) && yearOk(f) };
+
+    /* Kirchen, Türme, Kamine, Mauern: gleiche Daten, aber Stein statt Fensterraster */
+    specTs = await C.Cesium3DTileset.fromUrl(BLD_URL);
+    scene.primitives.add(specTs);
+    specTs.colorBlendMode = C.Cesium3DTileColorBlendMode.MIX;
+    specTs.colorBlendAmount = 0.6;
+    specTs.style = new C.Cesium3DTileStyle();
+    specTs.style.show = { evaluate: f => isSpecial(f) && yearOk(f) };
+    const stone = C.Color.fromCssColorString('#d9d2c2'), brick = C.Color.fromCssColorString('#9a5a42');
+    specTs.style.color = { evaluateColor: (f, res) => C.Color.clone(f.getProperty('OBJEKTART') === 'Hochkamin' ? brick : stone, res) };
   }
-  bldTs.show = $('bld').checked || $('oldOn').checked;
+  bldTs.show = specTs.show = $('bld').checked || $('oldOn').checked;
   bldTs.makeStyleDirty();
+  specTs.makeStyleDirty();
 }
 $('bld').addEventListener('change', () => buildingLayer().catch(() => { $('hud').textContent = '3D-Gebäude nicht erreichbar'; }));
 $('oldOn').addEventListener('change', () => buildingLayer().catch(() => {}));
@@ -318,7 +339,7 @@ async function loadGwr(w, s, e, n, onProgress){
         const y = a.gbauj || PERIOD[a.gbaup];
         if (!y || !a.gkode) continue;
         const [lo, la] = lv95(a.gkode, a.gkodn);
-        out.set(id, {y, lon:lo, lat:la});
+        out.set(id, {y, lon:lo, lat:la, exact: !!a.gbauj, adr: (a.strname_deinr || `${a.strname || ''} ${a.deinr || ''}`).trim()});
       }
       if (res.length < 200) break;
     }
@@ -461,8 +482,9 @@ async function buildEdition(area, year, reg, token){
 
   const roof = new Float32Array(cw * ch).fill(NaN);
   const inst = [];
-  const box = (lonC, latC, w, d, z0, hgt, col) => {
+  const box = (lonC, latC, w, d, z0, hgt, col, meta) => {
     inst.push(new C.GeometryInstance({
+      id: meta,
       geometry: C.BoxGeometry.fromDimensions({dimensions:new C.Cartesian3(w, d, hgt), vertexFormat:C.PerInstanceColorAppearance.VERTEX_FORMAT}),
       modelMatrix: C.Transforms.eastNorthUpToFixedFrame(C.Cartesian3.fromDegrees(lonC, latC, z0 + hgt / 2)),
       attributes: {color: C.ColorGeometryInstanceAttribute.fromColor(col)}
@@ -489,8 +511,9 @@ async function buildEdition(area, year, reg, token){
           const latC = alongX ? cellLat(a) : y2lat(py0 + (b + n / 2) * CELL);
           const w = alongX ? n * cm : cm, d = alongX ? cm : n * cm;
           const shade = 0.94 + hash(a * 7919 + b + year) * 0.1;
-          box(lonC, latC, w, d, c.base, c.h, tint(c.wall, shade));
-          box(lonC, latC, w, d, c.base + c.h, rh, tint(c.roof, shade * (1 - 0.06 * ((Math.abs(a - c.mid) | 0) % 2))));
+          const meta = {gen: year, floors: c.floors, hall: c.hall};
+          box(lonC, latC, w, d, c.base, c.h, tint(c.wall, shade), meta);
+          box(lonC, latC, w, d, c.base + c.h, rh, tint(c.roof, shade * (1 - 0.06 * ((Math.abs(a - c.mid) | 0) % 2))), meta);
         }
         b += n;
       }
@@ -596,7 +619,7 @@ function makeGround(ed){
 /* Jahr anwenden: echte Häuser nach Baujahr, nachgebaute aus der passenden Kartenausgabe */
 function applyYear(y){
   gwr.year = y;
-  if (bldTs) bldTs.makeStyleDirty();
+  if (bldTs) { bldTs.makeStyleDirty(); specTs.makeStyleDirty(); }
   if (!city) return;
   const avail = [...city.eds.keys()].sort((a, b) => a - b);
   if (!avail.length) return;
@@ -628,6 +651,7 @@ async function buildHouses(center){
     const reg = await loadGwr(lon - dLon, lat - dLat, lon + dLon, lat + dLat, (d, t) => { say(`Gebäuderegister: ${d} von ${t} Teilgebieten …`); setProg(0.3 * d / t); });
     if (token !== buildToken) return;
     gwr.years = new Map([...reg].map(([id, r]) => [id, r.y]));
+    gwr.info = reg;
     $('bld').checked = false;
     await buildingLayer().catch(() => {});
 
@@ -711,7 +735,31 @@ function setMode(w){
 $('mFly').addEventListener('click', () => setMode(false));
 $('mWalk').addEventListener('click', () => setMode(true));
 $('go').addEventListener('click', () => { try { canvas.requestPointerLock(); } catch(e){} });
-canvas.addEventListener('click', () => { if (!locked) try { canvas.requestPointerLock(); } catch(e){} });
+/* Klick auf ein Haus: Infokarte. Mit übernommener Maus zählt das Fadenkreuz. */
+let infoTimer;
+function showInfo(p){
+  let title = '', text = '';
+  if (p instanceof C.Cesium3DTileFeature) {
+    const egid = Number(p.getProperty('EGID')), r = gwr.info && gwr.info.get(egid);
+    const art = p.getProperty('OBJEKTART'), hgt = Math.round(p.getProperty('GESAMTHOEHE') || 0);
+    const kind = art === 'Sakrales Gebaeude' ? 'Kirche' : art === 'Hochkamin' ? 'Hochkamin' : art === 'Gebaeude Einzelhaus' ? 'Gebäude' : art;
+    title = (r && r.adr) ? r.adr : kind;
+    const bj = r ? (r.exact ? `Baujahr ${r.y}` : 'Baujahr vor 1919') : 'Baujahr unbekannt';
+    text = `${kind} · ${bj} · steht heute noch${hgt ? ` · ${hgt} m hoch` : ''}`;
+  } else if (p && p.id && p.id.gen) {
+    title = p.id.hall ? 'Abgerissene Fabrikhalle' : 'Abgerissenes Haus';
+    text = `Nachgebaut nach der Siegfriedkarte ${p.id.gen}` + (p.id.hall ? '' : ` · ${p.id.floors} Geschosse geschätzt`) + ' · steht heute nicht mehr';
+  } else return false;
+  $('iTitle').textContent = title; $('iText').textContent = text; $('info').hidden = false;
+  clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, 7000);
+  return true;
+}
+canvas.addEventListener('click', e => {
+  const pos = locked ? new C.Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2) : new C.Cartesian2(e.offsetX, e.offsetY);
+  let hit = null; try { hit = scene.pick(pos); } catch (err) {}
+  if (hit && showInfo(hit)) return;
+  if (!locked) try { canvas.requestPointerLock(); } catch (err) {}
+});
 
 function setPanel(show){
   $('panel').classList.toggle('off', !show);
@@ -743,7 +791,64 @@ document.addEventListener('keyup', e => { keys[e.code] = false; });
 window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 
 const up = new C.Cartesian3(), fwd = new C.Cartesian3(), prevPos = new C.Cartesian3();
-const probe = {dir:null, t:0, free:Infinity};
+const probes = [];
+let wallT = null;
+const gridFree = pos => {
+  const c = C.Cartographic.fromCartesian(pos);
+  const r = roofAt(C.Math.toDegrees(c.longitude), C.Math.toDegrees(c.latitude));
+  return r === null || c.height >= r + 0.5;
+};
+const castFree = (from, dir) => {
+  try {
+    const hit = scene.pickFromRay(new C.Ray(C.Cartesian3.clone(from), dir), ground.prim ? [ground.prim] : []);
+    return hit && hit.object && hit.position ? hit : null;
+  } catch (e) { return null; }
+};
+/* freie Strecke in eine Richtung, Strahlen werden kurz zwischengespeichert (ein Strahl kostet ~20 ms) */
+function rayRoom(from, dir, now){
+  let pr = probes.find(p => C.Cartesian3.dot(p.dir, dir) > 0.97 && now - p.t < 350 && C.Cartesian3.distance(p.from, from) < 2);
+  if (!pr) {
+    const hit = castFree(from, dir);
+    pr = {dir: C.Cartesian3.clone(dir), t: now, from: C.Cartesian3.clone(from), dist: hit ? C.Cartesian3.distance(hit.position, from) : Infinity};
+    probes.push(pr); if (probes.length > 8) probes.shift();
+  }
+  return pr.dist - C.Cartesian3.dot(C.Cartesian3.subtract(from, pr.from, new C.Cartesian3()), dir);
+}
+function stepOk(from, v, now){
+  const len = C.Cartesian3.magnitude(v);
+  if (len < 1e-4) return false;
+  if (!gridFree(C.Cartesian3.add(from, v, new C.Cartesian3()))) return false;
+  if (!walk) return true;
+  return rayRoom(from, C.Cartesian3.normalize(v, new C.Cartesian3()), now) > len + 0.6;
+}
+/* Wandrichtung aus zwei leicht gedrehten Strahlen */
+function wallTangent(from, dir, now){
+  if (wallT && now - wallT.t < 350 && C.Cartesian3.dot(wallT.dir, dir) > 0.95) return wallT.v;
+  const upv = C.Ellipsoid.WGS84.geodeticSurfaceNormal(from, new C.Cartesian3());
+  const rot = a => C.Matrix3.multiplyByVector(C.Matrix3.fromQuaternion(C.Quaternion.fromAxisAngle(upv, a)), dir, new C.Cartesian3());
+  const h1 = castFree(from, rot(0.3)), h2 = castFree(from, rot(-0.3));
+  let v = null;
+  if (h1 && h2) {
+    v = C.Cartesian3.subtract(h1.position, h2.position, new C.Cartesian3());
+    C.Cartesian3.subtract(v, C.Cartesian3.multiplyByScalar(upv, C.Cartesian3.dot(v, upv), new C.Cartesian3()), v);
+    if (C.Cartesian3.magnitude(v) > 1e-3) C.Cartesian3.normalize(v, v); else v = null;
+  }
+  wallT = {t: now, dir: C.Cartesian3.clone(dir), v};
+  return v;
+}
+function tryStep(from, want, now){
+  if (stepOk(from, want, now)) return want;
+  const dir = C.Cartesian3.normalize(want, new C.Cartesian3());
+  const cands = [];
+  if (walk) { const t = wallTangent(from, dir, now); if (t) cands.push(t); }
+  const enu = C.Transforms.eastNorthUpToFixedFrame(from);
+  cands.push(new C.Cartesian3(enu[0], enu[1], enu[2]), new C.Cartesian3(enu[4], enu[5], enu[6]));
+  for (const ax of cands) {
+    const s = C.Cartesian3.multiplyByScalar(ax, C.Cartesian3.dot(want, ax), new C.Cartesian3());
+    if (C.Cartesian3.magnitude(s) > C.Cartesian3.magnitude(want) * 0.2 && stepOk(from, s, now)) return s;
+  }
+  return null;
+}
 let last = performance.now();
 scene.preRender.addEventListener(() => {
   const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now;
@@ -773,26 +878,12 @@ scene.preRender.addEventListener(() => {
     if (keys.KeyD) camera.moveRight(d);
     if (!walk && keys.Space) camera.move(up, d);
     if (!walk && keys.KeyC) camera.move(up, -d);
-    /* Wände: in ein Haus hinein geht es nicht (unterhalb des Dachs) */
-    const nc = C.Cartographic.fromCartesian(camera.position);
-    const roof = roofAt(C.Math.toDegrees(nc.longitude), C.Math.toDegrees(nc.latitude));
-    if (roof !== null && nc.height < roof + 0.5) camera.position = C.Cartesian3.clone(prev);
-    /* echte Häuser: mehrmals pro Sekunde einen Strahl in Laufrichtung schicken */
-    if (walk) {
-      const disp = C.Cartesian3.subtract(camera.position, prev, new C.Cartesian3());
-      const len = C.Cartesian3.magnitude(disp);
-      if (len > 1e-4) {
-        const dir = C.Cartesian3.normalize(disp, new C.Cartesian3());
-        if (!probe.dir || C.Cartesian3.dot(dir, probe.dir) < 0.97 || now - probe.t > 250) {
-          probe.dir = dir; probe.t = now; probe.free = Infinity;
-          try {
-            const hit = scene.pickFromRay(new C.Ray(C.Cartesian3.clone(prev), dir), ground.prim ? [ground.prim] : []);
-            if (hit && hit.object && hit.position) probe.free = C.Cartesian3.distance(hit.position, prev);
-          } catch (e) {}
-        }
-        if (probe.free < len + 0.6) camera.position = C.Cartesian3.clone(prev);
-        else probe.free -= len;
-      }
+    /* Wände: geplanten Schritt prüfen; ist er versperrt, an der Wand entlanggleiten */
+    const want = C.Cartesian3.subtract(camera.position, prev, new C.Cartesian3());
+    camera.position = C.Cartesian3.clone(prev);
+    if (C.Cartesian3.magnitude(want) > 1e-4) {
+      const step = tryStep(prev, want, now);
+      if (step) camera.position = C.Cartesian3.add(prev, step, new C.Cartesian3());
     }
   }
 
