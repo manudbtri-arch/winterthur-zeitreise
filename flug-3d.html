@@ -124,8 +124,8 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
     <label class="chk"><input type="checkbox" id="oldOn" checked> Echte Altbauten nach Baujahr</label>
     <label class="chk"><input type="checkbox" id="genOn" checked> Nachgebaute, abgerissene Häuser</label>
     <label class="chk"><input type="checkbox" id="groundOn" checked> Boden mit Pflaster und Wiese</label>
-    <label class="chk"><input type="checkbox" id="blockOn" checked> Minecraft-Look (Pixeltexturen)</label>
-    <label class="chk"><input type="checkbox" id="shadowOn" checked> Schatten (schöner, etwas langsamer)</label>
+    <label class="chk"><input type="checkbox" id="blockOn"> Minecraft-Look (Pixeltexturen)</label>
+    <label class="chk"><input type="checkbox" id="shadowOn"> Schatten (schöner, etwas langsamer)</label>
     <label class="chk"><input type="checkbox" id="bld"> Alle heutigen Gebäude</label>
     <label class="chk"><input type="checkbox" id="veg"> Heutige Bäume</label>
 
@@ -237,15 +237,17 @@ globe.baseColor = C.Color.fromCssColorString('#cfcabf');
 globe.maximumScreenSpaceError = 2;
 globe.tileCacheSize = 400;
 /* Schatten: macht Gassen und Fassaden plastisch */
-viewer.shadows = true;
+viewer.shadows = false;                                /* Schatten zittern beim Bewegen: nur auf Wunsch */
 viewer.terrainShadows = C.ShadowMode.RECEIVE_ONLY;
-scene.shadowMap.softShadows = false;
-scene.shadowMap.size = 1024;
+scene.shadowMap.softShadows = true;
+scene.shadowMap.size = 2048;
 scene.shadowMap.maximumDistance = 150;
 scene.shadowMap.darkness = 0.3;
 let slowSince = 0;
 scene.fog.enabled = true;
-scene.postProcessStages.fxaa.enabled = false;
+scene.postProcessStages.fxaa.enabled = true;          /* Kanten glätten */
+if (scene.msaaSupported) scene.msaaSamples = 4;
+scene.highDynamicRange = false;
 /* Fernsicht (J): mehr Details in der Ferne gegen etwas weniger Bilder pro Sekunde */
 let farView = true;
 function setFarView(on){
@@ -334,6 +336,8 @@ const FACADE_FS = `
       vec3 c = tile * (0.84 + 0.26 * tn);
       c *= 1.0 - 0.30 * smoothstep(0.72, 1.0, row);              /* Schattenkante unter jeder Reihe */
       c *= 1.0 - 0.10 * (step(colF, 0.05) + step(0.95, colF));
+      float fwR = max(fwidth(d / 0.26), fwidth(a / 0.17));
+      c = mix(c, tile * 0.95, smoothstep(0.15, 0.5, fwR));          /* weit weg: ruhige Dachfarbe */
       material.diffuse = c;
       return;
     }
@@ -365,6 +369,10 @@ const FACADE_FS = `
     c = mix(c, glass, win);
     c = mix(c, vec3(0.95, 0.94, 0.90), bars);
     c *= 1.0 - 0.18 * step(0.80, fy) * step(fy, 0.83) * step(0.28, fx) * step(fx, 0.72);   /* Schatten unter dem Sturz */
+    /* Fensterraster in der Ferne zu einer Mischfarbe auflösen, sonst flimmert es */
+    float fwW = max(fwidth(s / 2.6), fwidth(hgt / 3.2));
+    vec3 avg = mix(plaster, vec3(0.30, 0.36, 0.44), 0.17);
+    c = mix(c, avg, smoothstep(0.08, 0.28, fwW));
     material.diffuse = c;
   }`;
 const gwr = {years:new Map(), year:1880};
@@ -632,9 +640,9 @@ async function buildEdition(area, year, reg, token){
     for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
       const nx = cx + dx, ny = cy + dy;
       if (nx >= 0 && ny >= 0 && nx < cw && ny < ch && comp[ny * cw + nx] === id) continue;
-      const off = cm / 2 + 0.06;
+      const off = cm / 2 + 0.12;
       const lonW = cellLon(cx) + dx * off * mLon, latW = cellLat(cy) - dy * off * mLat;   /* y wächst nach Süden */
-      const w = dx ? 0.14 : 1.1, d = dx ? 1.1 : 0.14;
+      const w = dx ? 0.2 : 1.1, d = dx ? 1.1 : 0.2;
       for (let f = 0; f < c.floors; f++) {
         if (c.hall && f > 0) break;
         const z = c.base + 1.5 + f * 3.3;
@@ -657,7 +665,7 @@ async function buildEdition(area, year, reg, token){
 
 /* ---------- Boden: Pflaster in Gassen und auf Plätzen, sonst Wiese, Bäche blau ---------- */
 const ground = {prim:null};
-let blocky = true;
+let blocky = false;
 function setBlocky(on){
   blocky = on; $('blockOn').checked = on;
   if (bldTs && bldTs.customShader) bldTs.customShader.setUniform('u_blocky', on ? 1 : 0);
@@ -697,7 +705,7 @@ czm_material czm_getMaterial(czm_materialInput mi) {
     grass = vec3(0.40, 0.56, 0.27) * (0.86 + 0.2 * pn) * (pn2 < 0.12 ? 0.9 : 1.0);
     water = vec3(0.20, 0.34, 0.75) * (0.85 + 0.2 * pn);
   }
-  float far = smoothstep(25.0, 120.0, length(mi.positionToEyeEC));
+  float far = max(smoothstep(25.0, 120.0, length(mi.positionToEyeEC)), smoothstep(0.2, 0.6, max(fwidth(g.x), fwidth(g.y))));
   cob = mix(cob, vec3(0.50, 0.48, 0.44), far);
   grass = mix(grass, vec3(0.36, 0.50, 0.26), far * 0.8);
   vec3 col = mix(grass, cob, cls.r);
@@ -1094,7 +1102,7 @@ scene.preRender.addEventListener(() => {
   if (g2 !== undefined) {
     if (walk) {
       bob += speed * dt * 1.9;
-      const target = g2 + 1.7 + (speed > 0.5 ? Math.sin(bob) * 0.035 : 0);
+      const target = g2 + 1.7;
       smoothH = smoothH === null || Math.abs(smoothH - target) > 8 ? target : smoothH + (target - smoothH) * (1 - Math.exp(-dt * 14));
       c2.height = Math.max(smoothH, g2 + 1.2);
       camera.position = C.Cartographic.toCartesian(c2);
