@@ -68,6 +68,7 @@ details.more[open] summary::after{content:"▴"}
 .keys{bottom:auto;top:60px}
 .intro{position:absolute;z-index:20;inset:0;display:grid;place-items:center;padding:24px;background:linear-gradient(180deg,rgba(20,18,14,.55),rgba(20,18,14,.8));color:#f3eee3;transition:opacity .4s}
 .intro.off{opacity:0;pointer-events:none}
+body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timeline{visibility:hidden}
 .intro .card{max-width:560px;text-align:left}
 .intro .kicker{font-size:15px;color:#d9b98f;margin:0 0 10px;font-weight:600}
 .intro h2{font-size:clamp(40px,7vw,64px);line-height:1.02;margin:0 0 14px;font-weight:800;text-wrap:balance}
@@ -83,7 +84,7 @@ details.more[open] summary::after{content:"▴"}
 @media(prefers-reduced-motion:reduce){.panel,.intro{transition:none}}
 </style>
 </head>
-<body>
+<body class="intro-on">
 <div id="scene"></div>
 <div id="cross" hidden></div>
 <div class="hud" id="hud">Lädt …</div>
@@ -687,8 +688,9 @@ async function spawn(at){
   say('Du stehst in der Gasse. WASD zum Gehen, ins Bild klicken zum Umschauen, Tab für das Menü.');
 }
 $('spawn').addEventListener('click', () => spawn());
-$('introWalk').addEventListener('click', async () => { $('intro').classList.add('off'); await spawn([8.7290, 47.4997]); });
-$('introFly').addEventListener('click', () => { $('intro').classList.add('off'); goHome(1.5); });
+const closeIntro = () => { $('intro').classList.add('off'); document.body.classList.remove('intro-on'); };
+$('introWalk').addEventListener('click', async () => { closeIntro(); await spawn([8.7290, 47.4997]); });
+$('introFly').addEventListener('click', () => { closeIntro(); goHome(1.5); });
 
 /* Kamera */
 function goHome(dur){
