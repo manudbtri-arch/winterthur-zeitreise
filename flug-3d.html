@@ -442,7 +442,7 @@ scene.preRender.addEventListener(() => {
   const g2 = globe.getHeight(c2);
   if (g2 !== undefined) {
     const min = g2 + (walk ? 1.7 : 3);
-    if ((walk && locked) || c2.height < min) {
+    if (walk || c2.height < min) {
       c2.height = min;
       camera.setView({destination:C.Cartographic.toCartesian(c2), orientation:{heading:camera.heading, pitch:camera.pitch, roll:0}});
     }
