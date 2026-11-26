@@ -337,7 +337,9 @@ $('build').addEventListener('click', () => buildHouses());
 /* Auf eine freie Strassenstelle setzen, Blick nach Osten */
 async function spawn(){
   if (!city) { say('Zuerst «Häuser hier bauen».'); return; }
-  const [lon, lat] = centerLonLat();
+  let [lon, lat] = centerLonLat();
+  const inside = (a, b) => { const x = (lon2x(a) - city.px0) / CELL, y = (lat2y(b) - city.py0) / CELL; return x >= 0 && y >= 0 && x < city.cw && y < city.ch; };
+  if (!inside(lon, lat)) [lon, lat] = city.center;
   const sx = Math.floor((lon2x(lon) - city.px0) / CELL), sy = Math.floor((lat2y(lat) - city.py0) / CELL);
   const free = (x, y) => { for (let k = -1; k <= 1; k++) for (let j = -1; j <= 1; j++) {
       const xx = x + j, yy = y + k;
