@@ -1289,7 +1289,9 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
     g.fillStyle = '#5a5a5f'; g.font = '600 14px Archivo, system-ui, sans-serif';
     const sb = scaleBar();
     const widthKm = (metersPerPixel(st.lat, st.z) * W / 1000).toFixed(1).replace('.', ',');
-    g.fillText(`${pick[0].label} bis ${pick[pick.length - 1].label} · Ausschnitt ca. ${widthKm} km breit`, pad, 60, out.width - pad * 2);
+    const [E0, N0] = toLV95(st.lon, st.lat), d0 = new Date();
+    const abg = `${d0.getDate()}.${d0.getMonth() + 1}.${d0.getFullYear()}`;
+    g.fillText(`${pick[0].label} bis ${pick[pick.length - 1].label} · Ausschnitt ca. ${widthKm} km breit · Mitte LV95 ${Math.round(E0)} / ${Math.round(N0)} · abgerufen am ${abg}`, pad, 60, out.width - pad * 2);
 
     pick.forEach((fr, i) => {
       const x = pad + i * (cw + gap), y = topH;

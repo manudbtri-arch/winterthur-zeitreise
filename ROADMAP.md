@@ -181,5 +181,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 22. Zeitraffer für Forschung und Partner
 - [x] Forschung: Zeitraffer speichert die Liste der gezeigten Stände als CSV (Jahr, Quelle, Ebene, Zeitstand, Farbe/Schwarzweiss, Bodenauflösung, Mitte in LV95, Ausschnittbreite, Abrufdatum), damit Bildreihen zitierbar sind.
-- [ ] Forschung: Bildstreifen (PNG) nennt unten Abrufdatum und Mitte des Ausschnitts in LV95.
+- [x] Forschung: Bildstreifen (PNG) nennt unten Abrufdatum und Mitte des Ausschnitts in LV95.
 - [ ] Gemeinden: Zeitraffer lädt mit `?stories=<name>` die Geschichten einer Story-Datei als Sprungziele (wie 3D-Flug und 2D-Karte).
