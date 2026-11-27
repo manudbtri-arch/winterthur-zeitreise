@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- 2D-Karte lädt mit `?stories=<name>` eine eigene Story-Datei wie der 3D-Flug und meldet die Zahl der Geschichten; der Name bleibt im kopierten Link und beim Wechsel zwischen 2D-Karte und 3D-Flug erhalten; in der Partner-Anleitung erklärt.
 - Kiosk-Rundgang zum Mitmachen: oben steht die Leiste mit Station und Titel; eine Berührung hält den Rundgang an, Besucher blättern mit ‹ und › selbst weiter; nach zwei Minuten ohne Eingabe läuft er wieder von selbst.
 - 2D-Karte auf dem Handy: Knopf «Karte ganz zeigen» klappt die Steuerung zu einer schmalen Leiste mit der Jahrzahl ein, «Steuerung zeigen» holt sie zurück.
 - Story-Werkstatt: Hinweis beim Zeitraum (von/bis), wenn eine Geschichte keine Kartenausgabe trifft (im Kiosk-Rundgang übersprungen), nur heute sichtbar wäre oder ausserhalb des Zeitreglers 1870–1949 liegt; auch in der Liste.

@@ -2171,6 +2171,7 @@ $('openFull').addEventListener('click', () => { $('openFull').href = permalink()
 $('to2d').addEventListener('click', () => {
   const [lon, lat] = centerLonLat(), q = new URLSearchParams({lat: lat.toFixed(5), lon: lon.toFixed(5), z: 16, mode: 'time'});
   if (!present) { q.set('t', 'sieg'); q.set('y', +$('yr').value || 1880); }
+  if (STORY_NAME) q.set('stories', STORY_NAME);
   $('to2d').href = 'karte-2d.html?' + q.toString();
 });
 /* ---------- Kiosk-Modus (?kiosk=1): Rundflug im Leerlauf, Neustart nach 2 Minuten ohne Eingabe ---------- */

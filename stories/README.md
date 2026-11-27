@@ -54,7 +54,7 @@ Liegt die Datei im Ordner `stories/`, zeigt dieser Link sie im 3D-Flug an (Name 
 
 `flug-3d.html?stories=meinort`
 
-Eine kurze Meldung nennt die Zahl der geladenen Geschichten. Übersprungene Einträge (fehlendes Feld, Adresse nicht gefunden) stehen mit Grund in der Browser-Konsole (F12).
+In der 2D-Karte geht es gleich: `karte-2d.html?stories=meinort`. Eine kurze Meldung nennt die Zahl der geladenen Geschichten. Übersprungene Einträge (fehlendes Feld, Adresse nicht gefunden) stehen mit Grund in der Browser-Konsole (F12).
 
 ## Direktlink zu einer Geschichte
 

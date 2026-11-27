@@ -272,9 +272,14 @@ $('places').addEventListener('click', e => { const b = e.target.closest('button'
 
 /* ---------- Geschichten an Orten: gleiche Datei wie im 3D-Flug, Inhalte nur als Text ---------- */
 const storyLayer = L.layerGroup().addTo(map);
+/* ?stories=<name> lädt stories/<name>.json (eigene Datei eines Partners), sonst Winterthur */
+const STORY_Q = new URLSearchParams(location.search).get('stories');
+const STORY_NAME = /^[a-z0-9-]{1,40}$/.test(STORY_Q || '') ? STORY_Q : null;
 async function loadStories(file){
   let data;
-  try { data = await (await fetch(file)).json(); } catch (e) { return; }
+  try { const r = await fetch(file); if (!r.ok) throw new Error(r.status); data = await r.json(); }
+  catch (e) { if (STORY_NAME) $('linkMsg').textContent = `Story-Datei ${file} nicht gefunden oder kein gültiges JSON.`; return; }
+  let n = 0;
   for (const st of (data.geschichten || [])) {
     if (typeof st.titel !== 'string' || typeof st.text !== 'string' || typeof st.quelle !== 'string') continue;
     let ll = Number.isFinite(st.lon) && Number.isFinite(st.lat) ? [st.lat, st.lon] : null;
@@ -297,14 +302,16 @@ async function loadStories(file){
     }
     /* Direktlink in den 3D-Flug: fliegt zur Geschichte und öffnet ihre Infokarte */
     if (/^[A-Za-z0-9_-]{1,60}$/.test(String(st.id || ''))) {
-      const a3 = document.createElement('a'); a3.href = 'flug-3d.html?story=' + encodeURIComponent(st.id); a3.textContent = 'Im 3D-Flug ansehen';
+      const a3 = document.createElement('a'); a3.href = 'flug-3d.html?story=' + encodeURIComponent(st.id) + (STORY_NAME ? '&stories=' + STORY_NAME : ''); a3.textContent = 'Im 3D-Flug ansehen';
       box.appendChild(a3);
     }
     L.circleMarker(ll, {radius: 8, color: '#fff', weight: 2, fillColor: '#c8803f', fillOpacity: 1})
       .bindTooltip(document.createTextNode(st.titel)).bindPopup(box, {maxWidth: 300}).addTo(storyLayer);
+    n++;
   }
+  if (STORY_NAME) $('linkMsg').textContent = `${n} Geschichten aus ${file} geladen.`;
 }
-loadStories('stories/winterthur.json');
+loadStories(`stories/${STORY_NAME || 'winterthur'}.json`);
 $('storyOn').addEventListener('change', e => { if (e.target.checked) storyLayer.addTo(map); else map.removeLayer(storyLayer); });
 
 /* ---------- Handy: Seitenleiste einklappen, damit die Karte ganz sichtbar ist ---------- */
@@ -428,6 +435,7 @@ $('to3d').addEventListener('click', async () => {
   const q = new URLSearchParams({lon: c.lng.toFixed(6), lat: (c.lat - 0.0055).toFixed(6), h: Math.round(ground + 600), hdg: 0, pitch: -38,
     c: c.lng.toFixed(5) + ',' + c.lat.toFixed(5), mode: 'fly'});
   if ((key === 'sieg' || key === 'zeit') && y >= 1870 && y <= 1949) q.set('year', y);
+  if (STORY_NAME) q.set('stories', STORY_NAME);
   location.href = 'flug-3d.html?' + q.toString();
 });
 window.addEventListener('pageshow', () => { $('to3d').disabled = false; });   /* nach «Zurück» wieder bereit */
@@ -438,6 +446,7 @@ function permalink(){
   const q = new URLSearchParams({lat: c.lat.toFixed(5), lon: c.lng.toFixed(5), z: map.getZoom(), mode: cmp ? 'cmp' : 'time'});
   if (cmp) { q.set('l', $('lSrc').value); q.set('ly', $('lYear').value); q.set('r', $('rSrc').value); q.set('ry', $('rYear').value); }
   else { q.set('t', $('tSrc').value); q.set('y', $('tYear').value); q.set('op', $('tOp').value); }
+  if (STORY_NAME) q.set('stories', STORY_NAME);
   return location.origin + location.pathname + '?' + q.toString();
 }
 /* auf Touch-Geräten mit Teilen-Funktion: System-Teilen (Nachricht, Mail), sonst kopieren */
