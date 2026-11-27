@@ -27,7 +27,7 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Bekannte Orte als Sprungziele je Stadt (aus der Story-Datei).
 
 ## 4. Einsatz bei Kunden
-- [ ] Anleitung für Partner `stories/README.md`: Format der Story-Dateien, Quellenregeln, Beispiel; verlinkt aus Pilotabschnitt der Produktseite.
+- [x] Anleitung für Partner `stories/README.md`: Format der Story-Dateien, Quellenregeln, Beispiel; verlinkt aus Pilotabschnitt der Produktseite.
 - [ ] Produktseite: Abschnitt «So setzen Sie es ein» mit Links zu Kiosk-Modus, Einbettung und Unterrichtsseite.
 - [ ] Barrierefreiheit: Kamerafahrten bei «Bewegung reduzieren» verkürzen, Infokarte mit Esc schliessen, Statusmeldungen für Screenreader.
 - [x] Unterrichtsseite `unterricht.html` für Schulen: Lernziele, drei Aufträge mit dem 3D-Flug (Zeitregler, Analyse nach Bauepoche, Export), Hinweise für Lehrpersonen; verlinkt aus Übersicht.
