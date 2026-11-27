@@ -1438,7 +1438,10 @@ function showInfo(p){
     const kind = art === 'Sakrales Gebaeude' ? 'Kirche' : art === 'Hochkamin' ? 'Hochkamin' : art === 'Gebaeude Einzelhaus' ? 'Gebäude' : art;
     title = (r && r.adr) ? r.adr : kind;
     const bj = r ? (r.exact ? `Baujahr ${r.y}` : 'Baujahr vor 1919') : 'Baujahr unbekannt';
-    text = `${kind} · ${bj} · steht heute noch${hgt ? ` · ${hgt} m hoch` : ''}`;
+    /* Alter im gewählten Jahr, nur bei genauem Baujahr */
+    const age = r && r.exact && !present && gwr.year >= r.y ? gwr.year - r.y : null;
+    const ageTxt = age === null ? '' : age === 0 ? ` · ${gwr.year} erbaut` : ` · ${gwr.year} war es ${age} ${age === 1 ? 'Jahr' : 'Jahre'} alt`;
+    text = `${kind} · ${bj}${ageTxt} · steht heute noch${hgt ? ` · ${hgt} m hoch` : ''}`;
     badge = 'Belegt';
     src = `Quelle: swissBUILDINGS3D (swisstopo), Gebäuderegister GWR (BFS)${egid ? ` · EGID ${egid}` : ''}`;
     /* zum Nachprüfen: Gebäuderegister auf map.geo.admin.ch an der Lage des Gebäudes (nicht im Kiosk) */
