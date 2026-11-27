@@ -92,3 +92,19 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Ortsnamen swissNAMES3D als Thema.
 - [x] Heutige Gewässer swissTLM3D als Thema (Vergleich mit der Karte).
 - [x] Arealstatistik BFS als Thema mit Infokarte.
+
+## 9. Absichern, Tempo, Optik, Bedienung (Auftrag Manuel)
+- [x] Automatischer Bildtest bei GitHub (Bilder, Tempo, Fehler an festen Orten; Zweig «bildtest»); Themen per Link `?themen=`.
+- [ ] Offene Fragen anhand der Testbilder klären (Kartenstand, Luftbild-Orte, Arealstatistik, Brücken, Seen).
+- [ ] Fenster der nachgebauten Häuser als Wandmuster statt Klötze.
+- [ ] Heutige 3D-Gebäude nur einmal laden.
+- [ ] Handy: kleinere Sichtweite.
+- [ ] Baujahre vorberechnet mitliefern (prüfen, ob machbar).
+- [ ] Satteldächer für nachgebaute Häuser (Minecraft-Look als Schalter).
+- [ ] Dunst auf fernen Häusern.
+- [ ] Türme für abgerissene Kirchen.
+- [ ] Nur Brücken, die auf der Karte des Jahres vorkommen.
+- [ ] Hinweis beim ersten Start, wie man sich bewegt.
+- [ ] Sanftes Überblenden beim Zeitsprung.
+- [ ] Menü in Reitern (Ort, Zeit, Themen, Export).
+- [ ] 3D-Flug in mehrere Dateien aufteilen.

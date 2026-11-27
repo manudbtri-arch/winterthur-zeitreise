@@ -1765,7 +1765,11 @@ function setTheme(t, on){
     cb.addEventListener('change', () => setTheme(t, cb.checked));
     lab.append(cb, document.createTextNode(' ' + t.name));
     box.appendChild(lab);
+    t.cb = cb;
   }
+  /* ?themen=ivs,isos,… schaltet Themen gleich ein (Link teilen, Bildtest) */
+  const want = String(new URLSearchParams(location.search).get('themen') || '').split(',');
+  for (const t of THEMES) if (want.includes(t.key)) { t.cb.checked = true; setTheme(t, true); }
 }
 /* Jahreszahl in einem Eintrag (z. B. Aufnahmedatum eines Luftbilds) */
 function hitYear(r){
@@ -2071,6 +2075,7 @@ function permalink(){
     year: +$('yr').value || 1880, mode: present ? 'now' : walk ? 'walk' : 'fly'});
   if (world.focus) q.set('c', world.focus.map(v => v.toFixed(5)).join(','));
   if (STORY_NAME) q.set('stories', STORY_NAME);
+  const th = THEMES.filter(t => t.on).map(t => t.key).join(','); if (th) q.set('themen', th);
   return location.origin + location.pathname + '?' + q.toString();
 }
 $('linkBtn').addEventListener('click', async () => {

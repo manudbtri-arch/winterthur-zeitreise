@@ -1,0 +1,33 @@
+# Bildtest: öffnet den 3D-Flug mit echtem Cesium an festen Orten, speichert Bilder,
+# misst Bilder pro Sekunde und sammelt Fehler. Ergebnis liegt im Zweig «bildtest».
+name: Bildtest
+on:
+  push:
+    branches: [main]
+    paths: ['flug-3d.html', 'tests/**', '.github/workflows/bildtest.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: bildtest
+  cancel-in-progress: true
+jobs:
+  bilder:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --no-save playwright@1.47.2
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/bildtest.mjs
+      - name: Ergebnisse in den Zweig «bildtest» legen
+        run: |
+          cd bildtest-out
+          git init -q
+          git checkout -q -b bildtest
+          git add -A
+          git -c user.name="Bildtest" -c user.email="actions@users.noreply.github.com" commit -qm "Bildtest ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" bildtest
