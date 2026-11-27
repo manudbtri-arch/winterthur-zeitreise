@@ -79,6 +79,6 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Produktseite: Funktionsliste um «Im Gebäuderegister prüfen», Teilen auf dem Handy und das druckbare Arbeitsblatt ergänzen.
 - [x] 2D-Karte (Handy): «Link kopieren» öffnet auf Touch-Geräten das System-Teilen, sonst wie bisher kopieren.
 - [x] Forschung: Gebäudeliste (CSV und GeoJSON) mit Spalte `gwr_link`, damit jede belegte Zeile im Gebäuderegister nachgeprüft werden kann; Methodik erklärt die Spalte.
-- [ ] Schulen: Auftrag 2 der Unterrichtsseite um das Nachprüfen im Gebäuderegister ergänzen (Quellenkritik: stimmt das Baujahr in der Quelle?).
+- [x] Schulen: Auftrag 2 der Unterrichtsseite um das Nachprüfen im Gebäuderegister ergänzen (Quellenkritik: stimmt das Baujahr in der Quelle?).
 - [ ] Infokarte eines belegten Gebäudes nennt das Alter im gewählten Jahr («1880 war es 34 Jahre alt»), nur bei genauem Baujahr.
 - [ ] Forschung: Statistik-CSV und Gebäudeliste (CSV, GeoJSON) mit Abrufdatum `abgerufen_am`, damit Exporte zitierbar sind.
