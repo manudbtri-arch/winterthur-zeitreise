@@ -24,7 +24,7 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 ## 3. Inhalte
 - [x] Geschichten an Orten: `stories/winterthur.json` (Titel, Text, Jahr von–bis, Koordinaten, Quelle); Marker im 3D-Bild, Infokarte beim Anklicken. Nur gesicherte, mit Quelle belegte Fakten.
 - [x] Geführte Tour: Kamera fliegt Stationen einer Story-Datei nacheinander an (Weiter/Zurück).
-- [ ] Bekannte Orte als Sprungziele je Stadt (aus der Story-Datei).
+- [x] Bekannte Orte als Sprungziele je Stadt (aus der Story-Datei).
 
 ## 4. Einsatz bei Kunden
 - [ ] Kiosk-Modus `?kiosk=1`: automatischer Rundflug, Neustart nach 2 Minuten ohne Eingabe, grosse Touch-Knöpfe.

@@ -119,6 +119,9 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
 .tour .btn{width:auto;margin:0;min-height:40px;padding:6px 14px;border-radius:20px}
 .tour span{font-size:14px;font-weight:600;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:700px){.tour{top:52px}}
+.places{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.places button{border:1px solid var(--line);background:var(--bg);color:var(--ink);font:600 13px Archivo,sans-serif;border-radius:16px;padding:6px 12px;min-height:36px;cursor:pointer}
+.places button:hover{border-color:var(--brown)}
 .dlg{position:absolute;inset:0;z-index:35;display:grid;place-items:center;background:rgba(0,0,0,.45);padding:16px}
 .dlg .box{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:18px;width:min(560px,100%);box-shadow:0 10px 40px rgba(0,0,0,.4)}
 .dlg h2{font-size:19px;margin:0 0 6px}
@@ -162,6 +165,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
     <button class="btn" id="shotBtn">Bild (P)</button>
   </div>
   <button class="btn" id="tourBtn" disabled>Rundgang zu den Geschichten</button>
+  <div class="places" id="places" aria-label="Bekannte Orte"></div>
   <button class="btn" id="embedBtn">Einbetten (Code für Website)</button>
   <div class="row2">
     <button class="btn" id="csvBtn" title="Gebäudeliste des gebauten Gebiets">Liste CSV</button>
@@ -1452,10 +1456,18 @@ async function loadStories(file){
   }
   updateStories();
   $('tourBtn').disabled = !stories.length;
+  /* bekannte Orte als Sprungziele */
+  const pl = $('places'); pl.textContent = '';
+  stories.forEach((ent, i) => {
+    const b = document.createElement('button');
+    b.textContent = ent.story.titel; b.title = 'Hinfliegen';
+    b.addEventListener('click', () => { closeIntro(); tourGo(i, false); });
+    pl.appendChild(b);
+  });
 }
 /* Geführte Tour: Kamera fliegt die Geschichten der Reihe nach an */
 let tourIdx = -1;
-function tourGo(i){
+function tourGo(i, bar = true){
   if (!stories.length) return;
   tourIdx = (i + stories.length) % stories.length;
   const ent = stories[tourIdx], st = ent.story;
@@ -1468,7 +1480,7 @@ function tourGo(i){
     {offset: new C.HeadingPitchRange(C.Math.toRadians(20), C.Math.toRadians(-32), 320), duration: 2.5,
      complete: () => { if (tourIdx >= 0 && stories[tourIdx] === ent) showInfo({id: ent}); }});
   $('tourLbl').textContent = `${tourIdx + 1}/${stories.length} · ${st.titel}`;
-  $('tour').hidden = false;
+  $('tour').hidden = !bar;
 }
 function tourEnd(){ tourIdx = -1; $('tour').hidden = true; }
 $('tourBtn').addEventListener('click', () => { closeIntro(); tourGo(0); });

@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Bekannte Orte als Sprungziele: Knöpfe in der Seitenleiste (aus der Story-Datei) fliegen direkt zum Ort und zeigen die Geschichte.
 - Geführter Rundgang: Knopf «Rundgang zu den Geschichten» fliegt die Stationen der Story-Datei nacheinander an, mit Weiter/Zurück und Infokarte je Station.
 - Geschichten an Orten: `stories/winterthur.json` mit vier belegten Einträgen (Rathaus, Stadthaus, Bahnhof, Technikum), Marker im 3D-Bild je nach Jahr, Infokarte mit Quelle und Link; abschaltbar.
 - Produktseite: Export, Zitieren und Analyse nach Bauepoche als verfügbare Funktionen aufgeführt.
