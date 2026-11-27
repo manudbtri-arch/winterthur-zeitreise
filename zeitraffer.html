@@ -1146,6 +1146,49 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
     $('spots').appendChild(b);
   });
 
+  /* ?stories=<name>: Geschichten aus stories/<name>.json als Ausschnitte (wie 3D-Flug und 2D-Karte); Inhalte nur als Text */
+  const STORY_Q = new URLSearchParams(location.search).get('stories');
+  const STORY_NAME = /^[a-z0-9-]{1,40}$/.test(STORY_Q || '') ? STORY_Q : null;
+  if (STORY_NAME) (async () => {
+    const file = `stories/${STORY_NAME}.json`;
+    let data;
+    try { const r = await fetch(file); if (!r.ok) throw new Error(r.status); data = await r.json(); }
+    catch (e) { $('status').textContent = `Story-Datei ${file} nicht gefunden oder kein gültiges JSON.`; return; }
+    const ort = typeof data.ort === 'string' ? data.ort.trim().slice(0, 60) : '';
+    const spots = [];
+    for (const g of (data.geschichten || [])) {
+      if (typeof g.titel !== 'string' || typeof g.text !== 'string' || typeof g.quelle !== 'string') continue;
+      let ll = Number.isFinite(g.lon) && Number.isFinite(g.lat) ? [g.lat, g.lon] : null;
+      if (!ll && typeof g.adresse === 'string') {
+        try {
+          const u = `https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(g.adresse)}&type=locations&origins=address&sr=4326&limit=1`;
+          const r = ((await (await fetch(u)).json()).results || [])[0];
+          if (r && Number.isFinite(+r.attrs.lat)) ll = [+r.attrs.lat, +r.attrs.lon];
+        } catch (e) {}
+      }
+      if (!ll || !(ll[0] > 45.7 && ll[0] < 47.9 && ll[1] > 5.8 && ll[1] < 10.6)) continue;
+      const titel = g.titel.trim().slice(0, 70);
+      spots.push({
+        id: 's:' + spots.length, short: titel.length > 32 ? titel.slice(0, 31) + '…' : titel,
+        title: (ort ? ort + ' – ' : '') + titel, lat: ll[0], lon: ll[1], z: 16,
+        desc: g.text.trim().slice(0, 400) + ' (Quelle: ' + g.quelle.trim().slice(0, 200) + ')'
+      });
+    }
+    if (!spots.length) { $('status').textContent = `In ${file} keine Geschichte mit Lage gefunden.`; return; }
+    const box = $('spots'); box.textContent = '';
+    box.setAttribute('aria-label', (ort ? ort + ': ' : '') + 'Geschichten aus der Story-Datei');
+    for (const sp of spots) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'spot'; b.dataset.id = sp.id; b.title = sp.title;
+      b.textContent = sp.short;
+      b.addEventListener('click', () => selectSpot(sp, st.mode !== 'cmp'));
+      box.appendChild(b);
+    }
+    const sq = new URLSearchParams(location.search);
+    if (!sq.has('lat') && !sq.has('lon') && !sq.has('ort')) selectSpot(spots[0], false);
+    else updateSpotButtons();
+  })();
+
   /* Ortssuche ganze Schweiz (geo.admin.ch) */
   {
     const inp = $('q'), list = $('qres');
@@ -1260,7 +1303,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
     const csv = '\ufeff' + [cols.join(';'), ...rows].join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv;charset=utf-8'}));
-    const slug = (st.spotId || st.title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const slug = (st.spotId && !st.spotId.startsWith('s:') ? st.spotId : st.title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     a.download = `zeitraffer-staende-${slug || 'schweiz'}-${st.mode === 'cmp' ? st.cmpBase : st.mode}.csv`;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 5000);
@@ -1310,7 +1353,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
       if (!blob) return;
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      const slug = (st.spotId || st.title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const slug = (st.spotId && !st.spotId.startsWith('s:') ? st.spotId : st.title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
       a.download = `zeitraffer-${slug || 'schweiz'}.png`;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 5000);
@@ -1347,7 +1390,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
       const blob = new Blob(chunks, {type: mime || 'video/webm'});
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      const slug = (st.spotId || st.title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const slug = (st.spotId && !st.spotId.startsWith('s:') ? st.spotId : st.title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
       a.download = `zeitraffer-${slug || 'schweiz'}.webm`;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 6000);
@@ -1386,7 +1429,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
   /* Permalink, Weiterführen (3D/2D) und QR-Code */
   function permalink(){
     const q = new URLSearchParams();
-    if (st.spotId) q.set('ort', st.spotId);
+    if (st.spotId && !st.spotId.startsWith('s:')) q.set('ort', st.spotId);
     else {
       q.set('lat', st.lat.toFixed(5));
       q.set('lon', st.lon.toFixed(5));
@@ -1395,6 +1438,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
     q.set('z', String(st.z));
     q.set('mode', st.mode);
     if (st.mode === 'cmp') q.set('base', st.cmpBase);
+    if (STORY_NAME) q.set('stories', STORY_NAME);
     const fy = frameYear();
     if (Number.isFinite(fy)) q.set('e', String(fy));
     return location.origin + location.pathname + '?' + q.toString();
@@ -1423,6 +1467,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
     if (Number.isFinite(fy) && fy >= 1870 && fy <= 1949) q3.set('year', String(fy));
     else if (Number.isFinite(fy) && fy > 1949) { q3.set('mode', 'now'); q3.delete('year'); }
     if (st.title && st.title !== 'Gewählter Ausschnitt') q3.set('ort', st.title);
+    if (STORY_NAME) q3.set('stories', STORY_NAME);
     location.href = 'flug-3d.html?' + q3.toString();
   });
   window.addEventListener('pageshow', () => { $('to3d').disabled = false; });
@@ -1467,7 +1512,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
   $('qrBtn').addEventListener('click', async () => {
     try { await loadQrLib(); drawQr($('qrCv'), permalink(), st.title); }
     catch (e) { $('status').textContent = 'QR-Code konnte nicht erstellt werden – Internet prüfen.'; return; }
-    const slug = (st.spotId || 'ort').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const slug = (st.spotId && !st.spotId.startsWith('s:') ? st.spotId : (st.title || 'ort')).toLowerCase().replace(/[^a-z0-9]+/g, '-');
     qrFile = 'qr-zeitraffer-' + slug + '.png';
     $('qrTxt').textContent = 'Öffnet den Zeitraffer direkt für: ' + st.title + '.';
     $('qrDlg').hidden = false; $('qrSave').focus();
