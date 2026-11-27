@@ -140,6 +140,10 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
     <button class="btn" id="linkBtn">Link kopieren</button>
     <button class="btn" id="shotBtn">Bild (P)</button>
   </div>
+  <div class="row2">
+    <button class="btn" id="csvBtn" title="Gebäudeliste des gebauten Gebiets">Liste CSV</button>
+    <button class="btn" id="geoBtn" title="Gebäude als GeoJSON für GIS">GeoJSON</button>
+  </div>
   <button class="btn" id="build">Hier neu bauen</button>
   <div class="prog" aria-hidden="true"><i id="progBar"></i></div>
   <p class="sub" id="bStat" style="margin:8px 0 0">Baue Winterthur …</p>
@@ -716,6 +720,9 @@ async function buildEdition(area, year, reg, token){
     }
   }
   comps.forEach((c, i) => { if (keep[i] && !real[i]) nGen++; });
+  /* für den Export: Mittelpunkt, Fläche und geschätzte Geschosse der rekonstruierten Häuser */
+  const recs = [];
+  comps.forEach((c, i) => { if (keep[i] && !real[i]) recs.push({lon: x2lon(px0 + (c.cx + .5) * CELL), lat: y2lat(py0 + (c.cy + .5) * CELL), m2: Math.round(c.n * cm * cm), floors: c.hall ? 1 : c.floors}); });
 
   const prim = inst.length ? scene.primitives.add(new C.Primitive({
     geometryInstances: inst,
@@ -724,7 +731,7 @@ async function buildEdition(area, year, reg, token){
     shadows: C.ShadowMode.ENABLED
   })) : null;
   if (prim) prim.show = false;
-  return {year, prim, roof, nGen, nOld, occ, wat, parts, hl: false, nDrop};
+  return {year, prim, roof, nGen, nOld, occ, wat, parts, hl: false, nDrop, recs};
 }
 
 /* ---------- Boden: Pflaster in Gassen und auf Plätzen, sonst Wiese, Bäche blau ---------- */
@@ -1352,6 +1359,48 @@ function saveShot(){
   img.src = src;
 }
 $('shotBtn').addEventListener('click', saveShot);
+
+/* ---------- Gebäude-Export: belegte und rekonstruierte Häuser des gebauten Gebiets zum gewählten Jahr ---------- */
+const SRC_OLD = 'swissBUILDINGS3D (swisstopo), Gebäuderegister GWR (BFS)';
+function exportRows(){
+  if (!city || !city.edition || !gwr.info) return null;
+  const year = +$('yr').value || 1880, ed = city.eds.get(city.edition), rows = [];
+  for (const [egid, r] of gwr.info) if (r.y <= year) {
+    const [E, N] = toLV95(r.lon, r.lat);
+    rows.push({status: 'belegt', egid, adresse: r.adr, baujahr: r.exact ? r.y : '', bauperiode: r.exact ? '' : 'vor 1919',
+      kartenstand: '', geschosse_geschaetzt: '', flaeche_m2: '', lon: +r.lon.toFixed(6), lat: +r.lat.toFixed(6), e_lv95: Math.round(E), n_lv95: Math.round(N), quelle: SRC_OLD});
+  }
+  for (const h of ed.recs) {
+    const [E, N] = toLV95(h.lon, h.lat);
+    rows.push({status: 'rekonstruiert', egid: '', adresse: '', baujahr: '', bauperiode: '', kartenstand: ed.year,
+      geschosse_geschaetzt: h.floors, flaeche_m2: h.m2, lon: +h.lon.toFixed(6), lat: +h.lat.toFixed(6), e_lv95: Math.round(E), n_lv95: Math.round(N),
+      quelle: `Siegfriedkarte ${ed.year} (swisstopo), Grundriss aus der Karte, Höhe geschätzt`});
+  }
+  return {year, rows};
+}
+function download(name, text, type){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type}));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+const fileSlug = () => placeName.toLowerCase().replace(/[^a-z0-9äöü]+/g, '-').replace(/^-|-$/g, '') || 'ort';
+$('csvBtn').addEventListener('click', () => {
+  const x = exportRows(); if (!x) { toast('Zuerst ein Gebiet bauen'); return; }
+  const cols = Object.keys(x.rows[0] || {status: ''});
+  const esc = v => { const t = String(v ?? ''); return /[;"\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+  const csv = '\ufeff' + [cols.join(';'), ...x.rows.map(r => cols.map(k => esc(r[k])).join(';'))].join('\r\n');
+  download(`gebaeude-${fileSlug()}-${x.year}.csv`, csv, 'text/csv;charset=utf-8');
+  toast(`${x.rows.length} Gebäude exportiert`);
+});
+$('geoBtn').addEventListener('click', () => {
+  const x = exportRows(); if (!x) { toast('Zuerst ein Gebiet bauen'); return; }
+  const gj = {type: 'FeatureCollection', name: `Zeitreise Schweiz – ${placeName} ${x.year}`,
+    quelle: 'Daten: © swisstopo (Siegfriedkarte, swissBUILDINGS3D), BFS Gebäuderegister GWR; Methodik: methodik.html',
+    features: x.rows.map(r => { const {lon, lat, ...props} = r; return {type: 'Feature', geometry: {type: 'Point', coordinates: [lon, lat]}, properties: props}; })};
+  download(`gebaeude-${fileSlug()}-${x.year}.geojson`, JSON.stringify(gj, null, 1), 'application/geo+json');
+  toast(`${x.rows.length} Gebäude exportiert`);
+});
 $('openFull').addEventListener('click', () => { $('openFull').href = permalink(); });
 if (LINK) {
   closeIntro();
