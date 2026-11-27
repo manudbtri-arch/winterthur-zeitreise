@@ -103,6 +103,7 @@
     </div>
     <button class="btn" id="go">Maus übernehmen</button>
     <button class="btn" id="home">Blick von oben auf die Altstadt</button>
+    <button class="btn" id="helpBtn" type="button">Tasten und Gesten (H)</button>
 
     <p class="note" id="terrMsg" hidden style="color:var(--brown)">Das 3D-Gelände konnte nicht geladen werden. Öffne die Seite über ihre Webadresse statt als Datei, und lade sie neu.</p>
     <p class="note">Häuser, die heute noch stehen, sind die echten 3D-Modelle von swisstopo, ausgewählt nach Baujahr im Gebäuderegister. Abgerissene Häuser sind aus der Siegfriedkarte nachgebaut, ihre Höhe ist geschätzt. Schrift und Linien der Karte werden über ihre Form herausgefiltert; einzelne Fehlklötze sind möglich.<br>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a>, BFS Gebäuderegister · <a href="methodik.html" target="_blank" rel="noopener">Methodik und Grenzen</a></p>
@@ -149,6 +150,13 @@
     <div class="row2"><button class="btn primary" id="qrSave">Als Bild speichern</button><button class="btn" id="qrClose">Schliessen</button></div>
   </div>
 </div>
+<div class="dlg" id="helpDlg" hidden role="dialog" aria-modal="true" aria-labelledby="helpH">
+  <div class="box">
+    <h2 id="helpH">Tasten und Gesten</h2>
+    <ul class="helpl" id="helpL"></ul>
+    <div class="row2"><button class="btn primary" id="helpClose">Schliessen</button></div>
+  </div>
+</div>
 <div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small><a id="iLink" hidden target="_blank" rel="noopener">Quelle öffnen</a><button class="ishare nokiosk" id="iShare" type="button" hidden>Link zu dieser Geschichte kopieren</button><button class="iclose" id="iClose" type="button" aria-label="Infokarte schliessen" title="Schliessen (Esc)">✕</button></div>
 
 <a class="pill openfull" id="openFull" href="flug-3d.html" target="_blank" rel="noopener" hidden>↗ Im Vollbild öffnen</a>
@@ -163,7 +171,7 @@
   <div><b>M</b> Karte · <b>F3</b> Koordinaten · <b>B</b> Look · <b>N</b> Norden</div>
   <div><b>P</b> Bild mit Quellenangabe speichern · <b>L</b> Messen</div>
   <div><b>Klick</b> auf ein Haus oder einen Marker: Infos</div>
-  <div><b>Tab</b> Menü · <b>Esc</b> Maus freigeben</div>
+  <div><b>Tab</b> Menü · <b>Esc</b> Maus freigeben · <b>H</b> alle Tasten</div>
 </div>
 
 <div class="timeline" aria-label="Zeitregler">
@@ -1720,6 +1728,7 @@ document.addEventListener('keydown', e => {
   if (e.code === 'KeyP') { saveShot(); }
   if (e.code === 'KeyL') { setMeasure(!meas.on); }
   if (e.code === 'KeyN') { faceNorth(); }
+  if (e.code === 'KeyH' && !KIOSK) { showHelp(); }
   if (e.key === 'Escape' && meas.on) { setMeasure(false); }
   if (e.code === 'KeyB') { setBlocky(!blocky); toast(`Minecraft-Look ${blocky ? 'an' : 'aus'}`); }
   if (locked && e.code === 'Space') e.preventDefault();
@@ -1779,6 +1788,31 @@ function showHint(kind){
   clearTimeout(hintT); hintT = setTimeout(hideHint, 15000);
 }
 $('hintOk').addEventListener('click', hideHint);
+/* ---------- Übersicht aller Tasten (Computer) bzw. Gesten (Handy): Taste H oder Knopf in den Einstellungen ---------- */
+const HELP = COARSE ? [
+  ['Joystick links unten', 'gehen'], ['Ein Finger übers Bild wischen', 'umschauen (beim Gehen)'],
+  ['Ein Finger ziehen', 'verschieben (beim Fliegen)'], ['Zwei Finger', 'zoomen und drehen'],
+  ['Haus oder Marker antippen', 'Infokarte, ✕ schliesst sie'], ['Zeitregler, Jahrzahlen', 'Jahr wählen · «Heute» zeigt die Gegenwart'],
+  ['Kompass', 'Blick nach Norden drehen'], ['☰ Menü', 'Ort suchen, Karte, Rundgang, Export, Einstellungen']
+] : [
+  ['W A S D', 'bewegen'], ['Maus', 'umschauen (erst ins Bild klicken)'], ['Leertaste / C', 'hoch / runter'],
+  ['Shift', 'rennen'], ['F', 'Fliegen oder Gehen'], ['I / U', 'Flugtempo schneller / langsamer (1–100×)'],
+  ['J', 'Fernsicht an/aus'], ['M', 'grosse Karte mit Teleport'], ['N', 'Blick nach Norden'],
+  ['L', 'Messen (zwei Punkte anklicken)'], ['P', 'Bild mit Quellenangabe speichern'], ['B', 'Minecraft-Look'],
+  ['F3', 'Koordinaten'], ['Klick auf Haus oder Marker', 'Infokarte'], ['Tab', 'Menü ein/aus'],
+  ['Esc', 'Maus freigeben, Infokarte oder Fenster schliessen'], ['H', 'diese Übersicht']
+];
+function showHelp(){
+  if (document.pointerLockElement) document.exitPointerLock();
+  const ul = $('helpL'); ul.textContent = '';
+  for (const [k, t] of HELP) { const li = document.createElement('li'), b = document.createElement('b'); b.textContent = k; li.append(b, ' ' + t); ul.appendChild(li); }
+  $('helpDlg').hidden = false; $('helpClose').focus();
+}
+$('helpBtn').addEventListener('click', showHelp);
+$('helpClose').addEventListener('click', () => { $('helpDlg').hidden = true; });
+$('helpDlg').addEventListener('click', e => { if (e.target === $('helpDlg')) $('helpDlg').hidden = true; });
+$('helpDlg').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape' || e.code === 'KeyH') $('helpDlg').hidden = true; });
+
 document.addEventListener('keydown', e => { if (!$('hint').hidden && /^(Key[WASD]|Arrow|Escape)/.test(e.code)) hideHint(); });
 $('joy').addEventListener('pointerdown', () => { if (!$('hint').hidden) hideHint(); });
 const up = new C.Cartesian3(), vel = new C.Cartesian3();   /* vel: x = rechts, y = vorwärts, z = hoch (m/s) */
@@ -2403,7 +2437,7 @@ function kioskStation(instant = false){
 function kioskStart(){
   kiosk.auto = true; kiosk.hdg = 0; kiosk.yearT = performance.now(); kiosk.ei = 0; kiosk.si = 0; kiosk.tour = false;
   if (document.pointerLockElement) document.exitPointerLock();
-  tourEnd(); closeMap(); $('embedDlg').hidden = true; $('qrDlg').hidden = true; $('info').hidden = true;
+  tourEnd(); closeMap(); $('embedDlg').hidden = true; $('qrDlg').hidden = true; $('helpDlg').hidden = true; $('info').hidden = true;
   if (meas.on) setMeasure(false);
   if (present) setPresent(false);
   setMode(false); setPanel(false);

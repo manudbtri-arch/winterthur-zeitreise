@@ -166,6 +166,9 @@ body.intro-on .joy{visibility:hidden}
 .dlg p{font-size:14px;color:var(--mute);margin:0 0 10px}
 .dlg .qrwrap{display:grid;place-items:center;margin:0 0 12px}
 .dlg .qrwrap canvas{width:min(300px,70vw);height:auto;border:1px solid var(--line);border-radius:8px;background:#fff}
+.dlg .helpl{list-style:none;margin:0 0 14px;padding:0;max-height:60vh;overflow:auto;font-size:14px;line-height:1.5}
+.dlg .helpl li{padding:5px 0;border-bottom:1px solid var(--line)}
+.dlg .helpl b{display:inline-block;min-width:11em;font-weight:600}
 .dlg textarea{width:100%;height:110px;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);resize:vertical}
 @media(min-width:1200px){.mini.on{display:block}body:has(.mini.on) .f3{bottom:212px}body:has(.mini.on) .panel{max-height:calc(100% - 224px)}}
 .intro .card{max-width:560px;text-align:left}
