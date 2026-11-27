@@ -48,3 +48,6 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Handy: Jahreszahlen der Kartenausgaben am Zeitregler als grosse Knöpfe zum Antippen (1880/1900/1920/1940).
 - [x] Messwerkzeug für Schulen und Forschung: zwei Punkte im 3D-Bild anklicken, Distanz und Höhenunterschied anzeigen.
 - [x] Eigene Story-Datei per Link testen: `?stories=<name>` lädt `stories/<name>.json` (nur Buchstaben, Ziffern, Bindestrich), damit Partner ihre Datei vor der Freischaltung prüfen können.
+- [ ] Handy: Infokarte mit Knopf «Schliessen» (✕), da es auf Touch-Geräten kein Esc gibt.
+- [ ] Unterrichtsseite: vierter Auftrag mit dem Messwerkzeug (Gassenbreite, Höhenunterschied Altstadt–Bahnhof).
+- [ ] 2D-Karte: Geschichten aus `stories/winterthur.json` als Marker mit Titel, Text und Quelle.
