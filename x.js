@@ -13,8 +13,6 @@ const $ = id => document.getElementById(id);
 const C = Cesium;
 /* Höhe über Ellipsoid: Winterthur liegt rund 500 m darüber, also 300 m über Boden */
 const HOME = {lon:8.7290, lat:47.4890, h:800, heading:15, pitch:-22};
-/* halbe Kantenlänge des gebauten Gebiets in Metern; beim Weitergehen wird automatisch nachgebaut */
-const HALF = 750;
 /* «Bewegung reduzieren» im System: Kamerafahrten kurz statt lang */
 const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const flyDur = d => REDUCE ? Math.min(d, 0.3) : d;
@@ -220,7 +218,7 @@ const gwr = {years:new Map(), all:new Map(), year:1880};   /* years/all: alle bi
 let bldTs = null;
 const PLAIN = new Set(['Gebaeude Einzelhaus', 'Hochhaus', 'Im Bau']);   /* nur diese bekommen Wohnhaus-Fenster */
 const isSpecial = f => !PLAIN.has(f.getProperty('OBJEKTART'));
-const flags = {bld: false, old: true};   /* Zustand der Häkchen, damit der Stil nicht für jedes Gebäude im HTML nachschaut */
+const flags = {bld: false, old: true, gen: true};   /* Zustand der Häkchen, damit der Stil nicht für jedes Gebäude im HTML nachschaut */
 const yearOk = f => {
   if (flags.bld) return true;
   if (!flags.old) return false;
@@ -261,10 +259,10 @@ async function buildingLayer(){
 }
 $('bld').addEventListener('change', () => buildingLayer().catch(() => { $('hud').textContent = '3D-Gebäude nicht erreichbar'; }));
 $('oldOn').addEventListener('change', () => buildingLayer().catch(() => {}));
-$('genOn').addEventListener('change', () => applyYear(+$('yr').value || gwr.year));
+$('genOn').addEventListener('change', () => { flags.gen = $('genOn').checked; applyYear(+$('yr').value || gwr.year); });
 $('blockOn').addEventListener('change', e => setBlocky(e.target.checked));
 $('shadowOn').addEventListener('change', e => { viewer.shadows = e.target.checked; });
-$('groundOn').addEventListener('change', () => { if (city && city.edition) makeGround(city.eds.get(city.edition)); });
+$('groundOn').addEventListener('change', () => refreshGrounds());
 
 /* LV95 → WGS84 (Näherungsformel von swisstopo) */
 function lv95(E, N){
@@ -275,8 +273,8 @@ function lv95(E, N){
 }
 /* Gebäuderegister im Gebiet abfragen: EGID → Baujahr und Lage */
 const PERIOD = {8011:1880, 8012:1932, 8013:1953, 8014:1966, 8015:1976, 8016:1983, 8017:1988, 8018:1993, 8019:1998, 8020:2003, 8021:2008, 8022:2013, 8023:2018};
-async function loadGwr(w, s, e, n, onProgress){
-  const boxes = [], N = 4;
+async function loadGwr(w, s, e, n, onProgress, N = 4){
+  const boxes = [];
   for (let i = 0; i < N; i++) for (let j = 0; j < N; j++)
     boxes.push([w + (e-w)*i/N, s + (n-s)*j/N, w + (e-w)*(i+1)/N, s + (n-s)*(j+1)/N]);
   const out = new Map(); let done = 0;
@@ -312,15 +310,30 @@ const x2lon = x => x / WORLD * 360 - 180;
 const y2lat = y => 180 / Math.PI * Math.atan(Math.sinh(Math.PI * (1 - 2 * y / WORLD)));
 const WALL = ['#d9ccb2','#cdbd9f','#e4d9c3','#c4b393','#d2c8b8','#bfa98a'];
 const ROOF = ['#8e4a35','#7c3f2e','#9a5a3f','#6e4636'];
-let city = null;   /* Raster für Wände: px0, py0, cw, ch, roof (Float32, NaN = frei) */
-
-function roofAt(lon, lat){
-  if (!city) return null;
-  const cx = Math.floor((lon2x(lon) - city.px0) / CELL), cy = Math.floor((lat2y(lat) - city.py0) / CELL);
-  if (cx < 0 || cy < 0 || cx >= city.cw || cy >= city.ch) return null;
-  const r = city.roof[cy * city.cw + cx];
-  return Number.isNaN(r) ? null : r;
+/* ---------- Welt in Kacheln wie in Minecraft: rund um den Standort laden, die nächsten zuerst ---------- */
+const CHUNK = TS;          /* eine Kachel = ein Kartenblatt-Ausschnitt der Zoomstufe 16, rund 400 m */
+const MARGIN = 32;         /* Rand in Pixeln, damit Häuser an der Kachelgrenze ganz erfasst werden */
+let building = false;   /* lädt gerade Kacheln (dann senkt die Ruckel-Erkennung die Qualität nicht) */
+const world = {chunks: new Map(), focus: null, forced: null, edition: 1880, busy: 0, want: 0, ready: 0, done: false};
+const chunkKey = (tx, ty) => tx + ',' + ty;
+const chunkAtXY = (x, y) => world.chunks.get(chunkKey(Math.floor(x / CHUNK), Math.floor(y / CHUNK)));
+const chunkReadyAt = (lon, lat) => { const c = chunkAtXY(lon2x(lon), lat2y(lat)); return !!(c && c.shown != null); };
+/* Dachhöhe an einem Punkt (Web-Mercator-Pixel); null = frei. Häuser am Kachelrand liegen im Raster der Nachbarkachel */
+function roofAtXY(x, y){
+  if (present || !flags.gen) return null;
+  const tx = Math.floor(x / CHUNK), ty = Math.floor(y / CHUNK);
+  let best = null;
+  for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) {
+    const c = world.chunks.get(chunkKey(tx + i, ty + j)); if (!c || c.shown == null) continue;
+    const ed = c.eds.get(c.shown); if (!ed) continue;
+    const cx = Math.floor((x - c.px0) / CELL), cy = Math.floor((y - c.py0) / CELL);
+    if (cx < 0 || cy < 0 || cx >= c.cw || cy >= c.ch) continue;
+    const r = ed.roof[cy * c.cw + cx];
+    if (!Number.isNaN(r) && (best === null || r > best)) best = r;
+  }
+  return best;
 }
+const roofAt = (lon, lat) => roofAtXY(lon2x(lon), lat2y(lat));
 const loadImg = url => new Promise(res => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = () => res(null); i.src = url; });
 const say = t => { $('bStat').textContent = t; if (!$('intro').classList.contains('off')) $('introSt').textContent = t; };
 const setProg = f => { const w = Math.round(Math.max(0, Math.min(1, f)) * 100) + '%'; $('progBar').style.width = w; $('introBar').style.width = w; };
@@ -433,7 +446,7 @@ async function analyseAsync(px, W, H, cw, ch){
 }
 
 /* Eine Kartenausgabe auswerten: Hausflächen → Blöcke mit Stufendach und Fenstern */
-async function buildEdition(area, year, reg, token){
+async function buildEdition(area, year, reg, token, emit){
   const {px0, py0, W, H, cw, ch, lat} = area;
   /* Zwischenspeicher: ausgewertete Kartenausgabe (v1 = Stand des Formfilters; bei Änderung hochzählen) */
   const ckey = `ed:v1:${year}:${px0}:${py0}:${W}:${H}`;
@@ -474,6 +487,10 @@ async function buildEdition(area, year, reg, token){
   /* auffällige Formen nur verwerfen, wenn dort kein echtes Haus steht (sonst fehlt dessen Wand) */
   let nDrop = 0;
   comps.forEach((c, i) => { if (keep[i] && c.bad && !real[i]) { keep[i] = false; nDrop++; } });
+  /* Kacheln: nur Häuser, deren Mitte in der Kachel liegt (die übrigen baut die Nachbarkachel) */
+  if (emit) comps.forEach((c, i) => { if (keep[i] && !emit(c)) keep[i] = false; });
+  /* Zufallswerte am Ort festmachen, damit ein Haus in jeder Kachel und Kartenausgabe gleich aussieht */
+  const gk = c => (px0 / CELL + c.x0) * 7919 + (py0 / CELL + c.y0) * 104729;
 
   /* Bodenhöhe, Geschosse, Farben, Dachrichtung */
   const pts = comps.map(c => C.Cartographic.fromDegrees(x2lon(px0 + (c.cx + .5) * CELL), y2lat(py0 + (c.cy + .5) * CELL)));
@@ -481,12 +498,12 @@ async function buildEdition(area, year, reg, token){
   if (token !== buildToken) return null;
   const mpp = 156543.03392 * Math.cos(lat * Math.PI / 180) / 2 ** Z, cm = CELL * mpp;
   comps.forEach((c, id) => {
-    const r = hash(id + 1 + year);
+    const r = hash(gk(c) + 1);
     c.floors = c.n > 700 ? 3 : c.n > 150 ? 3 + Math.round(r) : c.n > 35 ? 2 + Math.round(r * 2) : 2;
     c.base = (pts[id].height || 0) - 1.5;
     c.h = c.floors * 3.3 + 1.5;
     c.wall = C.Color.fromCssColorString(WALL[Math.floor(r * WALL.length)]);
-    c.roof = C.Color.fromCssColorString(c.n > 700 ? '#5c5a56' : ROOF[Math.floor(hash(id + 77) * ROOF.length)]);
+    c.roof = C.Color.fromCssColorString(c.n > 700 ? '#5c5a56' : ROOF[Math.floor(hash(gk(c) + 77) * ROOF.length)]);
     c.ew = (c.x1 - c.x0) >= (c.y1 - c.y0);          /* First in Längsrichtung */
     c.half = c.ew ? (c.y1 - c.y0 + 1) / 2 : (c.x1 - c.x0 + 1) / 2;
     c.mid = c.ew ? (c.y0 + c.y1) / 2 : (c.x0 + c.x1) / 2;
@@ -529,7 +546,7 @@ async function buildEdition(area, year, reg, token){
           const lonC = alongX ? x2lon(px0 + (b + n / 2) * CELL) : cellLon(a);
           const latC = alongX ? cellLat(a) : y2lat(py0 + (b + n / 2) * CELL);
           const w = alongX ? n * cm : cm, d = alongX ? cm : n * cm;
-          const shade = 0.94 + hash(a * 7919 + b + year) * 0.1;
+          const shade = 0.94 + hash((a + (alongX ? py0 : px0) / CELL) * 7919 + b + (alongX ? px0 : py0) / CELL) * 0.1;
           const wc = tint(c.wall, shade), rc = tint(c.roof, shade * (1 - 0.06 * ((Math.abs(a - c.mid) | 0) % 2)));
           const mw = {gen: year, floors: c.floors, hall: c.hall}, mr = {gen: year, floors: c.floors, hall: c.hall};
           box(lonC, latC, w, d, c.base, c.h, wc, mw);
@@ -580,12 +597,11 @@ async function buildEdition(area, year, reg, token){
 }
 
 /* ---------- Boden: Pflaster in Gassen und auf Plätzen, sonst Wiese, Bäche blau ---------- */
-const ground = {prim:null};
 let blocky = false;
 function setBlocky(on){
   blocky = on; $('blockOn').checked = on;
   if (bldTs && bldTs.customShader) bldTs.customShader.setUniform('u_blocky', on ? 1 : 0);
-  if (city && city.edition) makeGround(city.eds.get(city.edition));
+  refreshGrounds();
 }
 const GROUND_FS = `
 czm_material czm_getMaterial(czm_materialInput mi) {
@@ -630,12 +646,13 @@ czm_material czm_getMaterial(czm_materialInput mi) {
   m.alpha = 1.0;
   return m;
 }`;
-function makeGround(ed){
-  if (ground.prim) { scene.primitives.remove(ground.prim); ground.prim = null; }
-  city.groundFor = ed.year;
-  if (!$('groundOn').checked) return;
-  const {cw, ch, px0, py0} = city;
-  /* Abstand zum nächsten Haus: bis rund 19 m ist es Gasse oder Platz */
+function makeGround(c){
+  if (c.ground) { scene.primitives.remove(c.ground); c.ground = null; }
+  c.groundFor = c.shown;
+  const ed = c.eds.get(c.shown);
+  if (!ed || !$('groundOn').checked) return;
+  const {cw, ch} = c, m = MARGIN / CELL, n = CHUNK / CELL;
+  /* Abstand zum nächsten Haus: bis rund 19 m ist es Gasse oder Platz (über die ganze Kachel mit Rand gerechnet) */
   const dist = new Int16Array(cw * ch).fill(99), q = [];
   for (let i = 0; i < cw * ch; i++) if (ed.occ[i]) { dist[i] = 0; q.push(i); }
   for (let h = 0; h < q.length; h++) {
@@ -644,24 +661,27 @@ function makeGround(ed){
     for (const [nx, ny] of [[x+1,y],[x-1,y],[x,y+1],[x,y-1]])
       if (nx >= 0 && ny >= 0 && nx < cw && ny < ch && dist[ny * cw + nx] > dd) { dist[ny * cw + nx] = dd; q.push(ny * cw + nx); }
   }
-  const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
-  const g = cv.getContext('2d'), img = g.createImageData(cw, ch);
-  for (let i = 0; i < cw * ch; i++) {
-    img.data[i*4]   = dist[i] <= 6 ? 255 : 0;
-    img.data[i*4+1] = ed.wat[i] ? 255 : 0;
-    img.data[i*4+3] = 255;
+  const cv = document.createElement('canvas'); cv.width = n; cv.height = n;
+  const g = cv.getContext('2d'), img = g.createImageData(n, n);
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const i = (y + m) * cw + x + m, o = (y * n + x) * 4;
+    img.data[o] = dist[i] <= 6 ? 255 : 0;
+    img.data[o + 1] = ed.wat[i] ? 255 : 0;
+    img.data[o + 3] = 255;
   }
   g.putImageData(img, 0, 0);
-  const west = x2lon(px0), east = x2lon(px0 + cw * CELL), north = y2lat(py0), south = y2lat(py0 + ch * CELL);
-  const mpp = 156543.03392 * Math.cos(city.center[1] * Math.PI / 180) / 2 ** Z;
+  const x0 = c.tx * CHUNK, y0 = c.ty * CHUNK;
+  const west = x2lon(x0), east = x2lon(x0 + CHUNK), north = y2lat(y0), south = y2lat(y0 + CHUNK);
+  const mpp = 156543.03392 * Math.cos(c.lat * Math.PI / 180) / 2 ** Z;
   const stone = 0.22;                                         /* Pflasterstein in Metern */
-  const material = new C.Material({ fabric: { uniforms: { blocky: blocky ? 1 : 0, image: cv, repeat: new C.Cartesian2(cw * CELL * mpp / stone, ch * CELL * mpp / stone) }, source: GROUND_FS } });
-  ground.prim = scene.primitives.add(new C.GroundPrimitive({
+  const material = new C.Material({ fabric: { uniforms: { blocky: blocky ? 1 : 0, image: cv, repeat: new C.Cartesian2(CHUNK * mpp / stone, CHUNK * mpp / stone) }, source: GROUND_FS } });
+  c.ground = scene.primitives.add(new C.GroundPrimitive({
     geometryInstances: new C.GeometryInstance({ geometry: new C.RectangleGeometry({ rectangle: C.Rectangle.fromDegrees(west, south, east, north), vertexFormat: C.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat }) }),
     appearance: new C.MaterialAppearance({ material, materialSupport: C.MaterialAppearance.MaterialSupport.TEXTURED }),
     classificationType: C.ClassificationType.TERRAIN
   }));
 }
+function refreshGrounds(){ for (const c of world.chunks.values()) makeGround(c); }
 
 /* Rekonstruierte Häuser hervorheben: Wände und Dächer bläulich, damit sie sich von belegten abheben */
 const HL_WALL = C.Color.fromCssColorString('#9fbfe0'), HL_ROOF = C.Color.fromCssColorString('#4a74a6');
@@ -745,19 +765,19 @@ function updateStats(){
     list.appendChild(row);
   }
   stats = {kind: 'epoche', rows: all.map(e => ({label: e.label, n: n.get(e)})), total};
-  const ed = city && city.edition ? city.eds.get(city.edition) : null;
-  $('epochSum').textContent = `${total} belegte Gebäude bis ${present ? 'heute' : gwr.year}` + (ed && !present ? ` · dazu ${ed.nGen} rekonstruierte (Karte ${ed.year}), nicht eingefärbt` : '') + '. Quelle: GWR (BFS).';
+  const nGen = genCount();
+  $('epochSum').textContent = `${total} belegte Gebäude in den geladenen Kacheln bis ${present ? 'heute' : gwr.year}` + (nGen && !present ? ` · dazu ${nGen} rekonstruierte (Karte ${world.edition}), nicht eingefärbt` : '') + '. Quelle: GWR (BFS).';
 }
 $('epochOn').addEventListener('change', e => setAnalysis(e.target.checked ? 'epoch' : false));
 $('newOn').addEventListener('change', e => setAnalysis(e.target.checked ? 'new' : false));
 /* Statistik als CSV: Epoche, Anzahl, Anteil, Jahr, Ort, Lage und Quelle (für Forschung und Unterricht) */
 $('epochCsv').addEventListener('click', () => {
-  if (!stats || !gwr.info || !city) { toast('Zuerst ein Gebiet bauen'); return; }
-  const yr = present ? 'heute' : gwr.year, [E, N] = toLV95(city.center[0], city.center[1]);
+  if (!stats || !gwr.info || !world.focus) { toast('Zuerst ein Gebiet bauen'); return; }
+  const yr = present ? 'heute' : gwr.year, [E, N] = toLV95(world.focus[0], world.focus[1]);
   const esc = v => { const t = String(v ?? ''); return /[;"\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
   const pct = v => stats.total ? (v / stats.total * 100).toFixed(1) : '0.0';
   const lines = [['auswertung', 'kategorie', 'anzahl', 'anteil_prozent', 'stand_jahr', 'ort', 'mitte_e_lv95', 'mitte_n_lv95', 'gebiet', 'quelle'].join(';'),
-    ...stats.rows.map(r => [stats.kind, r.label, r.n, pct(r.n), yr, placeName, Math.round(E), Math.round(N), 'rund 1,5 x 1,5 km um die Mitte',
+    ...stats.rows.map(r => [stats.kind, r.label, r.n, pct(r.n), yr, placeName, Math.round(E), Math.round(N), 'geladene Kacheln um den Standort',
       'Gebäuderegister GWR (BFS), nur heute noch stehende Gebäude; Bauperiode «vor 1919» ohne genaues Jahr'].map(esc).join(';')),
     ['summe', 'alle belegten Gebäude', stats.total, '100.0', yr, placeName, Math.round(E), Math.round(N), '', ''].map(esc).join(';')];
   download(`bauepochen-${fileSlug()}-${yr}.csv`, '\ufeff' + lines.join('\r\n'), 'text/csv;charset=utf-8');
@@ -770,79 +790,142 @@ function styleDirty(){
   if (styleT) return;
   styleT = setTimeout(() => { styleT = 0; if (bldTs) { bldTs.makeStyleDirty(); specTs.makeStyleDirty(); } }, 150);
 }
-/* Jahr anwenden: echte Häuser nach Baujahr, nachgebaute aus der passenden Kartenausgabe */
+/* Jahr anwenden: echte Häuser nach Baujahr, nachgebaute aus der passenden Kartenausgabe jeder Kachel */
+function genCount(){ let n = 0; for (const c of world.chunks.values()) { const ed = c.eds.get(c.shown); if (ed) n += ed.nGen; } return n; }
+function showChunk(c){
+  if (!c.eds.size) return;
+  const avail = [...c.eds.keys()].sort((a, b) => a - b);
+  const pick = c.eds.has(world.edition) ? world.edition : (avail.filter(e => e <= world.edition).pop() ?? avail[0]);
+  for (const [e, ed] of c.eds) if (ed.prim) ed.prim.show = e === pick && $('genOn').checked && !present;
+  c.shown = pick;
+  if (c.groundFor !== pick) makeGround(c);
+}
 function applyYear(y){
   gwr.year = y;
   markTicks();
   styleDirty();
-  if (!city) return;
-  const avail = [...city.eds.keys()].sort((a, b) => a - b);
-  if (!avail.length) return;
-  const pick = avail.filter(e => e <= y).pop() ?? avail[0];
-  for (const [e, ed] of city.eds) if (ed.prim) ed.prim.show = (e === pick) && $('genOn').checked && !present;
-  city.roof = city.eds.get(pick).roof;
-  city.edition = pick;
-  if (city.groundFor !== pick) makeGround(city.eds.get(pick));
-  const ed = city.eds.get(pick);
+  world.edition = EDITIONS.filter(e => e <= y).pop() ?? EDITIONS[0];
+  for (const c of world.chunks.values()) showChunk(c);
   updateStories();
   if (present) { say('Heute: Luftbild, alle 3D-Gebäude und Bäume von swisstopo.'); updateStats(); return; }
+  if (!world.chunks.size) return;
   let nOldNow = 0; if (gwr.info) for (const r of gwr.info.values()) if (r.y <= y) nOldNow++;
-  say(`${y}: ${nOldNow} echte Altbauten und ${ed.nGen} nachgebaute Häuser (Karte ${pick}).` + (avail.length < EDITIONS.length ? ' Weitere Jahrgänge werden noch gebaut …' : ' Zieh am Jahr-Regler für den Zeitsprung.'));
+  say(`${y}: ${nOldNow} echte Altbauten und ${genCount()} nachgebaute Häuser (Karte ${world.edition}) in der Umgebung.` + (world.done ? ' Zieh am Jahr-Regler für den Zeitsprung.' : ' Weitere Kacheln laden …'));
   updateStats();
 }
 
-let oldPrims = [], building = false;
-const dropOld = () => { for (const p of oldPrims) scene.primitives.remove(p); oldPrims = []; };
-async function buildHouses(center){
-  const btn = $('build'); btn.disabled = true; building = true;
-  const token = ++buildToken;
-  try {
-    const [lon, lat] = center || centerLonLat();
-    if (bldTs && bldTs.customShader) bldTs.customShader.setUniform('u_up', C.Ellipsoid.WGS84.geodeticSurfaceNormal(C.Cartesian3.fromDegrees(lon, lat), new C.Cartesian3()));
-    const dLat = HALF / 111320, dLon = HALF / (111320 * Math.cos(lat * Math.PI / 180));
-    const px0 = Math.floor(lon2x(lon - dLon)), px1 = Math.ceil(lon2x(lon + dLon));
-    const py0 = Math.floor(lat2y(lat + dLat)), py1 = Math.ceil(lat2y(lat - dLat));
-    const W = px1 - px0, H = py1 - py0;
-    const area = {px0, py0, W, H, cw: Math.floor(W / CELL), ch: Math.floor(H / CELL), lat};
-
-    if (city) for (const ed of city.eds.values()) if (ed.prim) oldPrims.push(ed.prim);
-    city = {px0, py0, cw: area.cw, ch: area.ch, roof: new Float32Array(area.cw * area.ch).fill(NaN), eds: new Map(), center:[lon, lat]};
-
-    say('Frage das Gebäuderegister nach Baujahren ab …');
-    const gkey = `gwr:v1:${lon.toFixed(4)}:${lat.toFixed(4)}`, gc = await idbGet(gkey);
-    let reg;
-    if (gc && gc.reg instanceof Map && Date.now() - gc.t < 30 * 864e5) { reg = gc.reg; say('Gebäuderegister aus dem Zwischenspeicher …'); setProg(0.3); }
-    else {
-      reg = await loadGwr(lon - dLon, lat - dLat, lon + dLon, lat + dLat, (d, t) => { say(`Gebäuderegister: ${d} von ${t} Teilgebieten …`); setProg(0.3 * d / t); });
-      if (reg.size) idbPut(gkey, {t: Date.now(), reg});
-    }
-    if (token !== buildToken) return;
-    for (const [id, r] of reg) { gwr.years.set(id, r.y); gwr.all.set(id, r); }
-    gwr.info = reg;
-    $('bld').checked = false;
-    await buildingLayer().catch(() => {});
-
-    /* zuerst die Ausgabe zum aktuellen Jahr, dann die übrigen */
-    const y = +$('yr').value || 1880;
-    const first = EDITIONS.filter(e => e <= y).pop() ?? EDITIONS[0];
-    const order = [first, ...EDITIONS.filter(e => e !== first)];
-    for (const e of order) {
-      say(`Baue Häuser nach der Siegfriedkarte ${e} …`);
-      const ed = await buildEdition(area, e, reg, token);
-      if (!ed || token !== buildToken) { if (ed && ed.prim) scene.primitives.remove(ed.prim); return; }
-      city.eds.set(e, ed);
-      if (city.eds.size === 1) dropOld();
-      setProg(0.3 + 0.7 * city.eds.size / EDITIONS.length);
-      applyYear(+$('yr').value || 1880);
-      if (city.eds.size === 1) { $('introWalk').disabled = false; }
-      await new Promise(r => setTimeout(r, 50));
-    }
-  } catch (e) {
-    console.error(e);
-    say('Bauen fehlgeschlagen: ' + (e && e.message ? e.message : e));
-  } finally { if (token === buildToken) { btn.disabled = false; building = false; } }
+/* Gebäuderegister einer Kachel (mit Rand), 30 Tage zwischengespeichert */
+async function chunkGwr(c){
+  const key = `gwrc:v1:${c.tx}:${c.ty}`, gc = await idbGet(key);
+  if (gc && gc.reg instanceof Map && Date.now() - gc.t < 30 * 864e5) return gc.reg;
+  const reg = await loadGwr(x2lon(c.px0), y2lat(c.py0 + c.H), x2lon(c.px0 + c.W), y2lat(c.py0), () => {}, 1);
+  if (reg.size) idbPut(key, {t: Date.now(), reg});
+  return reg;
 }
-$('build').addEventListener('click', () => buildHouses());
+let infoT = 0;
+function scheduleInfo(){
+  clearTimeout(infoT);
+  infoT = setTimeout(() => { gwr.info = new Map(); for (const c of world.chunks.values()) if (c.reg) for (const [id, r] of c.reg) gwr.info.set(id, r); updateStats(); }, 300);
+}
+async function loadChunk(tx, ty, e){
+  const k = chunkKey(tx, ty);
+  let c = world.chunks.get(k);
+  if (!c) {
+    const W = CHUNK + 2 * MARGIN;
+    c = {tx, ty, px0: tx * CHUNK - MARGIN, py0: ty * CHUNK - MARGIN, W, H: W, cw: W / CELL, ch: W / CELL, lat: y2lat((ty + 0.5) * CHUNK),
+         eds: new Map(), pending: new Set(), reg: null, ground: null, groundFor: null, shown: null, fail: 0};
+    world.chunks.set(k, c);
+  }
+  const token = buildToken;
+  c.pending.add(e);
+  try {
+    if (!c.reg) {
+      const reg = await chunkGwr(c);
+      if (token !== buildToken || world.chunks.get(k) !== c) return;
+      c.reg = reg;
+      for (const [id, r] of reg) { gwr.years.set(id, r.y); gwr.all.set(id, r); }
+      styleDirty(); scheduleInfo();
+    }
+    const m0 = MARGIN / CELL, m1 = (MARGIN + CHUNK) / CELL;
+    const ed = await buildEdition({px0: c.px0, py0: c.py0, W: c.W, H: c.H, cw: c.cw, ch: c.ch, lat: c.lat}, e, c.reg, token,
+      cc => cc.cx + 0.5 >= m0 && cc.cx + 0.5 < m1 && cc.cy + 0.5 >= m0 && cc.cy + 0.5 < m1);
+    if (!ed) return;
+    if (token !== buildToken || world.chunks.get(k) !== c) { if (ed.prim) scene.primitives.remove(ed.prim); return; }
+    c.eds.set(e, ed);
+    showChunk(c);
+    $('introWalk').disabled = false;
+  } catch (err) { console.error(err); c.fail++; }
+  finally { c.pending.delete(e); }
+}
+function unloadChunk(k, c){
+  for (const ed of c.eds.values()) if (ed.prim) scene.primitives.remove(ed.prim);
+  if (c.ground) scene.primitives.remove(c.ground);
+  world.chunks.delete(k);
+  scheduleInfo();
+}
+/* Wo geladen wird: beim Gehen am Standort, beim Fliegen in der Bildmitte; hoch oben bleibt alles, wie es ist */
+function currentFocus(){
+  if (world.forced) {
+    if (C.Cartesian3.distance(world.forced.cam, camera.position) < 150) return world.forced.pt;
+    world.forced = null;
+  }
+  const c = C.Cartographic.fromCartesian(camera.position), g = globe.getHeight(c);
+  if (g === undefined || c.height - g > 1500) return world.focus;
+  if (walk) return [C.Math.toDegrees(c.longitude), C.Math.toDegrees(c.latitude)];
+  return centerLonLat();
+}
+const SIGHT = () => walk ? 2 : 3;   /* Sichtweite in Kacheln, wie die Render-Distanz in Minecraft */
+function schedTick(){
+  if (!terrainOk || present) { building = false; return; }
+  const f = currentFocus(); if (!f) return;
+  world.focus = f;
+  const fx = lon2x(f[0]) / CHUNK, fy = lat2y(f[1]) / CHUNK, R = SIGHT();
+  const dOf = (tx, ty) => Math.hypot(tx + 0.5 - fx, ty + 0.5 - fy);
+  /* weit entfernte Kacheln entladen, mittlere nur mit der aktuellen Kartenausgabe behalten */
+  for (const [k, c] of world.chunks) {
+    const d = dOf(c.tx, c.ty);
+    if (d > R + 1.5 && !c.pending.size) unloadChunk(k, c);
+    else if (d > 2.2) for (const [e, ed] of c.eds) if (e !== c.shown && !c.pending.has(e)) { if (ed.prim) scene.primitives.remove(ed.prim); c.eds.delete(e); }
+  }
+  /* nächste fehlende Kachel suchen, die nächste zuerst */
+  let best = null, bestD = 1e9, want = 0, ready = 0;
+  for (let j = -R - 1; j <= R + 1; j++) for (let i = -R - 1; i <= R + 1; i++) {
+    const tx = Math.floor(fx) + i, ty = Math.floor(fy) + j, d = dOf(tx, ty);
+    if (d > R + 0.5) continue;
+    want++;
+    const c = world.chunks.get(chunkKey(tx, ty));
+    if (c && c.eds.has(world.edition)) { ready++; continue; }
+    if (c && (c.pending.has(world.edition) || c.fail >= 2)) continue;
+    if (d < bestD) { bestD = d; best = [tx, ty, world.edition]; }
+  }
+  /* alles da: für die nahen Kacheln die übrigen Kartenausgaben vorbereiten, damit der Zeitregler sofort umschaltet */
+  if (!best) for (const c of world.chunks.values()) {
+    const d = dOf(c.tx, c.ty);
+    if (d > 1.6 || c.fail >= 2 || d >= bestD) continue;
+    const e = EDITIONS.find(x => !c.eds.has(x) && !c.pending.has(x));
+    if (e !== undefined) { bestD = d; best = [c.tx, c.ty, e]; }
+  }
+  world.want = want; world.ready = ready;
+  const wasDone = world.done; world.done = ready >= want;
+  building = !world.done;
+  if (!world.done) { setProg(ready / Math.max(1, want)); if (world.busy) say(`Lade die Umgebung: ${ready} von ${want} Kacheln …`); }
+  else if (!wasDone) { setProg(1); applyYear(gwr.year); }
+  if (!best || world.busy >= 2) return;
+  world.busy++;
+  loadChunk(best[0], best[1], best[2]).finally(() => { world.busy--; schedTick(); });
+}
+setInterval(schedTick, 250);
+/* An einem Ort sofort mit dem Laden beginnen (Suche, Start, Teleport) */
+function buildHouses(center){
+  const [lon, lat] = center || centerLonLat();
+  if (bldTs && bldTs.customShader) bldTs.customShader.setUniform('u_up', C.Ellipsoid.WGS84.geodeticSurfaceNormal(C.Cartesian3.fromDegrees(lon, lat), new C.Cartesian3()));
+  world.forced = {pt: [lon, lat], cam: C.Cartesian3.clone(camera.position)};
+  $('bld').checked = false;
+  buildingLayer().catch(() => {});
+  schedTick();
+}
+/* «Hier neu bauen»: alle Kacheln verwerfen und um die Bildmitte neu laden */
+$('build').addEventListener('click', () => { buildToken++; for (const [k, c] of [...world.chunks]) unloadChunk(k, c); world.done = false; buildHouses(); });
 
 /* ---------- Ortssuche ganze Schweiz (geo.admin.ch) ---------- */
 const plain = t => String(t || '').replace(/<[^>]+>/g, '').replace(/^[a-z_]+_\s*/, '').trim();
@@ -913,7 +996,7 @@ function setPresent(on){
   $('veg').checked = on;
   buildingLayer().catch(() => {});
   toggleTiles('v', 'https://3d.geo.admin.ch/ch.swisstopo.vegetation.3d/v1/tileset.json', on);
-  if (city && city.edition) makeGround(city.eds.get(city.edition));
+  refreshGrounds();
   applyYear(on ? 2100 : +$('yr').value);
   $('yBig').textContent = on ? 'Heute' : $('yr').value;
   $('yLbl').textContent = on ? 'Luftbild und 3D-Gebäude von swisstopo' : 'Siegfriedkarte';
@@ -959,8 +1042,10 @@ async function openMap(){
   meMark = L.marker([lat, lon], {icon: L.divIcon({className: '', iconSize: [28, 28], iconAnchor: [14, 14],
     html: `<svg width="28" height="28" viewBox="0 0 28 28" style="transform:rotate(${hdg}deg)"><circle cx="14" cy="14" r="7" fill="#c8803f" stroke="#fff" stroke-width="2"/><path d="M14 1 L19 10 L9 10Z" fill="#c8803f" stroke="#fff" stroke-width="1.5"/></svg>`})}).addTo(omap);
   if (areaRect) omap.removeLayer(areaRect);
-  if (city) {
-    areaRect = L.rectangle([[y2lat(city.py0 + city.ch * CELL), x2lon(city.px0)], [y2lat(city.py0), x2lon(city.px0 + city.cw * CELL)]],
+  if (world.chunks.size) {
+    let x0 = 1e12, x1 = -1e12, y0 = 1e12, y1 = -1e12;
+    for (const c of world.chunks.values()) { x0 = Math.min(x0, c.tx); x1 = Math.max(x1, c.tx + 1); y0 = Math.min(y0, c.ty); y1 = Math.max(y1, c.ty + 1); }
+    areaRect = L.rectangle([[y2lat(y1 * CHUNK), x2lon(x0 * CHUNK)], [y2lat(y0 * CHUNK), x2lon(x1 * CHUNK)]],
       {color: '#8a5a2b', weight: 2, dashArray: '8 6', fill: false, interactive: false}).addTo(omap);
   }
   setTimeout(() => omap.invalidateSize(), 50);
@@ -974,28 +1059,25 @@ $('mapFull').addEventListener('click', goFull);
 
 /* Teleport: im gebauten Gebiet auf eine freie Strassenstelle, sonst einfach auf den Boden */
 async function teleport(lon, lat){
-  if (city) {
-    const x = (lon2x(lon) - city.px0) / CELL, y = (lat2y(lat) - city.py0) / CELL;
-    if (x >= 0 && y >= 0 && x < city.cw && y < city.ch) { await spawn([lon, lat]); return; }
-  }
+  if (chunkReadyAt(lon, lat)) { await spawn([lon, lat]); return; }
   const p = C.Cartographic.fromDegrees(lon, lat);
   if (terrainOk) await C.sampleTerrainMostDetailed(viewer.terrainProvider, [p]);
   p.height = (p.height || 0) + 1.7;
   camera.setView({destination: C.Cartographic.toCartesian(p), orientation: {heading: camera.heading, pitch: 0, roll: 0}});
   setMode(true); setPanel(false);
-  say('Ausserhalb des gebauten Gebiets. «Hier neu bauen» baut die Häuser um diese Stelle.');
+  buildHouses([lon, lat]);
+  say('Die Häuser rundherum werden geladen …');
 }
 
 /* Die engste, dichteste Gasse in der Nähe suchen: freie Stelle mit möglichst vielen Häusern rundherum */
 function densestStreet(lon, lat){
-  if (!city) return [lon, lat];
-  const R = city.roof, cw = city.cw, ch = city.ch;
-  const cx0 = Math.floor((lon2x(lon) - city.px0) / CELL), cy0 = Math.floor((lat2y(lat) - city.py0) / CELL);
-  const occ = (x, y) => x < 0 || y < 0 || x >= cw || y >= ch ? 0 : (Number.isNaN(R[y * cw + x]) ? 0 : 1);
+  if (!world.chunks.size) return [lon, lat];
+  const cx0 = Math.floor(lon2x(lon) / CELL), cy0 = Math.floor(lat2y(lat) / CELL);
+  const occ = (x, y) => roofAtXY((x + 0.5) * CELL, (y + 0.5) * CELL) === null ? 0 : 1;
   /* echte Altbauten des gewählten Jahres je Rasterzelle: dort ist die Altstadt */
-  const old = new Map();
+  const old = new Map(), K = 1e7;
   if (gwr.info) for (const r of gwr.info.values()) if (r.y <= gwr.year) {
-    const i = Math.floor((lat2y(r.lat) - city.py0) / CELL) * cw + Math.floor((lon2x(r.lon) - city.px0) / CELL);
+    const i = Math.floor(lat2y(r.lat) / CELL) * K + Math.floor(lon2x(r.lon) / CELL);
     old.set(i, (old.get(i) || 0) + 1);
   }
   let best = null, bestS = -1;
@@ -1003,28 +1085,33 @@ function densestStreet(lon, lat){
     /* frei, mit Durchgang in einer Richtung (Gassen sind auf der Karte schmal) */
     if (occ(x, y) || !((!occ(x - 1, y) && !occ(x + 1, y)) || (!occ(x, y - 1) && !occ(x, y + 1)))) continue;
     let sc = 0;
-    for (let k = -5; k <= 5; k++) for (let j = -5; j <= 5; j++) sc += old.get((y + k) * cw + x + j) || 0;
+    for (let k = -5; k <= 5; k++) for (let j = -5; j <= 5; j++) sc += old.get((y + k) * K + x + j) || 0;
     sc -= Math.hypot(x - cx0, y - cy0) * 0.15;                 /* nahe der Mitte bevorzugen */
     if (sc > bestS) { bestS = sc; best = [x, y]; }
   }
-  return best ? [x2lon(city.px0 + (best[0] + .5) * CELL), y2lat(city.py0 + (best[1] + .5) * CELL)] : [lon, lat];
+  return best ? [x2lon((best[0] + .5) * CELL), y2lat((best[1] + .5) * CELL)] : [lon, lat];
 }
 
 /* Auf eine freie Strassenstelle setzen, Blick nach Osten */
 async function spawn(at){
-  if (!city) { say('Zuerst «Häuser hier bauen».'); return; }
   let [lon, lat] = at || centerLonLat();
-  const inside = (a, b) => { const x = (lon2x(a) - city.px0) / CELL, y = (lat2y(b) - city.py0) / CELL; return x >= 0 && y >= 0 && x < city.cw && y < city.ch; };
-  if (!inside(lon, lat)) [lon, lat] = city.center;
-  const sx = Math.floor((lon2x(lon) - city.px0) / CELL), sy = Math.floor((lat2y(lat) - city.py0) / CELL);
-  const isOcc = (x, y) => x < 0 || y < 0 || x >= city.cw || y >= city.ch || !Number.isNaN(city.roof[y * city.cw + x]);
+  if (!chunkReadyAt(lon, lat)) {
+    /* noch nicht geladen: in die nächste fertige Kachel */
+    const x = lon2x(lon), y = lat2y(lat); let near = null, nd = Infinity;
+    for (const c of world.chunks.values()) if (c.shown != null) { const d = Math.hypot((c.tx + .5) * CHUNK - x, (c.ty + .5) * CHUNK - y); if (d < nd) { nd = d; near = c; } }
+    if (!near) { say('Die Umgebung lädt noch – gleich nochmals versuchen.'); return; }
+    lon = x2lon((near.tx + .5) * CHUNK); lat = y2lat((near.ty + .5) * CHUNK);
+  }
+  const sx = Math.floor(lon2x(lon) / CELL), sy = Math.floor(lat2y(lat) / CELL);
+  const cellReady = (x, y) => { const c = chunkAtXY((x + .5) * CELL, (y + .5) * CELL); return !!(c && c.shown != null); };
+  const isOcc = (x, y) => !cellReady(x, y) || roofAtXY((x + .5) * CELL, (y + .5) * CELL) !== null;
   const free = (x, y) => !isOcc(x, y) && ((!isOcc(x - 1, y) && !isOcc(x + 1, y)) || (!isOcc(x, y - 1) && !isOcc(x, y + 1)));
   let best = null;
   for (let r = 0; r < 80 && !best; r++)
     for (let dy = -r; dy <= r && !best; dy++) for (let dx = -r; dx <= r; dx++)
       if ((Math.abs(dx) === r || Math.abs(dy) === r) && free(sx + dx, sy + dy)) { best = [sx + dx, sy + dy]; break; }
   if (!best) { say('Keine freie Stelle gefunden.'); return; }
-  const p = C.Cartographic.fromDegrees(x2lon(city.px0 + (best[0] + .5) * CELL), y2lat(city.py0 + (best[1] + .5) * CELL));
+  const p = C.Cartographic.fromDegrees(x2lon((best[0] + .5) * CELL), y2lat((best[1] + .5) * CELL));
   if (terrainOk) await C.sampleTerrainMostDetailed(viewer.terrainProvider, [p]);
   p.height = (p.height || 0) + 1.7;
   camera.setView({destination:C.Cartographic.toCartesian(p), orientation:{heading:C.Math.toRadians(90), pitch:0, roll:0}});
@@ -1034,7 +1121,7 @@ async function spawn(at){
   for (let h = 0; h < 360; h += 20) {
     camera.setView({orientation:{heading:C.Math.toRadians(h), pitch:0, roll:0}});
     try {
-      const hit = scene.pickFromRay(new C.Ray(C.Cartesian3.clone(camera.position), C.Cartesian3.clone(camera.direction)), ground.prim ? [ground.prim] : []);
+      const hit = scene.pickFromRay(new C.Ray(C.Cartesian3.clone(camera.position), C.Cartesian3.clone(camera.direction)), [...world.chunks.values()].map(c => c.ground).filter(Boolean));
       const d = hit && hit.object && hit.position ? C.Cartesian3.distance(hit.position, camera.position) : 300;
       if (d > bestD && d <= 300) { bestD = d; bestH = h; }
     } catch (e) {}
@@ -1217,7 +1304,7 @@ const joy = {on: false, x: 0, y: 0, id: null};
   };
   pad.addEventListener('pointerdown', e => {
     e.preventDefault(); joy.on = true; joy.id = e.pointerId; pad.setPointerCapture(e.pointerId);
-    if (!walk && city) spawn(centerLonLat()); else if (!walk) setMode(true);
+    if (!walk && world.chunks.size) spawn(centerLonLat()); else if (!walk) setMode(true);
     move(e);
   });
   pad.addEventListener('pointermove', e => { if (joy.on && e.pointerId === joy.id) move(e); });
@@ -1282,10 +1369,8 @@ scene.preRender.addEventListener(() => {
       slowSince = 0; fps = 45;
     }
   } else slowSince = 0;
-  if (city && city.edition) {
-    const ed = city.eds.get(city.edition), want = $('recHl').checked;
-    if (ed && ed.prim && ed.prim.ready && ed.hl !== want) recolor(ed, want);
-  }
+  { const want = $('recHl').checked;
+    for (const c of world.chunks.values()) { const ed = c.eds.get(c.shown); if (ed && ed.prim && ed.prim.ready && ed.hl !== want) recolor(ed, want); } }
   const carto = C.Cartographic.fromCartesian(camera.position);
   const gnd = globe.getHeight(carto);
   const agl = gnd === undefined ? carto.height : carto.height - gnd;
@@ -1388,7 +1473,7 @@ function permalink(){
     lon: r(C.Math.toDegrees(c.longitude), 6), lat: r(C.Math.toDegrees(c.latitude), 6), h: r(c.height, 1),
     hdg: r((C.Math.toDegrees(camera.heading) + 360) % 360, 1), pitch: r(C.Math.toDegrees(camera.pitch), 1),
     year: +$('yr').value || 1880, mode: present ? 'now' : walk ? 'walk' : 'fly'});
-  if (city) q.set('c', city.center.map(v => v.toFixed(5)).join(','));
+  if (world.focus) q.set('c', world.focus.map(v => v.toFixed(5)).join(','));
   if (STORY_NAME) q.set('stories', STORY_NAME);
   return location.origin + location.pathname + '?' + q.toString();
 }
@@ -1566,19 +1651,19 @@ $('shotBtn').addEventListener('click', saveShot);
 /* ---------- Gebäude-Export: belegte und rekonstruierte Häuser des gebauten Gebiets zum gewählten Jahr ---------- */
 const SRC_OLD = 'swissBUILDINGS3D (swisstopo), Gebäuderegister GWR (BFS)';
 function exportRows(){
-  if (!city || !city.edition || !gwr.info) return null;
-  const year = +$('yr').value || 1880, ed = city.eds.get(city.edition), rows = [];
+  if (!world.chunks.size || !gwr.info) return null;
+  const year = +$('yr').value || 1880, rows = [];
   for (const [egid, r] of gwr.info) if (r.y <= year) {
     const [E, N] = toLV95(r.lon, r.lat);
     rows.push({status: 'belegt', egid, adresse: r.adr, baujahr: r.exact ? r.y : '', bauperiode: r.exact ? '' : 'vor 1919',
       kartenstand: '', geschosse_geschaetzt: '', flaeche_m2: '', lon: +r.lon.toFixed(6), lat: +r.lat.toFixed(6), e_lv95: Math.round(E), n_lv95: Math.round(N), quelle: SRC_OLD});
   }
-  for (const h of ed.recs) {
+  for (const c of world.chunks.values()) { const ed = c.eds.get(c.shown); if (ed) for (const h of ed.recs) {
     const [E, N] = toLV95(h.lon, h.lat);
     rows.push({status: 'rekonstruiert', egid: '', adresse: '', baujahr: '', bauperiode: '', kartenstand: ed.year,
       geschosse_geschaetzt: h.floors, flaeche_m2: h.m2, lon: +h.lon.toFixed(6), lat: +h.lat.toFixed(6), e_lv95: Math.round(E), n_lv95: Math.round(N),
       quelle: `Siegfriedkarte ${ed.year} (swisstopo), Grundriss aus der Karte, Höhe geschätzt`});
-  }
+  } }
   return {year, rows};
 }
 function download(name, text, type){
@@ -1671,26 +1756,6 @@ if (KIOSK) {
   });
   kioskStart();
 }
-/* ---------- Automatisch nachbauen: wer den Rand des gebauten Gebiets erreicht, bekommt dort neue Häuser ---------- */
-let followSince = 0;
-const followPos = new C.Cartesian3();
-setInterval(() => {
-  /* während Kamerafahrten (Suche, Rundgang) nicht nachbauen: mehr als 40 m in einer halben Sekunde */
-  const moved = C.Cartesian3.distance(followPos, camera.position); C.Cartesian3.clone(camera.position, followPos);
-  if (moved > 40) { followSince = 0; return; }
-  if (!city || building || present || KIOSK || !terrainOk || !$('intro').classList.contains('off') || C.Cartesian3.magnitude(vel) > 25) { followSince = 0; return; }
-  const c = C.Cartographic.fromCartesian(camera.position), g = globe.getHeight(c);
-  if (g === undefined || c.height - g > 700) { followSince = 0; return; }       /* hoch oben: nicht nachbauen */
-  const [lon, lat] = walk ? [C.Math.toDegrees(c.longitude), C.Math.toDegrees(c.latitude)] : centerLonLat();
-  const dx = (lon - city.center[0]) * 111320 * Math.cos(lat * Math.PI / 180), dy = (lat - city.center[1]) * 111320;
-  if (Math.max(Math.abs(dx), Math.abs(dy)) < HALF * 0.6) { followSince = 0; return; }
-  if (!followSince) { followSince = performance.now(); return; }
-  if (performance.now() - followSince < 1500) return;
-  followSince = 0;
-  toast('Baue die Häuser in der Umgebung …', 2500);
-  buildHouses([lon, lat]);
-}, 500);
-
 if (LINK) {
   closeIntro();
   camera.setView({destination: C.Cartesian3.fromDegrees(LINK.lon, LINK.lat, LINK.h),
