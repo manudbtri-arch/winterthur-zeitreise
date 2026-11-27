@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Unterrichtsseite: Auftrag 5 «Zwei Orte im Vergleich» mit der Statistik-CSV (Diagramm in der Tabellenkalkulation, Erklärung prüfen, Grenze der Zählung); Produktseite nennt fünf Aufträge.
 - Direktlink zu einer Geschichte: `flug-3d.html?story=<id>` fliegt hin und öffnet die Infokarte; die Infokarte einer Geschichte hat den Knopf «Link zu dieser Geschichte kopieren»; in der Partner-Anleitung beschrieben.
 - Produktseite nennt Kompass, Statistik-CSV und Story-Werkstatt; Methodik erklärt in einem neuen Abschnitt, was die Statistik der Bauepochen zählt und was ihre Spalten bedeuten.
 - Neue Story-Werkstatt `stories/werkstatt.html`: Geschichten im Formular erfassen, Lage über Adresssuche oder Klick in die Landeskarte, Prüfung der Pflichtfelder und Quellenregeln, bestehende Datei öffnen, JSON herunterladen oder kopieren; verlinkt aus Partner-Anleitung und Pilotabschnitt.
