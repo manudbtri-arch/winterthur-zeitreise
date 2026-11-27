@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Story-Werkstatt nennt die Testlinks für 3D-Flug, 2D-Karte und Kiosk-Rundgang.
 - 2D-Karte mit eigener Story-Datei: die Sprungziele sind die Geschichten der Datei, überschrieben mit dem Ort aus der Datei, statt der Winterthurer Quartiere.
 - Unterrichtsseite: Auftrag 7 «Wie alt ist die Karte?» – Blatt und Kartenstand unter dem Zeitregler ablesen, mit dem gewählten Jahr und einem zweiten Ort vergleichen, die Abweichung mit der Methodik erklären; neues Lernziel; Produktseite nennt sieben Aufträge.
 - 2D-Karte lädt mit `?stories=<name>` eine eigene Story-Datei wie der 3D-Flug und meldet die Zahl der Geschichten; der Name bleibt im kopierten Link und beim Wechsel zwischen 2D-Karte und 3D-Flug erhalten; in der Partner-Anleitung erklärt.

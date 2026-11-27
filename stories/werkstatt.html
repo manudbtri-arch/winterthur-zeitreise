@@ -243,7 +243,7 @@ function render(){
   $('preview').textContent = JSON.stringify(output(), null, 2);
   const fn = $('fname').value.trim();
   $('testHint').textContent = (nBad ? `${nBad} Geschichte(n) noch unvollständig – sie würden beim Laden übersprungen. ` : '') +
-    (fn && /^[a-z0-9-]{1,40}$/.test(fn) ? `Nach der Freischaltung testen mit: flug-3d.html?stories=${fn}` : 'Dateiname eintragen, um den Testlink zu sehen.');
+    (fn && /^[a-z0-9-]{1,40}$/.test(fn) ? `Nach der Freischaltung testen mit: flug-3d.html?stories=${fn} (3D-Flug) · karte-2d.html?stories=${fn} (2D-Karte) · flug-3d.html?kiosk=1&stories=${fn} (Kiosk-Rundgang)` : 'Dateiname eintragen, um die Testlinks zu sehen.');
   saveDraft();
 }
 

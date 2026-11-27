@@ -151,5 +151,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 16. Eigene Orte durchgängig
 - [x] Gemeinden: 2D-Karte nimmt bei eigener Story-Datei die Sprungziele aus der Datei (wie der 3D-Flug) statt der festen Winterthurer Liste, mit dem Ortsnamen aus der Datei.
-- [ ] Gemeinden: Story-Werkstatt nennt neben dem Testlink für den 3D-Flug auch die Testlinks für 2D-Karte und Kiosk-Rundgang.
+- [x] Gemeinden: Story-Werkstatt nennt neben dem Testlink für den 3D-Flug auch die Testlinks für 2D-Karte und Kiosk-Rundgang.
 - [ ] Museen: Im Kiosk-Rundgang bleibt die Infokarte stehen, bis die nächste Station angeflogen wird (keine leere Pause).
