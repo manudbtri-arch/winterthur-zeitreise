@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Produktseite: Funktion «Messen» ergänzt, Geschichten als vorhanden (bisher Winterthur) statt «in Arbeit» aufgeführt, Schulkarte nennt vier Aufträge.
 - 2D-Karte: die Geschichten aus `stories/winterthur.json` erscheinen als Marker mit Titel, Text, Quelle und Link, in beiden Modi; abschaltbar.
 - Unterrichtsseite: Auftrag 4 «Wie breit, wie steil?» mit dem Messwerkzeug; Methodik nennt die Genauigkeit der Messung.
 - Infokarte mit Knopf «✕» zum Schliessen, auf Touch-Geräten in Fingergrösse.

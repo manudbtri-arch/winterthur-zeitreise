@@ -51,6 +51,6 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Handy: Infokarte mit Knopf «Schliessen» (✕), da es auf Touch-Geräten kein Esc gibt.
 - [x] Unterrichtsseite: vierter Auftrag mit dem Messwerkzeug (Gassenbreite, Höhenunterschied Altstadt–Bahnhof).
 - [x] 2D-Karte: Geschichten aus `stories/winterthur.json` als Marker mit Titel, Text und Quelle.
-- [ ] Produktseite: Funktionsliste um Messwerkzeug, Story-Test per Link und Geschichten in der 2D-Karte ergänzen.
+- [x] Produktseite: Funktionsliste um Messwerkzeug, Story-Test per Link und Geschichten in der 2D-Karte ergänzen.
 - [ ] 2D-Karte: Permalink (Ort, Zoom, Modus, Quellen und Jahre in der URL) mit Knopf «Link kopieren».
 - [ ] 2D-Karte: Ortssuche für die ganze Schweiz (geo.admin.ch), wie im 3D-Flug.
