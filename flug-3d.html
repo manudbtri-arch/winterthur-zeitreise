@@ -959,7 +959,10 @@ void main() {
   czm_material m = czm_getDefaultMaterial(mi);
   m.diffuse = c;
   m.alpha = 1.0;
-  out_FragColor = czm_phong(normalize(toEye), m, czm_lightDirectionEC);
+  vec4 lit = czm_phong(normalize(toEye), m, czm_lightDirectionEC);
+  /* Dunst wie bei Gelände und echten Häusern: ferne Häuser verblassen ins Himmelsgrau (Dichte aus scene.fog) */
+  lit.rgb = czm_fog(length(v_positionEC), lit.rgb, vec3(0.80, 0.84, 0.88));
+  out_FragColor = lit;
 }`;
 let wallApp = null;
 const wallAppearance = () => wallApp || (wallApp = new C.Appearance({

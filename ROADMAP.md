@@ -105,7 +105,7 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
   - [ ] (Manuel) Action «GWR-Daten» einmal von Hand starten (Actions → GWR-Daten → Run workflow) und prüfen, ob der Zweig «gwr-daten» entsteht.
   - [ ] 3D-Flug: vorberechnete Kachel zuerst laden, sonst wie bisher über geo.admin.ch abfragen. – wartet auf den ersten Lauf der Action und den Entscheid zur Ablage.
 - [x] Satteldächer für nachgebaute Häuser (Minecraft-Look als Schalter).
-- [ ] Dunst auf fernen Häusern.
+- [x] Dunst auf fernen Häusern.
 - [ ] Türme für abgerissene Kirchen.
 - [ ] Nur Brücken, die auf der Karte des Jahres vorkommen.
 - [ ] Hinweis beim ersten Start, wie man sich bewegt.
