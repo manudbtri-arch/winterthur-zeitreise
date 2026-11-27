@@ -1372,6 +1372,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
   /* Tastaturkürzel */
   document.addEventListener('keydown', e => {
     if (e.target.matches('input,select,textarea,button') && e.target.id !== 'scrubber') return;
+    if (!$('qrDlg').hidden) return;   /* offenes QR-Fenster: keine Wiedergabe-Tasten */
     if (e.code === 'Space' && st.mode !== 'cmp') { e.preventDefault(); if (st.playing) pause(); else play(); }
     if (e.key === 'ArrowLeft' && st.mode !== 'cmp') { e.preventDefault(); $('prevBtn').click(); }
     if (e.key === 'ArrowRight' && st.mode !== 'cmp') { e.preventDefault(); $('nextBtn').click(); }
@@ -1616,9 +1617,19 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
       setTimeout(() => URL.revokeObjectURL(a.href), 5000);
     }, 'image/png');
   });
-  $('qrClose').addEventListener('click', () => { $('qrDlg').hidden = true; $('qrBtn').focus(); });
-  $('qrDlg').addEventListener('click', e => { if (e.target === $('qrDlg')) $('qrDlg').hidden = true; });
-  $('qrDlg').addEventListener('keydown', e => { if (e.key === 'Escape') $('qrDlg').hidden = true; });
+  /* QR-Fenster: Fokus bleibt beim Tabben im Fenster und kehrt beim Schliessen (Knopf, Esc, Klick daneben) zum Knopf zurück */
+  const closeQr = () => { $('qrDlg').hidden = true; $('qrBtn').focus(); };
+  $('qrClose').addEventListener('click', closeQr);
+  $('qrDlg').addEventListener('click', e => { if (e.target === $('qrDlg')) closeQr(); });
+  $('qrDlg').addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeQr(); return; }
+    if (e.key !== 'Tab') return;
+    const f = [...$('qrDlg').querySelectorAll('button, a[href], input, select, [tabindex]:not([tabindex="-1"])')].filter(el => !el.disabled && el.offsetParent !== null);
+    if (!f.length) return;
+    const i = f.indexOf(document.activeElement);
+    if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && (i === f.length - 1 || i < 0)) { e.preventDefault(); f[0].focus(); }
+  });
 
   /* URL-Parameter auslesen & initial starten */
   const Q = new URLSearchParams(location.search);

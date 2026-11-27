@@ -187,4 +187,4 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 ## 23. Zeitraffer überall erreichbar
 - [x] Gemeinden und Museen: Infokarte einer Geschichte im 3D-Flug mit Link «Zeitraffer von oben» (Ausschnitt um die Geschichte).
 - [x] 2D-Karte: «Ausschnitt als Zeitraffer von oben» nimmt die eigene Story-Datei und das gezeigte Jahr (`e=`) mit.
-- [ ] Barrierefreiheit: QR-Fenster im Zeitraffer hält den Tastaturfokus und gibt ihn beim Schliessen (auch mit Esc) an den Knopf zurück.
+- [x] Barrierefreiheit: QR-Fenster im Zeitraffer hält den Tastaturfokus und gibt ihn beim Schliessen (auch mit Esc) an den Knopf zurück.
