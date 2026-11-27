@@ -359,6 +359,8 @@ const $ = id => document.getElementById(id);
 const C = Cesium;
 /* Höhe über Ellipsoid: Winterthur liegt rund 500 m darüber, also 300 m über Boden */
 const HOME = {lon:8.7290, lat:47.4890, h:800, heading:15, pitch:-22};
+/* halbe Kantenlänge des gebauten Gebiets in Metern; beim Weitergehen wird automatisch nachgebaut */
+const HALF = 750;
 /* «Bewegung reduzieren» im System: Kamerafahrten kurz statt lang */
 const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const flyDur = d => REDUCE ? Math.min(d, 0.3) : d;
@@ -422,7 +424,7 @@ let farView = true;
 function setFarView(on){
   farView = on;
   globe.maximumScreenSpaceError = on ? 2 : 4;
-  scene.fog.density = on ? 1.2e-4 : 6e-4;
+  scene.fog.density = on ? (walk ? 2e-4 : 1.2e-4) : 6e-4;   /* beim Gehen weniger Gelände am Horizont laden */
   for (const t of [bldTs, specTs]) if (t) t.maximumScreenSpaceError = on ? 16 : 32;
 }
 let toastT;
@@ -560,18 +562,20 @@ const FACADE_FS = `
     c = mix(c, avg, smoothstep(0.08, 0.28, fwW));
     material.diffuse = c;
   }`;
-const gwr = {years:new Map(), year:1880};
+const gwr = {years:new Map(), all:new Map(), year:1880};   /* years/all: alle bisher gebauten Gebiete; info: aktuelles Gebiet */
 let bldTs = null;
 const PLAIN = new Set(['Gebaeude Einzelhaus', 'Hochhaus', 'Im Bau']);   /* nur diese bekommen Wohnhaus-Fenster */
 const isSpecial = f => !PLAIN.has(f.getProperty('OBJEKTART'));
+const flags = {bld: false, old: true};   /* Zustand der Häkchen, damit der Stil nicht für jedes Gebäude im HTML nachschaut */
 const yearOk = f => {
-  if ($('bld').checked) return true;
-  if (!$('oldOn').checked) return false;
+  if (flags.bld) return true;
+  if (!flags.old) return false;
   const y = gwr.years.get(Number(f.getProperty('EGID')));
   return y !== undefined && y <= gwr.year;
 };
 let specTs = null, specColor = null, bldShader = null;
 async function buildingLayer(){
+  flags.bld = $('bld').checked; flags.old = $('oldOn').checked;
   if (!bldTs) {
     bldTs = await C.Cesium3DTileset.fromUrl(BLD_URL);
     scene.primitives.add(bldTs);
@@ -1028,12 +1032,12 @@ const EPOCHS = [
 const EP_OLD = {label: 'vor 1919, Jahr unbekannt', col: '#b67f95'}, EP_NONE = {label: 'ohne Baujahr', col: '#9b9b9b'};
 EPOCHS.forEach(e => { e.c = C.Color.fromCssColorString(e.col); }); EP_OLD.c = C.Color.fromCssColorString(EP_OLD.col); EP_NONE.c = C.Color.fromCssColorString(EP_NONE.col);
 const epochOf = r => !r ? EP_NONE : (!r.exact && r.y === PERIOD[8011]) ? EP_OLD : EPOCHS.find(e => r.y <= e.max);
-const epochColor = { evaluateColor: (f, res) => C.Color.clone(epochOf(gwr.info && gwr.info.get(Number(f.getProperty('EGID')))).c, res) };
+const epochColor = { evaluateColor: (f, res) => C.Color.clone(epochOf(gwr.all.get(Number(f.getProperty('EGID')))).c, res) };
 /* «Neu seit der letzten Kartenausgabe»: belegte Häuser mit genauem Baujahr zwischen vorheriger Ausgabe und gewähltem Jahr */
 let newFrom = null;
 const NEW_C = C.Color.fromCssColorString('#22a35a'), OLD_C = C.Color.fromCssColorString('#d6d1c6');
 const newColor = { evaluateColor: (f, res) => {
-  const r = gwr.info && gwr.info.get(Number(f.getProperty('EGID')));
+  const r = gwr.all.get(Number(f.getProperty('EGID')));
   return C.Color.clone(newFrom !== null && r && r.exact && r.y > newFrom && r.y <= gwr.year ? NEW_C : OLD_C, res);
 } };
 let analysis = false;   /* false, 'epoch' oder 'new' */
@@ -1099,18 +1103,24 @@ $('epochCsv').addEventListener('click', () => {
   const esc = v => { const t = String(v ?? ''); return /[;"\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
   const pct = v => stats.total ? (v / stats.total * 100).toFixed(1) : '0.0';
   const lines = [['auswertung', 'kategorie', 'anzahl', 'anteil_prozent', 'stand_jahr', 'ort', 'mitte_e_lv95', 'mitte_n_lv95', 'gebiet', 'quelle'].join(';'),
-    ...stats.rows.map(r => [stats.kind, r.label, r.n, pct(r.n), yr, placeName, Math.round(E), Math.round(N), 'rund 1,3 x 1,3 km um die Mitte',
+    ...stats.rows.map(r => [stats.kind, r.label, r.n, pct(r.n), yr, placeName, Math.round(E), Math.round(N), 'rund 1,5 x 1,5 km um die Mitte',
       'Gebäuderegister GWR (BFS), nur heute noch stehende Gebäude; Bauperiode «vor 1919» ohne genaues Jahr'].map(esc).join(';')),
     ['summe', 'alle belegten Gebäude', stats.total, '100.0', yr, placeName, Math.round(E), Math.round(N), '', ''].map(esc).join(';')];
   download(`bauepochen-${fileSlug()}-${yr}.csv`, '\ufeff' + lines.join('\r\n'), 'text/csv;charset=utf-8');
   toast('Statistik gespeichert');
 });
 
+/* Alle Gebäude neu auswerten ist teuer: beim Ziehen am Regler höchstens alle 150 ms */
+let styleT = 0;
+function styleDirty(){
+  if (styleT) return;
+  styleT = setTimeout(() => { styleT = 0; if (bldTs) { bldTs.makeStyleDirty(); specTs.makeStyleDirty(); } }, 150);
+}
 /* Jahr anwenden: echte Häuser nach Baujahr, nachgebaute aus der passenden Kartenausgabe */
 function applyYear(y){
   gwr.year = y;
   markTicks();
-  if (bldTs) { bldTs.makeStyleDirty(); specTs.makeStyleDirty(); }
+  styleDirty();
   if (!city) return;
   const avail = [...city.eds.keys()].sort((a, b) => a - b);
   if (!avail.length) return;
@@ -1122,24 +1132,26 @@ function applyYear(y){
   const ed = city.eds.get(pick);
   updateStories();
   if (present) { say('Heute: Luftbild, alle 3D-Gebäude und Bäume von swisstopo.'); updateStats(); return; }
-  const nOldNow = [...gwr.years.values()].filter(v => v <= y).length;
+  let nOldNow = 0; if (gwr.info) for (const r of gwr.info.values()) if (r.y <= y) nOldNow++;
   say(`${y}: ${nOldNow} echte Altbauten und ${ed.nGen} nachgebaute Häuser (Karte ${pick}).` + (avail.length < EDITIONS.length ? ' Weitere Jahrgänge werden noch gebaut …' : ' Zieh am Jahr-Regler für den Zeitsprung.'));
   updateStats();
 }
 
+let oldPrims = [], building = false;
+const dropOld = () => { for (const p of oldPrims) scene.primitives.remove(p); oldPrims = []; };
 async function buildHouses(center){
-  const btn = $('build'); btn.disabled = true;
+  const btn = $('build'); btn.disabled = true; building = true;
   const token = ++buildToken;
   try {
     const [lon, lat] = center || centerLonLat();
     if (bldTs && bldTs.customShader) bldTs.customShader.setUniform('u_up', C.Ellipsoid.WGS84.geodeticSurfaceNormal(C.Cartesian3.fromDegrees(lon, lat), new C.Cartesian3()));
-    const dLat = 650 / 111320, dLon = 650 / (111320 * Math.cos(lat * Math.PI / 180));
+    const dLat = HALF / 111320, dLon = HALF / (111320 * Math.cos(lat * Math.PI / 180));
     const px0 = Math.floor(lon2x(lon - dLon)), px1 = Math.ceil(lon2x(lon + dLon));
     const py0 = Math.floor(lat2y(lat + dLat)), py1 = Math.ceil(lat2y(lat - dLat));
     const W = px1 - px0, H = py1 - py0;
     const area = {px0, py0, W, H, cw: Math.floor(W / CELL), ch: Math.floor(H / CELL), lat};
 
-    if (city) for (const ed of city.eds.values()) if (ed.prim) scene.primitives.remove(ed.prim);
+    if (city) for (const ed of city.eds.values()) if (ed.prim) oldPrims.push(ed.prim);
     city = {px0, py0, cw: area.cw, ch: area.ch, roof: new Float32Array(area.cw * area.ch).fill(NaN), eds: new Map(), center:[lon, lat]};
 
     say('Frage das Gebäuderegister nach Baujahren ab …');
@@ -1151,7 +1163,7 @@ async function buildHouses(center){
       if (reg.size) idbPut(gkey, {t: Date.now(), reg});
     }
     if (token !== buildToken) return;
-    gwr.years = new Map([...reg].map(([id, r]) => [id, r.y]));
+    for (const [id, r] of reg) { gwr.years.set(id, r.y); gwr.all.set(id, r); }
     gwr.info = reg;
     $('bld').checked = false;
     await buildingLayer().catch(() => {});
@@ -1161,10 +1173,11 @@ async function buildHouses(center){
     const first = EDITIONS.filter(e => e <= y).pop() ?? EDITIONS[0];
     const order = [first, ...EDITIONS.filter(e => e !== first)];
     for (const e of order) {
-      say(`Baue Winterthur nach der Siegfriedkarte ${e} …`);
+      say(`Baue Häuser nach der Siegfriedkarte ${e} …`);
       const ed = await buildEdition(area, e, reg, token);
-      if (!ed || token !== buildToken) return;
+      if (!ed || token !== buildToken) { if (ed && ed.prim) scene.primitives.remove(ed.prim); return; }
       city.eds.set(e, ed);
+      if (city.eds.size === 1) dropOld();
       setProg(0.3 + 0.7 * city.eds.size / EDITIONS.length);
       applyYear(+$('yr').value || 1880);
       if (city.eds.size === 1) { $('introWalk').disabled = false; }
@@ -1173,7 +1186,7 @@ async function buildHouses(center){
   } catch (e) {
     console.error(e);
     say('Bauen fehlgeschlagen: ' + (e && e.message ? e.message : e));
-  } finally { if (token === buildToken) btn.disabled = false; }
+  } finally { if (token === buildToken) { btn.disabled = false; building = false; } }
 }
 $('build').addEventListener('click', () => buildHouses());
 
@@ -1403,6 +1416,7 @@ const keys = {};
 const canvas = viewer.canvas;
 function setMode(w){
   walk = w;
+  setFarView(farView);
   $('mFly').setAttribute('aria-pressed', !w); $('mWalk').setAttribute('aria-pressed', w);
 }
 $('mFly').addEventListener('click', () => setMode(false));
@@ -1419,7 +1433,7 @@ function showInfo(p){
     link = /^https:\/\//.test(st.url || '') ? st.url : '';
     story = STORY_ID_RE.test(String(st.id || '')) ? String(st.id) : null;
   } else if (p instanceof C.Cesium3DTileFeature) {
-    const egid = Number(p.getProperty('EGID')), r = gwr.info && gwr.info.get(egid);
+    const egid = Number(p.getProperty('EGID')), r = gwr.all.get(egid);
     const art = p.getProperty('OBJEKTART'), hgt = Math.round(p.getProperty('GESAMTHOEHE') || 0);
     const kind = art === 'Sakrales Gebaeude' ? 'Kirche' : art === 'Hochkamin' ? 'Hochkamin' : art === 'Gebaeude Einzelhaus' ? 'Gebäude' : art;
     title = (r && r.adr) ? r.adr : kind;
@@ -1569,7 +1583,7 @@ const joy = {on: false, x: 0, y: 0, id: null};
 const up = new C.Cartesian3(), fwd = new C.Cartesian3(), prevPos = new C.Cartesian3();
 const vel = new C.Cartesian3();            /* x = rechts, y = vorwärts, z = hoch (m/s) */
 const SPEEDS = [1, 2, 5, 10, 20, 50, 100];
-let speedIdx = 2, smoothH = null, bob = 0, fps = 60;
+let speedIdx = 2, smoothH = null, bob = 0, fps = 60, hudTxt = '';
 let last = performance.now();
 const gridFree = pos => {
   const c = C.Cartographic.fromCartesian(pos);
@@ -1579,7 +1593,7 @@ const gridFree = pos => {
 /* Minecraft-artig: Ost- und Nordanteil getrennt prüfen, dann gleitet man an Wänden entlang */
 function collide(from, disp){
   const to = C.Cartesian3.add(from, disp, new C.Cartesian3());
-  if (gridFree(to)) return to;
+  if (gridFree(to) || !gridFree(from)) return to;   /* steht man schon in einem Haus, darf man hinaus */
   const enu = C.Transforms.eastNorthUpToFixedFrame(from);
   const e = new C.Cartesian3(enu[0], enu[1], enu[2]), n = new C.Cartesian3(enu[4], enu[5], enu[6]);
   const de = C.Cartesian3.multiplyByScalar(e, C.Cartesian3.dot(disp, e), new C.Cartesian3());
@@ -1604,10 +1618,15 @@ const DIRS = ['N','NO','O','SO','S','SW','W','NW'];
 scene.preRender.addEventListener(() => {
   const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now;
   fps = fps * 0.95 + (dt > 0 ? 1 / dt : 60) * 0.05;
-  /* ruckelt es länger als 3 s, Schatten automatisch abschalten */
-  if (viewer.shadows && !document.hidden && fps < 28) {
+  /* ruckelt es länger als 3 s (nicht während des Bauens): Schritt für Schritt Qualität senken */
+  if (!document.hidden && !building && fps < 30 && (viewer.shadows || scene.msaaSamples > 1 || farView)) {
     if (!slowSince) slowSince = now;
-    else if (now - slowSince > 3000) { viewer.shadows = false; $('shadowOn').checked = false; toast('Schatten aus, damit es flüssig bleibt'); slowSince = 0; }
+    else if (now - slowSince > 3000) {
+      if (viewer.shadows) { viewer.shadows = false; $('shadowOn').checked = false; toast('Schatten aus, damit es flüssig bleibt'); }
+      else if (scene.msaaSamples > 1) { scene.msaaSamples = 1; toast('Kantenglättung vereinfacht, damit es flüssig bleibt'); }
+      else { setFarView(false); toast('Fernsicht aus, damit es flüssig bleibt (J schaltet sie wieder ein)', 3000); }
+      slowSince = 0; fps = 45;
+    }
   } else slowSince = 0;
   if (city && city.edition) {
     const ed = city.eds.get(city.edition), want = $('recHl').checked;
@@ -1670,7 +1689,8 @@ scene.preRender.addEventListener(() => {
 
   /* Anzeige */
   if (terrainOk || !$('terrMsg').hidden) {
-    $('hud').textContent = walk ? `Gehen${sprint ? ' · rennen' : ''}` : `Fliegen ${SPEEDS[speedIdx]}× · ${Math.round(agl)} m über Boden`;
+    const ht = walk ? `Gehen${sprint ? ' · rennen' : ''}` : `Fliegen ${SPEEDS[speedIdx]}× · ${Math.round(agl / 5) * 5} m über Boden`;
+    if (ht !== hudTxt) { hudTxt = ht; $('hud').textContent = ht; }   /* nur bei Änderung: jedes Schreiben kostet Layout */
   }
   if (!$('f3').hidden) {
     const lon = C.Math.toDegrees(c2.longitude), lat = C.Math.toDegrees(c2.latitude);
@@ -1997,6 +2017,26 @@ if (KIOSK) {
   });
   kioskStart();
 }
+/* ---------- Automatisch nachbauen: wer den Rand des gebauten Gebiets erreicht, bekommt dort neue Häuser ---------- */
+let followSince = 0;
+const followPos = new C.Cartesian3();
+setInterval(() => {
+  /* während Kamerafahrten (Suche, Rundgang) nicht nachbauen: mehr als 40 m in einer halben Sekunde */
+  const moved = C.Cartesian3.distance(followPos, camera.position); C.Cartesian3.clone(camera.position, followPos);
+  if (moved > 40) { followSince = 0; return; }
+  if (!city || building || present || KIOSK || !terrainOk || !$('intro').classList.contains('off') || C.Cartesian3.magnitude(vel) > 25) { followSince = 0; return; }
+  const c = C.Cartographic.fromCartesian(camera.position), g = globe.getHeight(c);
+  if (g === undefined || c.height - g > 700) { followSince = 0; return; }       /* hoch oben: nicht nachbauen */
+  const [lon, lat] = walk ? [C.Math.toDegrees(c.longitude), C.Math.toDegrees(c.latitude)] : centerLonLat();
+  const dx = (lon - city.center[0]) * 111320 * Math.cos(lat * Math.PI / 180), dy = (lat - city.center[1]) * 111320;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < HALF * 0.6) { followSince = 0; return; }
+  if (!followSince) { followSince = performance.now(); return; }
+  if (performance.now() - followSince < 1500) return;
+  followSince = 0;
+  toast('Baue die Häuser in der Umgebung …', 2500);
+  buildHouses([lon, lat]);
+}, 500);
+
 if (LINK) {
   closeIntro();
   camera.setView({destination: C.Cartesian3.fromDegrees(LINK.lon, LINK.lat, LINK.h),

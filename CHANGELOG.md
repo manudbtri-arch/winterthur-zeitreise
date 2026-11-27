@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- 3D-Flug flüssiger und grösser: Gebiet 1,5 × 1,5 km; am Rand wird automatisch nachgebaut, ohne dass die alten Häuser vorher verschwinden; echte Altbauten bleiben in allen besuchten Gebieten sichtbar; der Gebäudestil wird beim Ziehen am Zeitregler gebündelt und ohne HTML-Abfragen pro Gebäude ausgewertet; beim Gehen weniger Gelände am Horizont; Anzeige nur bei Änderung; bei anhaltendem Ruckeln werden Schatten, Kantenglättung und Fernsicht schrittweise reduziert.
 - Story-Werkstatt: Knopf «Lage im 3D-Flug ansehen» öffnet den 3D-Flug in einem neuen Fenster mit Blick von Süden auf den gesetzten Punkt (im Jahr «ab», falls zwischen 1870 und 1949) und baut dort die Häuser.
 - Story-Werkstatt: Tabellen (CSV mit Semikolon, Komma oder Tab, z. B. aus Excel) mit den Spalten der Anleitung werden eingelesen und an die Liste angehängt; unvollständige Zeilen sind markiert.
 - 2D-Karte: das Infofenster einer Geschichte hat den Link «Im 3D-Flug ansehen» (Direktlink zur Geschichte); der Titel am Marker wird als reiner Text eingefügt.
