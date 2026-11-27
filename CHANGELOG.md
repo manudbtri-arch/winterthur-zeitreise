@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Infokarte mit Knopf «✕» zum Schliessen, auf Touch-Geräten in Fingergrösse.
 - Story-Dateien testen: `flug-3d.html?stories=<name>` lädt `stories/<name>.json`, meldet die Zahl der geladenen Geschichten und listet übersprungene Einträge mit Grund in der Konsole; in der Partner-Anleitung beschrieben.
 - Messwerkzeug (Knopf «Messen» oder Taste L): zwei Punkte im 3D-Bild anklicken, die Infokarte zeigt Distanz, waagrechte Distanz, Höhenunterschied und Steigung als Richtwert.
 - Zeitregler: die Jahreszahlen der Kartenausgaben sind jetzt Knöpfe und springen direkt zum Jahr; auf Touch-Geräten als grosse Knöpfe, der Regler nutzt dort die ganze Breite.

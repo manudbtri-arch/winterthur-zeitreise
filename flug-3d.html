@@ -118,6 +118,10 @@ details.more[open] summary::after{content:"▴"}
 .info{position:absolute;z-index:12;left:50%;transform:translateX(-50%);bottom:118px;max-width:min(520px,calc(100% - 32px));background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--brown);border-radius:10px;padding:10px 16px;box-shadow:0 6px 24px rgba(0,0,0,.3);display:grid;gap:2px}
 .info b{font-size:17px}.info span{font-size:14px;color:var(--mute)}
 @media(max-width:700px){.info{bottom:96px}}
+.info{padding-right:46px}
+.iclose{position:absolute;top:4px;right:4px;width:38px;height:38px;border:0;border-radius:8px;background:transparent;color:var(--mute);font:600 18px Archivo,sans-serif;cursor:pointer}
+.iclose:hover{background:var(--line);color:var(--ink)}
+@media(pointer:coarse){.iclose{width:44px;height:44px}}
 .intro{position:absolute;z-index:20;inset:0;display:grid;place-items:center;padding:24px;background:linear-gradient(180deg,rgba(20,18,14,.55),rgba(20,18,14,.8));color:#f3eee3;transition:opacity .4s}
 .intro.off{opacity:0;pointer-events:none}
 body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timeline,body.intro-on .mini{visibility:hidden}
@@ -289,7 +293,7 @@ body.intro-on .joy{visibility:hidden}
     <div class="row2"><button class="btn primary" id="embedCopy">Code kopieren</button><button class="btn" id="embedClose">Schliessen</button></div>
   </div>
 </div>
-<div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small><a id="iLink" hidden target="_blank" rel="noopener">Quelle öffnen</a></div>
+<div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small><a id="iLink" hidden target="_blank" rel="noopener">Quelle öffnen</a><button class="iclose" id="iClose" type="button" aria-label="Infokarte schliessen" title="Schliessen (Esc)">✕</button></div>
 
 <a class="pill openfull" id="openFull" href="flug-3d.html" target="_blank" rel="noopener" hidden>↗ Im Vollbild öffnen</a>
 <button class="pill" id="pill" hidden>☰ Menü <span style="color:var(--mute)">(Tab)</span></button>
@@ -1451,6 +1455,7 @@ function measureAt(pos){
   clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, 30000);
 }
 $('measBtn').addEventListener('click', () => setMeasure(!meas.on));
+$('iClose').addEventListener('click', () => { clearTimeout(infoTimer); $('info').hidden = true; });
 
 function setPanel(show){
   $('panel').classList.toggle('off', !show);
