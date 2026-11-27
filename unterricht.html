@@ -49,7 +49,22 @@ footer a{color:var(--mute)}
 .task{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 22px 16px;margin:16px 0}
 .task h3{font-size:20px;margin:16px 0 2px}
 .meta{font-size:14px;color:var(--brick);font-weight:600;margin:0 0 8px}
-@media print{nav,footer{display:none}.task{break-inside:avoid}body{background:#fff}}
+.ans,.sheethead{display:none}
+.printbtn{font:600 16px Archivo,sans-serif;border:1px solid var(--blue);background:var(--blue);color:#fff;border-radius:8px;padding:10px 18px;min-height:44px;cursor:pointer;margin:16px 0 0}
+.printbtn:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+@media print{
+  :root{color-scheme:light}
+  nav,footer,.printbtn,.toc{display:none}
+  body{background:#fff;color:#000;font-size:12pt}
+  a{color:#000;text-decoration:none}
+  .task{break-inside:avoid;border:1px solid #999;background:#fff}
+  .ans{display:block;margin:6px 0 4px}
+  .ans span{font-size:10pt;color:#444}
+  .ans i{display:block;height:30px;border-bottom:1px solid #888}
+  .sheethead{display:flex;gap:24px;margin:0 0 12px;font-size:11pt}
+  .sheethead span{flex:1;border-bottom:1px solid #888;padding-bottom:18px}
+  body.ws .lponly{display:none}
+}
 </style>
 </head>
 <body>
@@ -65,6 +80,7 @@ footer a{color:var(--mute)}
   <p class="kicker">Für Schulen</p>
   <h1>Den eigenen Ort von 1880 bis 1940 erkunden</h1>
   <p class="lead">Ein Unterrichtsvorschlag für zwei bis drei Lektionen. Die Schülerinnen und Schüler gehen durch ihren Wohnort, wie ihn die Siegfriedkarte zeigt, vergleichen Jahrzehnte und prüfen, wie sicher das Gezeigte ist.</p>
+  <div class="sheethead" aria-hidden="true"><span>Name:</span><span>Klasse:</span><span>Datum:</span></div>
   <div class="toc">
     <ol>
       <li><a href="#ziele">Lernziele</a></li>
@@ -76,8 +92,10 @@ footer a{color:var(--mute)}
       <li><a href="#lp">Hinweise für Lehrpersonen</a></li>
     </ol>
   </div>
+  <button class="printbtn" id="printWs" type="button">Arbeitsblatt drucken</button>
 </header>
 
+<div class="lponly">
 <h2 id="ziele">Lernziele</h2>
 <ul>
   <li>Die Schülerinnen und Schüler beschreiben, wie sich ein Ort zwischen 1880 und 1940 baulich verändert hat.</li>
@@ -85,6 +103,7 @@ footer a{color:var(--mute)}
   <li>Sie unterscheiden belegte von rekonstruierten Informationen und begründen, warum das wichtig ist.</li>
 </ul>
 <p>Passt zu den Fachbereichen Natur, Mensch, Gesellschaft (NMG, Zyklus 2) und Räume, Zeiten, Gesellschaften (RZG, Zyklus 3) des Lehrplans 21.</p>
+</div>
 
 <div class="task" id="a1">
   <h3>Auftrag 1: Was hat sich verändert?</h3>
@@ -96,6 +115,7 @@ footer a{color:var(--mute)}
     <li>Drücke «Heute» und vergleiche ein drittes Mal.</li>
     <li>Notiere drei Veränderungen: Wo sind Häuser dazugekommen? Was ist verschwunden? Wie haben sich Strassen, Bahn oder Gewässer verändert?</li>
   </ol>
+  <div class="ans" aria-hidden="true"><span>Antworten:</span><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <p>Ohne 3D oder auf langsamen Geräten: In der <a href="karte-2d.html">2D-Karte</a> den Ort suchen, auf «Vergleich» wechseln und links die Siegfriedkarte 1880, rechts das heutige Luftbild wählen. Mit dem Wischregler in der Mitte vergleichen.</p>
 </div>
 
@@ -108,6 +128,7 @@ footer a{color:var(--mute)}
     <li>Klicke auf drei verschiedenfarbige Häuser. Notiere Adresse und Baujahr aus der Infokarte.</li>
     <li>Suche das älteste Haus, das du findest. Steht in der Infokarte ein genaues Jahr oder nur «vor 1919»? Was bedeutet das?</li>
   </ol>
+  <div class="ans" aria-hidden="true"><span>Antworten:</span><i></i><i></i><i></i><i></i><i></i></div>
   <p>Für ältere Klassen: Mit «Liste CSV» die Gebäudeliste herunterladen und in einer Tabellenkalkulation ein Diagramm der Baujahre erstellen.</p>
 </div>
 
@@ -120,6 +141,7 @@ footer a{color:var(--mute)}
     <li>Lies auf der Seite <a href="methodik.html">Methodik</a> den Abschnitt «Bekannte Grenzen». Wählt zwei Grenzen aus und erklärt sie der Klasse in eigenen Worten.</li>
     <li>Diskutiert: Warum ist es wichtig, bei einer Rekonstruktion zu sagen, was geschätzt ist?</li>
   </ol>
+  <div class="ans" aria-hidden="true"><span>Antworten:</span><i></i><i></i><i></i><i></i></div>
 </div>
 
 <div class="task" id="a4">
@@ -132,6 +154,7 @@ footer a{color:var(--mute)}
     <li>Miss vom tiefsten zum höchsten Punkt deines Gebiets, z. B. vom Fluss zur Kirche. Notiere den Höhenunterschied und die Steigung.</li>
     <li>Prüft: Steht an der gemessenen Stelle ein belegtes oder ein rekonstruiertes Haus? Wie genau kann die Messung dann sein?</li>
   </ol>
+  <div class="ans" aria-hidden="true"><span>Antworten:</span><i></i><i></i><i></i><i></i><i></i></div>
   <p>Hinweis: Die Messung ist ein Richtwert aus dem 3D-Bild, keine amtliche Vermessung. Bei rekonstruierten Häusern stammt der Grundriss aus der Karte, die Wände können um einige Meter abweichen.</p>
 </div>
 
@@ -146,9 +169,11 @@ footer a{color:var(--mute)}
     <li>Vergleicht: In welchem Ort ist der Anteil alter Gebäude grösser? In welcher Epoche wurde jeweils am meisten gebaut? Findet eine mögliche Erklärung, z. B. Bahnanschluss oder Industrie, und prüft sie mit der Karte oder dem Historischen Lexikon der Schweiz.</li>
     <li>Kritisch denken: Die Zählung enthält nur Gebäude, die heute noch stehen. Was bedeutet das für alte Epochen?</li>
   </ol>
+  <div class="ans" aria-hidden="true"><span>Antworten:</span><i></i><i></i><i></i><i></i><i></i></div>
   <p>Hinweis: Was die Spalten bedeuten und wie gezählt wird, steht auf der <a href="methodik.html#statistik">Methodik-Seite</a>. Die Dateien sind mit Semikolon getrennt und öffnen sich direkt in Excel, LibreOffice oder Numbers.</p>
 </div>
 
+<div class="lponly">
 <h2 id="lp">Hinweise für Lehrpersonen</h2>
 <ul>
   <li><b>Geräte:</b> Am besten Computer oder Laptop mit aktuellem Browser. Auf Tablets und Handys gibt es einen Joystick zum Gehen und Wischen zum Umschauen.</li>
@@ -158,11 +183,19 @@ footer a{color:var(--mute)}
   <li><b>Anmeldung:</b> Keine nötig.</li>
   <li><b>Quellen angeben:</b> Gespeicherte Bilder tragen die Quellenangabe bereits. Ein Zitiervorschlag steht auf der <a href="methodik.html#zitieren">Methodik-Seite</a>.</li>
 </ul>
-<p>Diese Seite lässt sich ausdrucken; Navigation und Fusszeile werden dabei weggelassen.</p>
+<p>Diese Seite lässt sich ausdrucken; Navigation und Fusszeile werden dabei weggelassen, unter jedem Auftrag stehen Linien für die Antworten. Der Knopf «Arbeitsblatt drucken» lässt zusätzlich Lernziele und diese Hinweise weg und ergänzt Felder für Name, Klasse und Datum.</p>
+</div>
 </main>
 
 <footer>
   <div class="wrap">Zeitreise Schweiz · Daten © swisstopo, BFS Gebäuderegister · <a href="./">Übersicht</a> · <a href="methodik.html">Methodik</a></div>
 </footer>
+<script>
+document.getElementById('printWs').addEventListener('click', () => {
+  document.body.classList.add('ws');
+  window.print();
+});
+window.addEventListener('afterprint', () => document.body.classList.remove('ws'));
+</script>
 </body>
 </html>

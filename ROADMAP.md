@@ -75,4 +75,4 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 ## 8. Prüfen, teilen, drucken
 - [x] Forschung und Gemeinden: Infokarte eines belegten Gebäudes mit Link «Im Gebäuderegister prüfen» (map.geo.admin.ch mit GWR-Ebene an der Lage des Gebäudes), damit Baujahr und Adresse selbst nachgeprüft werden können.
 - [x] Handy: «Link kopieren» und «Link zu dieser Geschichte» öffnen auf Geräten mit Teilen-Funktion das System-Teilen (Nachricht, Mail), sonst wie bisher kopieren.
-- [ ] Schulen: Unterrichtsseite druckbar als Arbeitsblatt (Druckansicht ohne Navigation, Platz für Antworten, Knopf «Arbeitsblatt drucken»).
+- [x] Schulen: Unterrichtsseite druckbar als Arbeitsblatt (Druckansicht ohne Navigation, Platz für Antworten, Knopf «Arbeitsblatt drucken»).

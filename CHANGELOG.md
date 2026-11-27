@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Unterrichtsseite: Knopf «Arbeitsblatt drucken» druckt die fünf Aufträge mit Antwortlinien und Feldern für Name, Klasse und Datum, ohne Lernziele und Lehrpersonen-Hinweise; beim normalen Drucken erscheinen die Antwortlinien ebenfalls.
 - Handy: «Link teilen» und «Link zu dieser Geschichte teilen» öffnen auf Touch-Geräten das System-Teilen (Nachricht, Mail); ohne Teilen-Funktion wird wie bisher kopiert.
 - Infokarte eines belegten Gebäudes: Link «Im Gebäuderegister prüfen» öffnet map.geo.admin.ch mit der Ebene des Gebäuderegisters an der Lage des Gebäudes (nicht im Kiosk); in der Methodik beschrieben.
 - Testseite `flug-3d-welt.html`: das ganze Bild bis zum Horizont wird gefüllt (beim Gehen bis rund 2,4 km, beim Fliegen je nach Höhe bis rund 4 km); nahe Kacheln mit allen Details, ferne vereinfacht ohne Fenster und Pflaster; Startbild erscheint sofort, das Gebäuderegister wird schon während des Ladens abgefragt (je zwei Seiten gleichzeitig), «Durch die Gassen gehen» lässt sich sofort drücken; die Übersicht lädt die 3D-Bibliothek im Hintergrund vor.
