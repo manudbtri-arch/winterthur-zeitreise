@@ -162,4 +162,4 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 ## 18. QR-Codes überall
 - [x] 2D-Karte: Knopf «QR-Code» zur aktuellen Ansicht (Ort, Zoom, Jahr), als PNG speicherbar, wie im 3D-Flug.
 - [x] Schulen: Unterrichtsseite nennt den QR-Code (Startansicht für die Klasse aufs Arbeitsblatt); `README.md` auf sieben Aufträge und die neuen Knöpfe nachführen.
-- [ ] Gemeinden: Story-Werkstatt druckt ein Blatt mit den QR-Codes aller erfassten Geschichten (Titel, QR, Link) für Tafeln am Ort.
+- [x] Gemeinden: Story-Werkstatt druckt ein Blatt mit den QR-Codes aller erfassten Geschichten (Titel, QR, Link) für Tafeln am Ort.

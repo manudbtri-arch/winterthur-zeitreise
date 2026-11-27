@@ -52,6 +52,14 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font:12px/1.45 ui-monospace,Menlo,Consolas,monospace;max-height:260px;overflow:auto;white-space:pre-wrap;word-break:break-word}
 .coord{font:13px ui-monospace,Menlo,Consolas,monospace;color:var(--mute)}
 [hidden]{display:none!important}
+#qrSheet{max-width:1000px;margin:0 auto;padding:16px}
+.qrgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:12px}
+.qrgrid figure{margin:0;border:1px solid #ccc;border-radius:8px;padding:12px;text-align:center;break-inside:avoid;background:#fff;color:#151515}
+.qrgrid img{width:180px;height:180px;image-rendering:pixelated}
+.qrgrid b{display:block;font-size:16px;line-height:1.25;margin:6px 0 4px}
+.qrgrid small{display:block;font-size:11px;color:#5b5b5b}
+.qrgrid small.u{word-break:break-all;margin-top:4px}
+@media print{body.qrprint > :not(#qrSheet){display:none!important}body.qrprint #qrSheet{display:block!important}body.qrprint{background:#fff;color:#151515}}
 </style>
 </head>
 <body>
@@ -120,12 +128,19 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
       <div class="row">
         <button class="btn primary" id="dlBtn" type="button" disabled>JSON herunterladen</button>
         <button class="btn" id="copyBtn" type="button" disabled>JSON kopieren</button>
+        <button class="btn" id="qrBtn" type="button" disabled title="Ein Blatt mit einem QR-Code je Geschichte, z. B. für Tafeln am Ort">QR-Codes drucken</button>
       </div>
       <p class="hint" id="testHint"></p>
       <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">Vorschau der Datei</summary><pre id="preview"></pre></details>
     </section>
   </div>
 </main>
+
+<section id="qrSheet" hidden aria-label="Druckblatt mit QR-Codes">
+  <h1 id="qrSheetH"></h1>
+  <p class="sub" id="qrSheetSub"></p>
+  <div class="qrgrid" id="qrGrid"></div>
+</section>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -240,7 +255,7 @@ function render(){
   });
   const n = doc.geschichten.length;
   $('nStories').textContent = n; $('emptyHint').hidden = n > 0;
-  $('dlBtn').disabled = $('copyBtn').disabled = !n;
+  $('dlBtn').disabled = $('copyBtn').disabled = $('qrBtn').disabled = !n;
   $('preview').textContent = JSON.stringify(output(), null, 2);
   const fn = $('fname').value.trim();
   $('testHint').textContent = (nBad ? `${nBad} Geschichte(n) noch unvollständig – sie würden beim Laden übersprungen. ` : '') +
@@ -338,6 +353,46 @@ $('copyBtn').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(t); $('testHint').textContent = 'JSON kopiert.'; }
   catch (e) { $('preview').parentElement.open = true; getSelection().selectAllChildren($('preview')); }
 });
+
+/* QR-Codes drucken: ein Blatt mit einem QR-Code je vollständiger Geschichte (Direktlink flug-3d.html?story=<id>&stories=<datei>).
+   Bibliothek qrcode-generator, erst beim ersten Gebrauch geladen. Gilt erst, wenn die Datei freigeschaltet ist. */
+let qrLib = null;
+const loadQrLib = () => qrLib || (qrLib = new Promise((res, rej) => {
+  const sc = document.createElement('script');
+  sc.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
+  sc.onload = () => typeof window.qrcode === 'function' ? res() : rej(new Error('qrcode fehlt'));
+  sc.onerror = () => { qrLib = null; rej(new Error('nicht geladen')); };
+  document.head.appendChild(sc);
+}));
+function qrDataUrl(url){
+  const q = window.qrcode(0, 'M'); q.addData(url); q.make();
+  const n = q.getModuleCount(), cell = 8, pad = 4 * cell, cv = document.createElement('canvas');
+  cv.width = cv.height = n * cell + 2 * pad;
+  const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height); g.fillStyle = '#151515';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) g.fillRect(pad + c * cell, pad + r * cell, cell, cell);
+  return cv.toDataURL('image/png');
+}
+$('qrBtn').addEventListener('click', async () => {
+  const fn = $('fname').value.trim();
+  if (!/^[a-z0-9-]{1,40}$/.test(fn)) { $('testHint').textContent = 'Für die QR-Codes zuerst einen Dateinamen eintragen (Kleinbuchstaben, Ziffern, Bindestrich).'; $('fname').focus(); return; }
+  try { await loadQrLib(); } catch (e) { $('testHint').textContent = 'QR-Codes konnten nicht geladen werden – Internetverbindung prüfen.'; return; }
+  const out = output().geschichten, grid = $('qrGrid'); grid.textContent = '';
+  let n = 0;
+  doc.geschichten.forEach((st, i) => {
+    if (problems(st).length) return;
+    const url = new URL('../flug-3d.html?' + new URLSearchParams({story: out[i].id, stories: fn}).toString(), location.href).href;
+    const fig = document.createElement('figure'), img = document.createElement('img'), b = document.createElement('b'), sm = document.createElement('small'), sm2 = document.createElement('small');
+    img.src = qrDataUrl(url); img.alt = 'QR-Code: ' + st.titel;
+    b.textContent = st.titel; sm2.textContent = 'Scannen: Geschichte im 3D-Flug ansehen'; sm.textContent = url; sm.className = 'u';
+    fig.append(img, b, sm2, sm); grid.appendChild(fig); n++;
+  });
+  if (!n) { $('testHint').textContent = 'Keine vollständige Geschichte für QR-Codes vorhanden.'; return; }
+  $('qrSheetH').textContent = (doc.ort ? doc.ort + ': ' : '') + 'Geschichten an Orten';
+  $('qrSheetSub').textContent = `Zeitreise Schweiz · Datei ${fn}.json · Karten und Daten © swisstopo, BFS Gebäuderegister · Die Codes funktionieren, sobald die Datei freigeschaltet ist.`;
+  document.body.classList.add('qrprint');
+  setTimeout(() => window.print(), 100);
+});
+window.addEventListener('afterprint', () => document.body.classList.remove('qrprint'));
 
 /* Lage im 3D-Flug prüfen: Blick von Süden auf den Punkt, Höhe aus der Höhenabfrage von geo.admin.ch */
 function toLV95(lon, lat){

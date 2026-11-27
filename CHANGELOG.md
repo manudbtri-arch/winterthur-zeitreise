@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Story-Werkstatt: Knopf «QR-Codes drucken» erstellt ein Druckblatt mit einem QR-Code je vollständiger Geschichte (Titel, Code, Direktlink in den 3D-Flug) für Tafeln am Ort; in der Partner-Anleitung erklärt.
 - Unterrichtsseite: Hinweise für Lehrpersonen nennen den QR-Code als gemeinsamen Start der Klasse und die Tastenübersicht (H); `README.md` nennt sieben Aufträge, QR-Codes und Tastenübersicht.
 - 2D-Karte: Knopf «QR-Code zu dieser Ansicht» zeigt den Link mit Ausschnitt, Quelle und Jahr (bzw. beiden Vergleichsebenen) als QR-Code und speichert ihn als PNG.
 - Infokarte einer Geschichte mit Knopf «QR-Code zu dieser Geschichte»: speichert den Direktlink (`?story=<id>`) als QR-Code, z. B. für eine Tafel am Ort; in der Partner-Anleitung erklärt.
