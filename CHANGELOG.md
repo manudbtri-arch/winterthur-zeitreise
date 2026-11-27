@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- 2D-Karte: auf Touch-Geräten heisst der Knopf «Link zu dieser Ansicht teilen» und öffnet das System-Teilen; sonst wird wie bisher kopiert.
 - Produktseite nennt den Prüflink ins Gebäuderegister, das Teilen auf dem Handy und das druckbare Arbeitsblatt.
 - Unterrichtsseite: Knopf «Arbeitsblatt drucken» druckt die fünf Aufträge mit Antwortlinien und Feldern für Name, Klasse und Datum, ohne Lernziele und Lehrpersonen-Hinweise; beim normalen Drucken erscheinen die Antwortlinien ebenfalls.
 - Handy: «Link teilen» und «Link zu dieser Geschichte teilen» öffnen auf Touch-Geräten das System-Teilen (Nachricht, Mail); ohne Teilen-Funktion wird wie bisher kopiert.

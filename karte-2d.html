@@ -378,8 +378,15 @@ function permalink(){
   else { q.set('t', $('tSrc').value); q.set('y', $('tYear').value); q.set('op', $('tOp').value); }
   return location.origin + location.pathname + '?' + q.toString();
 }
+/* auf Touch-Geräten mit Teilen-Funktion: System-Teilen (Nachricht, Mail), sonst kopieren */
+const SHARE = matchMedia('(pointer:coarse)').matches && !!navigator.share;
+if (SHARE) $('linkBtn').textContent = 'Link zu dieser Ansicht teilen';
 $('linkBtn').addEventListener('click', async () => {
   const url = permalink();
+  if (SHARE) {
+    try { await navigator.share({title: 'Zeitreise Schweiz – ' + $('yBig').textContent, url}); $('linkMsg').textContent = ''; return; }
+    catch (e) { if (e && e.name === 'AbortError') return; }
+  }
   try { await navigator.clipboard.writeText(url); $('linkMsg').textContent = 'Link kopiert.'; }
   catch (e) { window.prompt('Link zu dieser Ansicht:', url); }
 });
