@@ -487,6 +487,13 @@ function showLayer(){
   const next = viewer.imageryLayers.addImageryProvider(tile(key, y));
   for (const l of themeLayers) viewer.imageryLayers.raiseToTop(l);
   const old = top; top = next;
+  /* Zeitsprung sanft überblenden: neue Karte in 0,6 s einblenden (bei «Bewegung reduzieren» sofort) */
+  if (old && !REDUCE) {
+    next.alpha = 0;
+    const t0 = performance.now();
+    const step = () => { if (next.isDestroyed()) return; const f = Math.min(1, (performance.now() - t0) / 600); next.alpha = f * f * (3 - 2 * f); if (f < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
   if (old) setTimeout(() => { if (old !== top) viewer.imageryLayers.remove(old, true); }, 1500);
 }
 /* ---------- Abfrage bei geo.admin.ch an einem Punkt (identify); Ergebnisse nur als Text verwenden ---------- */

@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Zeitsprung: die Karte des neuen Jahres blendet in 0,6 Sekunden weich über die alte, statt hart umzuspringen (bei «Bewegung reduzieren» sofort).
 - Beim ersten Gehen und beim ersten Flug erscheint ein kurzer Hinweis, wie man sich bewegt (Tastatur und Maus bzw. Joystick und Wischen auf dem Handy); er verschwindet mit «Verstanden», beim ersten Schritt oder nach 15 Sekunden und kommt im selben Browser nicht wieder; nicht im Kiosk und in der Einbettung.
 - Ferne nachgebaute Häuser verblassen jetzt im Dunst wie Gelände und echte Altbauten, statt am Horizont hart abzustechen.
 - Nachgebaute Häuser haben jetzt schräge Satteldächer (rund 40°, First in Längsrichtung) statt Stufendächern; das Stufendach gibt es weiter mit dem Minecraft-Look (Taste B), beim Umschalten werden die Häuser neu aufgebaut.

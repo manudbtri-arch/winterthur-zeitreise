@@ -109,6 +109,6 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [ ] Türme für abgerissene Kirchen. – zurückgestellt: Kirchensymbole der Siegfriedkarte lassen sich nicht zuverlässig erkennen; braucht eine belegte Liste (z. B. Feld in der Story-Datei mit Quelle).
 - [ ] Nur Brücken, die auf der Karte des Jahres vorkommen. – zurückgestellt: swissTLM3D hat kein Baujahr; Abgleich mit der Karte (Strasse über Gewässer) zuerst an den Testbildern prüfen.
 - [x] Hinweis beim ersten Start, wie man sich bewegt.
-- [ ] Sanftes Überblenden beim Zeitsprung.
+- [x] Sanftes Überblenden beim Zeitsprung.
 - [ ] Menü in Reitern (Ort, Zeit, Themen, Export).
 - [ ] 3D-Flug in mehrere Dateien aufteilen.
