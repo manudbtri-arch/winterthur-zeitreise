@@ -613,22 +613,8 @@ function centerLonLat(){
 const EDITIONS = [1880, 1900, 1920, 1940];
 let buildToken = 0;
 
-/* Eine Kartenausgabe auswerten: Hausflächen → Blöcke mit Stufendach und Fenstern */
-async function buildEdition(area, year, reg, token){
-  const {px0, py0, W, H, cw, ch, lat} = area;
-  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-  const g = cv.getContext('2d', {willReadFrequently:true});
-  g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
-  const jobs = [];
-  for (let ty = Math.floor(py0 / TS); ty <= Math.floor((py0 + H - 1) / TS); ty++)
-    for (let tx = Math.floor(px0 / TS); tx <= Math.floor((px0 + W - 1) / TS); tx++)
-      jobs.push(loadImg(`https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.hiks-siegfried/default/${year}/3857/${Z}/${tx}/${ty}.png`)
-        .then(img => { if (img) g.drawImage(img, tx * TS - px0, ty * TS - py0); }));
-  await Promise.all(jobs);
-  if (token !== buildToken) return null;
-
-  /* schwarze Flächen, dünne Linien und Schrift wegfiltern */
-  const px = g.getImageData(0, 0, W, H).data;
+/* Kartenbild auswerten (läuft im Web Worker, sonst im Hauptfaden): Hausflächen, Wasser, zusammenhängende Häuser */
+function analyseMap(px, W, H, cw, ch, CELL){
   const dark = new Uint8Array(W * H);
   for (let i = 0; i < W * H; i++) {
     const r = px[i*4], gg = px[i*4+1], b = px[i*4+2];
@@ -678,6 +664,47 @@ async function buildEdition(area, year, reg, token){
   }
   /* Häuser sind kompakt; Gleisfelder und Strassennetze sind dünn gefüllte Gitter */
   const keep = comps.map(c => c.n >= 6 && !(c.n > 200 && c.n / ((c.x1 - c.x0 + 1) * (c.y1 - c.y0 + 1)) < 0.3));
+  return {occ, wat, comp, comps, keep};
+}
+let mapWorker;
+try {
+  mapWorker = new Worker(URL.createObjectURL(new Blob([`const analyseMap = ${analyseMap.toString()};
+self.onmessage = e => { const d = e.data, r = analyseMap(d.px, d.W, d.H, d.cw, d.ch, d.CELL);
+  self.postMessage({id: d.id, r}, [r.occ.buffer, r.wat.buffer, r.comp.buffer]); };`], {type: 'text/javascript'})));
+} catch (e) { mapWorker = null; }
+let mapJob = 0;
+const mapWait = new Map();
+if (mapWorker) {
+  mapWorker.onmessage = e => { const f = mapWait.get(e.data.id); mapWait.delete(e.data.id); if (f) f(e.data.r); };
+  mapWorker.onerror = () => { mapWorker = null; for (const f of mapWait.values()) f(null); mapWait.clear(); };
+}
+async function analyseAsync(px, W, H, cw, ch){
+  if (mapWorker) {
+    const copy = new Uint8ClampedArray(px);   /* Kopie verschicken, das Original bleibt für den Ersatzweg */
+    const r = await new Promise(res => { const id = ++mapJob; mapWait.set(id, res); mapWorker.postMessage({id, px: copy, W, H, cw, ch, CELL}, [copy.buffer]); });
+    if (r) return r;
+  }
+  return analyseMap(px, W, H, cw, ch, CELL);
+}
+
+/* Eine Kartenausgabe auswerten: Hausflächen → Blöcke mit Stufendach und Fenstern */
+async function buildEdition(area, year, reg, token){
+  const {px0, py0, W, H, cw, ch, lat} = area;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const g = cv.getContext('2d', {willReadFrequently:true});
+  g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+  const jobs = [];
+  for (let ty = Math.floor(py0 / TS); ty <= Math.floor((py0 + H - 1) / TS); ty++)
+    for (let tx = Math.floor(px0 / TS); tx <= Math.floor((px0 + W - 1) / TS); tx++)
+      jobs.push(loadImg(`https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.hiks-siegfried/default/${year}/3857/${Z}/${tx}/${ty}.png`)
+        .then(img => { if (img) g.drawImage(img, tx * TS - px0, ty * TS - py0); }));
+  await Promise.all(jobs);
+  if (token !== buildToken) return null;
+
+  /* schwarze Flächen, dünne Linien und Schrift wegfiltern */
+  const px = g.getImageData(0, 0, W, H).data;
+  const {occ, wat, comp, comps, keep} = await analyseAsync(px, W, H, cw, ch);
+  if (token !== buildToken) return null;
 
   /* heute noch stehende Häuser übernimmt das echte 3D-Modell */
   const real = new Uint8Array(comps.length);

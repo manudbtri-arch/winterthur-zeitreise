@@ -35,5 +35,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [ ] (Manuel) Eigene Domain.
 
 ## 5. Technik
-- [ ] Kartenausgaben in einem Web Worker berechnen, damit die Seite beim Bauen nicht stockt.
+- [x] Kartenausgaben in einem Web Worker berechnen, damit die Seite beim Bauen nicht stockt.
 - [ ] Ladezeit: Kartenausgaben zwischenspeichern (IndexedDB), zweiter Besuch startet sofort.

@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Die Auswertung der Kartenbilder (Hausflächen, Wasser, Formfilter) läuft jetzt in einem Web Worker, damit die Seite beim Bauen nicht stockt; ohne Worker-Unterstützung wie bisher im Hauptfaden.
 - Handy-Steuerung: virtueller Joystick zum Gehen (stufenlos, setzt einen beim ersten Antippen in die Gasse) und Wischen mit einem Finger zum Umschauen.
 - Kiosk-Modus `flug-3d.html?kiosk=1` für Museen: Rundflug um die Altstadt mit Wechsel der Kartenausgaben, Hinweis «Berühre den Bildschirm», Neustart nach 2 Minuten ohne Eingabe, grosse Touch-Knöpfe, keine Links und Downloads.
 - Bekannte Orte als Sprungziele: Knöpfe in der Seitenleiste (aus der Story-Datei) fliegen direkt zum Ort und zeigen die Geschichte.
