@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- 3D-Flug aufgeteilt, erster Schritt: die Shader (Fassaden, Wände mit Fenstern, Boden) liegen jetzt in `flug-3d-shader.js`; der Bildtest läuft auch bei Änderungen an `flug-3d-*.js`.
 - Bildtest: läuft bei schnell aufeinanderfolgenden Änderungen zu Ende statt abgebrochen zu werden, meldet fehlgeschlagene Abrufe mit Adresse und blendet den Bedienungshinweis aus.
 - Menü in Reitern: «Ort» (Losgehen, Karte, Rundgang, Messen, neu bauen), «Zeit» (Legende, Analyse nach Bauepoche, Neu seit der letzten Kartenausgabe), «Themen» (Bundesdaten) und «Export» (Link, Bild, Einbetten, Liste, GeoJSON); Suche, Baustatus und Einstellungen bleiben immer sichtbar; Pfeiltasten wechseln den Reiter, der gewählte wird gemerkt; Unterrichtsseite und Methodik nennen die Reiter.
 - Zeitsprung: die Karte des neuen Jahres blendet in 0,6 Sekunden weich über die alte, statt hart umzuspringen (bei «Bewegung reduzieren» sofort).

@@ -112,3 +112,7 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Sanftes Überblenden beim Zeitsprung.
 - [x] Menü in Reitern (Ort, Zeit, Themen, Export).
 - [ ] 3D-Flug in mehrere Dateien aufteilen.
+  - [x] Shader (Fassade, Wand und Fenster, Boden) in `flug-3d-shader.js`.
+  - [ ] Kartenauswertung (Web Worker) in `flug-3d-worker.js`.
+  - [ ] CSS in `flug-3d.css`.
+  - [ ] Themen aus Bundesdaten in `flug-3d-themen.js`.
