@@ -1,277 +1,248 @@
 
 {
-const SRC = {
-  zeit:  {name:'Landeskarte-Zeitreihe', layer:'ch.swisstopo.zeitreihen', fmt:'png', min:1844, max:1960, ts:y=>y+'1231', nz:16},
-  sieg:  {name:'Siegfriedkarte', layer:'ch.swisstopo.hiks-siegfried', fmt:'png', min:1870, max:1949, ts:y=>String(y), nz:16},
-  luft:  {name:'Luftbild (Archiv)', layer:'ch.swisstopo.swissimage-product', fmt:'png', min:1926, max:2025, ts:y=>String(y===1928?1927:y), nz:18},
-  dufour:{name:'Dufourkarte', layer:'ch.swisstopo.hiks-dufour', fmt:'png', fixed:'current', nz:15},
-  karte: {name:'Heute: Landeskarte', layer:'ch.swisstopo.pixelkarte-farbe', fmt:'jpeg', fixed:'current', nz:18},
-  foto:  {name:'Heute: Luftbild', layer:'ch.swisstopo.swissimage', fmt:'jpeg', fixed:'current', nz:19}
-};
-const PLACES = [
-  ['Altstadt',[47.4998,8.7290]],['Bahnhof & Sulzer-Areal',[47.4985,8.7215]],
-  ['Töss',[47.4880,8.7080]],['Wülflingen',[47.5100,8.6880]],
-  ['Veltheim',[47.5150,8.7180]],['Oberwinterthur',[47.5080,8.7590]]
-];
-const ATTR = '© <a href="https://www.swisstopo.admin.ch">swisstopo</a>';
 const $ = id => document.getElementById(id);
+const KEY = 'zeitreise-werkstatt-v1';
+let doc = {ort: '', geschichten: []}, edit = -1, pos = null, marker = null;
+const markers = [];
 
-const map = L.map('map',{zoomControl:true,minZoom:12,maxZoom:19}).setView(PLACES[0][1],15);
-const mk = (key,year,pane) => {
-  const s = SRC[key], t = s.fixed || s.ts(year);
-  return L.tileLayer(`https://wmts.geo.admin.ch/1.0.0/${s.layer}/default/${t}/3857/{z}/{x}/{y}.${s.fmt}`,
-    {maxNativeZoom:s.nz,maxZoom:19,attribution:ATTR,pane:pane||'tilePane'});
-};
-const fill = (sel,keys,val) => { sel.innerHTML = keys.map(k=>`<option value="${k}">${SRC[k].name}</option>`).join(''); sel.value = val; };
-const setRange = (inp,key,keep) => {
-  const s = SRC[key];
-  inp.disabled = !!s.fixed;
-  if (s.fixed) return;
-  inp.min = s.min; inp.max = s.max;
-  inp.value = Math.min(s.max, Math.max(s.min, +keep || s.min));
-};
-
-/* weicher Wechsel: neue Ebene erst einblenden, wenn sie geladen ist */
-function swap(holder, layer, onReady){
-  const old = holder.cur;
-  holder.cur = layer;
-  layer.addTo(map);
-  layer.once('load', () => { if (old && old !== holder.cur) map.removeLayer(old); onReady && onReady(); });
-  if (old) setTimeout(() => { if (old !== holder.cur && map.hasLayer(old)) map.removeLayer(old); }, 4000);
+/* Entwurf im Browser merken (nur dieser Browser; die Datei selbst ist das Ergebnis) */
+function saveDraft(){ try { localStorage.setItem(KEY, JSON.stringify({doc, fname: $('fname').value})); } catch (e) {} }
+function loadDraft(){
+  try { const d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (d && d.doc && Array.isArray(d.doc.geschichten)) { doc = d.doc; $('fname').value = d.fname || ''; } } catch (e) {}
+  $('ort').value = doc.ort || '';
 }
-const debounce = (fn,ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(()=>fn(...a), ms); }; };
 
-/* ---------- Zeitregler ---------- */
-const base = mk('karte').addTo(map);
-const hist = {cur:null};
-const tKeys = ['zeit','sieg','luft'];
-fill($('tSrc'), tKeys, 'zeit');
-setRange($('tYear'),'zeit',1900);
+const slug = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+const yearOrNull = v => { const t = String(v).trim(); if (!t) return null; const n = Number(t); return Number.isInteger(n) ? n : NaN; };
 
-function showTime(after){
-  const key = $('tSrc').value, y = +$('tYear').value, s = SRC[key];
-  $('yBig').textContent = (key==='luft' && y===1928) ? '1927' : y;
-  $('yLbl').textContent = s.name;
-  const l = mk(key,y); l.setOpacity(1 - $('tOp').value/100);
-  swap(hist, l, after);
+/* gleiche Regeln wie beim Laden im 3D-Flug, dazu die Quellenregeln der Anleitung */
+function problems(st){
+  const p = [];
+  if (!st.titel) p.push('Titel fehlt');
+  if (!st.text) p.push('Text fehlt');
+  if (!st.quelle) p.push('Quelle fehlt');
+  if (!(Number.isFinite(st.lon) && Number.isFinite(st.lat)) && !st.adresse) p.push('Lage fehlt (Adresse oder Punkt in der Karte)');
+  if (Number.isFinite(st.lon) && !(st.lon > 5.9 && st.lon < 10.6 && st.lat > 45.8 && st.lat < 47.9)) p.push('Lage liegt nicht in der Schweiz');
+  if (Number.isNaN(st.von) || Number.isNaN(st.bis)) p.push('Jahr muss eine ganze Zahl sein');
+  if (st.von != null && st.bis != null && st.bis < st.von) p.push('«bis» liegt vor «ab»');
+  if (st.url && !/^https:\/\/[^\s]+$/.test(st.url)) p.push('Link muss mit https:// beginnen');
+  if (/<[a-z\/][^>]*>/i.test(st.text || '')) p.push('Text enthält HTML – bitte nur reinen Text');
+  return p;
 }
-const showTimeD = debounce(()=>showTime(),180);
-$('tSrc').addEventListener('change', () => { setRange($('tYear'),$('tSrc').value,$('tYear').value); showTime(); });
-$('tYear').addEventListener('input', () => { $('yBig').textContent = $('tYear').value; showTimeD(); });
-$('tOp').addEventListener('input', () => { $('opV').textContent = $('tOp').value+' %'; hist.cur && hist.cur.setOpacity(1 - $('tOp').value/100); });
-const step = d => { const i = $('tYear'); const v = Math.min(+i.max, Math.max(+i.min, +i.value + d)); if (v === +i.value) return false; i.value = v; return true; };
-$('prev').addEventListener('click', () => { if (step(-1)) showTime(); });
-$('next').addEventListener('click', () => { if (step(1)) showTime(); });
-
-let playing = false;
-function tick(){
-  if (!playing) return;
-  if (!step(1)) { stop(); return; }
-  showTime(() => setTimeout(tick, 500));
+function readForm(){
+  const st = {
+    id: '', titel: $('titel').value.trim(), text: $('text').value.trim(),
+    von: yearOrNull($('von').value), bis: yearOrNull($('bis').value),
+    quelle: $('quelle').value.trim()
+  };
+  const adr = $('adresse').value.trim(); if (adr) st.adresse = adr;
+  if (pos) { st.lon = +pos[0].toFixed(6); st.lat = +pos[1].toFixed(6); }
+  const u = $('url').value.trim(); if (u) st.url = u;
+  return st;
 }
-function stop(){ playing = false; $('play').textContent = '▶ Abspielen'; }
-$('play').addEventListener('click', () => {
-  if (playing) return stop();
-  const i = $('tYear'); if (+i.value >= +i.max) i.value = i.min;
-  playing = true; $('play').textContent = '❚❚ Pause';
-  showTime(() => setTimeout(tick, 500));
+function fillForm(st){
+  $('titel').value = st ? st.titel || '' : ''; $('text').value = st ? st.text || '' : '';
+  $('von').value = st && st.von != null ? st.von : ''; $('bis').value = st && st.bis != null ? st.bis : '';
+  $('adresse').value = st ? st.adresse || '' : ''; $('quelle').value = st ? st.quelle || '' : ''; $('url').value = st ? st.url || '' : '';
+  setPos(st && Number.isFinite(st.lon) && Number.isFinite(st.lat) ? [st.lon, st.lat] : null, !!st);
+  $('textCount').textContent = $('text').value.length;
+  $('formErr').textContent = ''; $('formOk').textContent = '';
+  $('editLbl').textContent = edit >= 0 ? `– bearbeiten (${edit + 1})` : '– neu';
+}
+function setPos(ll, pan){
+  pos = ll;
+  $('coordLbl').textContent = ll ? `Lage: ${ll[1].toFixed(5)} N, ${ll[0].toFixed(5)} O (WGS84)` : 'Noch keine Lage gesetzt.';
+  if (!map) return;
+  if (marker) { map.removeLayer(marker); marker = null; }
+  if (ll) { marker = L.circleMarker([ll[1], ll[0]], {radius: 9, color: '#fff', weight: 2, fillColor: '#c8803f', fillOpacity: 1}).addTo(map); if (pan) map.setView([ll[1], ll[0]], Math.max(map.getZoom(), 16)); }
+}
+
+/* JSON im Format von stories/README.md */
+function output(){
+  const used = new Set();
+  const g = doc.geschichten.map(st => {
+    let id = slug(st.id || st.titel) || 'geschichte', k = id, i = 2;
+    while (used.has(k)) k = `${id}-${i++}`;
+    used.add(k);
+    const o = {id: k, titel: st.titel, text: st.text, von: st.von ?? null, bis: st.bis ?? null};
+    if (st.adresse) o.adresse = st.adresse;
+    if (Number.isFinite(st.lon) && Number.isFinite(st.lat)) { o.lon = st.lon; o.lat = st.lat; }
+    o.quelle = st.quelle;
+    if (st.url) o.url = st.url;
+    return o;
+  });
+  return {ort: doc.ort || '', geschichten: g};
+}
+function render(){
+  const list = $('list'); list.textContent = '';
+  for (const m of markers) map && map.removeLayer(m); markers.length = 0;
+  let nBad = 0;
+  doc.geschichten.forEach((st, i) => {
+    const li = document.createElement('li'), d = document.createElement('div'), b = document.createElement('b'), sm = document.createElement('small');
+    const pr = problems(st); if (pr.length) { li.classList.add('bad'); nBad++; }
+    b.textContent = st.titel || '(ohne Titel)';
+    sm.textContent = pr.length ? 'Fehlt: ' + pr.join(', ') : [st.von != null ? `ab ${st.von}` : '', st.adresse || (Number.isFinite(st.lon) ? 'Punkt in der Karte' : ''), st.quelle].filter(Boolean).join(' · ');
+    d.append(b, sm);
+    const eb = document.createElement('button'); eb.className = 'btn'; eb.type = 'button'; eb.textContent = 'Bearbeiten';
+    eb.addEventListener('click', () => { edit = i; fillForm(st); $('titel').focus(); });
+    const db = document.createElement('button'); db.className = 'btn'; db.type = 'button'; db.textContent = 'Löschen';
+    db.setAttribute('aria-label', `«${st.titel || 'ohne Titel'}» löschen`);
+    db.addEventListener('click', () => { if (!confirm(`«${st.titel || 'ohne Titel'}» löschen?`)) return; doc.geschichten.splice(i, 1); if (edit === i) { edit = -1; fillForm(null); } else if (edit > i) edit--; render(); });
+    li.append(d, eb, db); list.appendChild(li);
+    if (map && Number.isFinite(st.lon) && Number.isFinite(st.lat)) {
+      const m = L.circleMarker([st.lat, st.lon], {radius: 7, color: '#fff', weight: 2, fillColor: '#1f5fa8', fillOpacity: .9}).addTo(map);
+      m.bindTooltip(document.createTextNode(st.titel || ''));   /* Titel als Text, nicht als HTML */
+      m.on('click', () => { edit = i; fillForm(st); });
+      markers.push(m);
+    }
+  });
+  const n = doc.geschichten.length;
+  $('nStories').textContent = n; $('emptyHint').hidden = n > 0;
+  $('dlBtn').disabled = $('copyBtn').disabled = !n;
+  $('preview').textContent = JSON.stringify(output(), null, 2);
+  const fn = $('fname').value.trim();
+  $('testHint').textContent = (nBad ? `${nBad} Geschichte(n) noch unvollständig – sie würden beim Laden übersprungen. ` : '') +
+    (fn && /^[a-z0-9-]{1,40}$/.test(fn) ? `Nach der Freischaltung testen mit: flug-3d.html?stories=${fn}` : 'Dateiname eintragen, um den Testlink zu sehen.');
+  saveDraft();
+}
+
+$('text').addEventListener('input', () => { $('textCount').textContent = $('text').value.length; });
+$('ort').addEventListener('input', () => { doc.ort = $('ort').value.trim(); if (!$('fname').dataset.touched) $('fname').value = slug(doc.ort); render(); });
+$('fname').addEventListener('input', () => { $('fname').dataset.touched = '1'; render(); });
+$('saveBtn').addEventListener('click', () => {
+  const st = readForm(), pr = problems(st);
+  if (edit >= 0 && doc.geschichten[edit]) st.id = doc.geschichten[edit].id || '';
+  if (pr.length) { $('formErr').textContent = pr.join('\n'); $('formOk').textContent = ''; return; }
+  if (edit >= 0) doc.geschichten[edit] = st; else doc.geschichten.push(st);
+  edit = -1; fillForm(null); render();
+  $('formOk').textContent = 'Übernommen. Nächste Geschichte erfassen oder die Datei herunterladen.';
 });
-
-/* ---------- Vergleich (Wischen) ---------- */
-map.createPane('left').style.zIndex = 250;
-map.createPane('right').style.zIndex = 251;
-const L_ = {cur:null}, R_ = {cur:null};
-const cKeys = ['zeit','sieg','dufour','luft','karte','foto'];
-fill($('lSrc'), cKeys, 'sieg'); setRange($('lYear'),'sieg',1880);
-fill($('rSrc'), cKeys, 'foto'); setRange($('rYear'),'foto');
-let frac = 0.5;
-
-function label(side){
-  const key = $(side+'Src').value, s = SRC[key];
-  const y = s.fixed ? (key==='dufour' ? '1845–65' : 'heute') : $(side+'Year').value;
-  $(side+'Yv').textContent = s.fixed ? '–' : y;
-  $(side==='l'?'tagL':'tagR').textContent = s.name.replace('Heute: ','') + ' · ' + y;
-}
-function showSide(side){
-  label(side);
-  swap(side==='l'?L_:R_, mk($(side+'Src').value, +$(side+'Year').value, side==='l'?'left':'right'));
-}
-function clip(){
-  if ($('pCmp').hidden) return;
-  const size = map.getSize(), nw = map.containerPointToLayerPoint([0,0]), se = map.containerPointToLayerPoint(size);
-  const x = nw.x + size.x*frac;
-  map.getPane('left').style.clip  = `rect(${nw.y}px, ${x}px, ${se.y}px, ${nw.x}px)`;
-  map.getPane('right').style.clip = `rect(${nw.y}px, ${se.x}px, ${se.y}px, ${x}px)`;
-  $('divider').style.left = (size.x*frac)+'px';
-  const tl = $('tagL'), tr = $('tagR');
-  tl.style.left = Math.max(8, size.x*frac - tl.offsetWidth - 12)+'px';
-  tr.style.left = Math.min(size.x - tr.offsetWidth - 8, size.x*frac + 12)+'px';
-}
-map.on('move zoom resize zoomend', clip);
-['l','r'].forEach(s => {
-  $(s+'Src').addEventListener('change', () => { setRange($(s+'Year'),$(s+'Src').value,$(s+'Year').value); showSide(s); clip(); });
-  const d = debounce(()=>{ showSide(s); clip(); },180);
-  $(s+'Year').addEventListener('input', () => { label(s); clip(); d(); });
+$('newBtn').addEventListener('click', () => { edit = -1; fillForm(null); $('titel').focus(); });
+$('clearAll').addEventListener('click', () => {
+  if (doc.geschichten.length && !confirm('Alle erfassten Geschichten löschen?')) return;
+  doc = {ort: '', geschichten: []}; edit = -1; $('ort').value = ''; $('fname').value = ''; delete $('fname').dataset.touched; fillForm(null); render();
 });
-const dv = $('divider');
-dv.addEventListener('pointerdown', e => {
-  dv.setPointerCapture(e.pointerId); map.dragging.disable();
-  const mv = ev => { const r = map.getContainer().getBoundingClientRect(); frac = Math.min(.98, Math.max(.02, (ev.clientX - r.left)/r.width)); clip(); };
-  const up = () => { dv.removeEventListener('pointermove', mv); map.dragging.enable(); };
-  dv.addEventListener('pointermove', mv);
-  dv.addEventListener('pointerup', up, {once:true});
+$('importFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; $('fileErr').textContent = '';
+  if (!f) return;
+  try {
+    const raw = await f.text();
+    if (/\.(csv|txt)$/i.test(f.name) || !/^\s*[\[{]/.test(raw)) { importCsv(raw); return; }
+    const d = JSON.parse(raw);
+    if (!d || !Array.isArray(d.geschichten)) throw new Error('kein Feld «geschichten»');
+    const num = v => typeof v === 'number' && Number.isFinite(v) ? v : undefined, str = v => typeof v === 'string' ? v : '';
+    doc = {ort: str(d.ort), geschichten: d.geschichten.filter(x => x && typeof x === 'object').map(x => ({
+      id: str(x.id), titel: str(x.titel), text: str(x.text), von: Number.isInteger(x.von) ? x.von : null, bis: Number.isInteger(x.bis) ? x.bis : null,
+      ...(str(x.adresse) ? {adresse: str(x.adresse)} : {}), ...(num(x.lon) !== undefined && num(x.lat) !== undefined ? {lon: x.lon, lat: x.lat} : {}),
+      quelle: str(x.quelle), ...(str(x.url) ? {url: str(x.url)} : {})}))};
+    $('ort').value = doc.ort; $('fname').value = f.name.replace(/\.json$/i, '').toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 40); $('fname').dataset.touched = '1';
+    edit = -1; fillForm(null); render();
+    const pts = doc.geschichten.filter(s => Number.isFinite(s.lon)).map(s => [s.lat, s.lon]);
+    if (map && pts.length) map.fitBounds(pts, {padding: [30, 30], maxZoom: 16});
+  } catch (err) { $('fileErr').textContent = 'Datei konnte nicht gelesen werden: ' + (err && err.message ? err.message : 'kein gültiges JSON'); }
 });
-
-/* ---------- Modus ---------- */
-function mode(cmp){
-  stop();
-  $('mTime').setAttribute('aria-pressed', !cmp); $('mCmp').setAttribute('aria-pressed', cmp);
-  $('pTime').hidden = cmp; $('pCmp').hidden = !cmp;
-  [dv,$('tagL'),$('tagR')].forEach(el => el.hidden = !cmp);
-  if (cmp){
-    map.removeLayer(base); if (hist.cur) { map.removeLayer(hist.cur); hist.cur = null; }
-    showSide('l'); showSide('r'); clip();
-  } else {
-    [L_,R_].forEach(h => { if (h.cur) { map.removeLayer(h.cur); h.cur = null; } });
-    base.addTo(map); showTime();
+/* Tabelle (CSV) einlesen: Trennzeichen ; , oder Tab, Felder in Anführungszeichen erlaubt; Zeilen werden angehängt */
+function parseCsv(t){
+  t = t.replace(/^\ufeff/, '');
+  const first = t.split(/\r?\n/)[0], delim = [';', '\t', ','].sort((a, b) => first.split(b).length - first.split(a).length)[0];
+  const rows = []; let row = [], cur = '', q = false;
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (q) { if (c === '"') { if (t[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += c; }
+    else if (c === '"') q = true;
+    else if (c === delim) { row.push(cur); cur = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && t[i + 1] === '\n') i++; row.push(cur); rows.push(row); row = []; cur = ''; }
+    else cur += c;
   }
+  if (cur || row.length) { row.push(cur); rows.push(row); }
+  return rows.filter(r => r.some(v => v.trim()));
 }
-$('mTime').addEventListener('click', () => mode(false));
-$('mCmp').addEventListener('click', () => mode(true));
-
-$('places').innerHTML = PLACES.map((p,i)=>`<button class="btn" data-i="${i}">${p[0]}</button>`).join('');
-$('places').addEventListener('click', e => { const b = e.target.closest('button'); if (b) map.setView(PLACES[+b.dataset.i][1], 16); });
-
-/* ---------- Geschichten an Orten: gleiche Datei wie im 3D-Flug, Inhalte nur als Text ---------- */
-const storyLayer = L.layerGroup().addTo(map);
-async function loadStories(file){
-  let data;
-  try { data = await (await fetch(file)).json(); } catch (e) { return; }
-  for (const st of (data.geschichten || [])) {
-    if (typeof st.titel !== 'string' || typeof st.text !== 'string' || typeof st.quelle !== 'string') continue;
-    let ll = Number.isFinite(st.lon) && Number.isFinite(st.lat) ? [st.lat, st.lon] : null;
-    if (!ll && typeof st.adresse === 'string') {
-      try {
-        const u = `https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(st.adresse)}&type=locations&origins=address&sr=4326&limit=1`;
-        const r = ((await (await fetch(u)).json()).results || [])[0];
-        if (r && Number.isFinite(+r.attrs.lat)) ll = [+r.attrs.lat, +r.attrs.lon];
-      } catch (e) {}
-    }
-    if (!ll) continue;
-    const box = document.createElement('div'); box.className = 'story';
-    const t = document.createElement('b'); t.textContent = st.titel;
-    const p = document.createElement('p'); p.textContent = st.text;
-    const q = document.createElement('small'); q.textContent = 'Quelle: ' + st.quelle;
-    box.append(t, p, q);
-    if (/^https:\/\//.test(st.url || '')) {
-      const a = document.createElement('a'); a.href = st.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Quelle öffnen';
-      box.appendChild(a);
-    }
-    /* Direktlink in den 3D-Flug: fliegt zur Geschichte und öffnet ihre Infokarte */
-    if (/^[A-Za-z0-9_-]{1,60}$/.test(String(st.id || ''))) {
-      const a3 = document.createElement('a'); a3.href = 'flug-3d.html?story=' + encodeURIComponent(st.id); a3.textContent = 'Im 3D-Flug ansehen';
-      box.appendChild(a3);
-    }
-    L.circleMarker(ll, {radius: 8, color: '#fff', weight: 2, fillColor: '#c8803f', fillOpacity: 1})
-      .bindTooltip(document.createTextNode(st.titel)).bindPopup(box, {maxWidth: 300}).addTo(storyLayer);
+function importCsv(raw){
+  const rows = parseCsv(raw);
+  if (rows.length < 2) throw new Error('Tabelle ohne Datenzeilen');
+  const head = rows[0].map(h => h.trim().toLowerCase().replace(/^"|"$/g, ''));
+  const col = k => head.indexOf(k);
+  if (col('titel') < 0 || col('text') < 0) throw new Error('Spalten «titel» und «text» fehlen in der ersten Zeile');
+  const get = (r, k) => col(k) >= 0 ? String(r[col(k)] ?? '').trim() : '';
+  const yr = v => { if (!v) return null; const n = Number(v); return Number.isInteger(n) ? n : NaN; };
+  const dec = v => { const n = Number(String(v).replace(',', '.')); return v && Number.isFinite(n) ? n : undefined; };
+  let n = 0;
+  for (const r of rows.slice(1)) {
+    const st = {id: get(r, 'id'), titel: get(r, 'titel'), text: get(r, 'text'), von: yr(get(r, 'von')), bis: yr(get(r, 'bis')), quelle: get(r, 'quelle')};
+    if (get(r, 'adresse')) st.adresse = get(r, 'adresse');
+    const lon = dec(get(r, 'lon')), lat = dec(get(r, 'lat'));
+    if (lon !== undefined && lat !== undefined) { st.lon = lon; st.lat = lat; }
+    if (get(r, 'url')) st.url = get(r, 'url');
+    doc.geschichten.push(st); n++;
   }
+  edit = -1; fillForm(null); render();
+  const bad = doc.geschichten.slice(-n).filter(st => problems(st).length).length;
+  $('formOk').textContent = `${n} Zeilen aus der Tabelle angehängt` + (bad ? `, ${bad} davon unvollständig (rot markiert, zum Ergänzen auf «Bearbeiten»).` : '.');
+  const pts = doc.geschichten.filter(s => Number.isFinite(s.lon)).map(s => [s.lat, s.lon]);
+  if (map && pts.length) map.fitBounds(pts, {padding: [30, 30], maxZoom: 16});
 }
-loadStories('stories/winterthur.json');
-$('storyOn').addEventListener('change', e => { if (e.target.checked) storyLayer.addTo(map); else map.removeLayer(storyLayer); });
+$('dlBtn').addEventListener('click', () => {
+  const name = (/^[a-z0-9-]{1,40}$/.test($('fname').value.trim()) ? $('fname').value.trim() : slug(doc.ort) || 'geschichten') + '.json';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(output(), null, 2) + '\n'], {type: 'application/json'}));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+});
+$('copyBtn').addEventListener('click', async () => {
+  const t = JSON.stringify(output(), null, 2);
+  try { await navigator.clipboard.writeText(t); $('testHint').textContent = 'JSON kopiert.'; }
+  catch (e) { $('preview').parentElement.open = true; getSelection().selectAllChildren($('preview')); }
+});
 
-/* ---------- Ortssuche ganze Schweiz (geo.admin.ch); Ergebnisse nur als Text ---------- */
-{
-  const inp = $('q'), list = $('qres');
-  const KIND = {gg25: 'Gemeinde', address: 'Adresse', zipcode: 'Postleitzahl', sn25: 'Ort/Flurname', kantone: 'Kanton', district: 'Bezirk', parcel: 'Parzelle', gazetteer: 'Ort'};
-  const plain = t => String(t || '').replace(/<[^>]+>/g, '').trim();
+/* Suche über geo.admin.ch: Ergebnisse als Text einfügen */
+const plain = t => String(t || '').replace(/<[^>]+>/g, '').trim();
+function attachSearch(inp, ul, origins, onPick){
   let timer, items = [], sel = -1;
-  const render = () => {
-    list.textContent = '';
+  const draw = () => {
+    ul.textContent = '';
     items.forEach((it, i) => {
-      const li = document.createElement('li');
-      li.setAttribute('role', 'option'); li.setAttribute('aria-selected', i === sel);
-      li.textContent = it.name;
-      const sm = document.createElement('small'); sm.textContent = it.kind; li.appendChild(sm);
+      const li = document.createElement('li'); li.setAttribute('role', 'option'); li.setAttribute('aria-selected', i === sel);
+      li.textContent = it.name; const sm = document.createElement('small'); sm.textContent = it.kind; li.appendChild(sm);
       li.addEventListener('mousedown', e => { e.preventDefault(); pick(i); });
-      list.appendChild(li);
+      ul.appendChild(li);
     });
-    list.hidden = !items.length; inp.setAttribute('aria-expanded', !list.hidden);
+    ul.hidden = !items.length;
   };
-  const pick = i => {
-    const it = items[i]; if (!it) return;
-    list.hidden = true; inp.value = it.name; inp.blur();
-    map.setView([it.lat, it.lon], it.kind === 'Adresse' ? 18 : it.kind === 'Kanton' ? 12 : 16);
-  };
+  const pick = i => { const it = items[i]; if (!it) return; ul.hidden = true; onPick(it); };
   inp.addEventListener('input', () => {
-    clearTimeout(timer);
-    const q = inp.value.trim();
-    if (q.length < 2) { items = []; render(); return; }
+    clearTimeout(timer); const q = inp.value.trim();
+    if (q.length < 3) { items = []; draw(); return; }
     timer = setTimeout(async () => {
       try {
-        const j = await (await fetch(`https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(q)}&type=locations&sr=4326&limit=8`)).json();
-        items = (j.results || []).map(r => ({name: plain(r.attrs.label), kind: KIND[r.attrs.origin] || 'Ort', lon: +r.attrs.lon, lat: +r.attrs.lat}))
-          .filter(it => Number.isFinite(it.lon) && Number.isFinite(it.lat));
-      } catch (e) { items = []; }
-      sel = -1; render();
-    }, 220);
+        const u = `https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(q)}&type=locations&sr=4326&limit=6${origins ? '&origins=' + origins : ''}`;
+        const j = await (await fetch(u)).json();
+        const KIND = {gg25: 'Gemeinde', address: 'Adresse', zipcode: 'Postleitzahl', sn25: 'Ort/Flurname', gazetteer: 'Ort'};
+        items = (j.results || []).map(r => ({name: plain(r.attrs.label), kind: KIND[r.attrs.origin] || 'Ort', lon: +r.attrs.lon, lat: +r.attrs.lat})).filter(it => Number.isFinite(it.lon) && Number.isFinite(it.lat));
+        sel = -1; draw();
+      } catch (e) { items = []; draw(); }
+    }, 250);
   });
   inp.addEventListener('keydown', e => {
-    if (e.key === 'ArrowDown') { sel = Math.min(items.length - 1, sel + 1); render(); e.preventDefault(); }
-    if (e.key === 'ArrowUp') { sel = Math.max(0, sel - 1); render(); e.preventDefault(); }
-    if (e.key === 'Enter') { pick(sel < 0 ? 0 : sel); e.preventDefault(); }
-    if (e.key === 'Escape') { list.hidden = true; }
+    if (e.key === 'ArrowDown') { sel = Math.min(items.length - 1, sel + 1); draw(); e.preventDefault(); }
+    if (e.key === 'ArrowUp') { sel = Math.max(0, sel - 1); draw(); e.preventDefault(); }
+    if (e.key === 'Enter' && items.length) { pick(sel < 0 ? 0 : sel); e.preventDefault(); }
+    if (e.key === 'Escape') ul.hidden = true;
   });
-  inp.addEventListener('blur', () => setTimeout(() => { list.hidden = true; }, 150));
+  inp.addEventListener('blur', () => setTimeout(() => { ul.hidden = true; }, 150));
 }
+attachSearch($('adresse'), $('adrRes'), 'address', it => { $('adresse').value = it.name; setPos([it.lon, it.lat], true); });
+attachSearch($('mapQ'), $('mapRes'), '', it => { $('mapQ').value = it.name; if (map) map.setView([it.lat, it.lon], it.kind === 'Adresse' ? 17 : 15); });
 
-/* ---------- Im 3D-Flug ansehen: Blick von Süden auf den Kartenmittelpunkt, Häuser werden dort gebaut ---------- */
-function toLV95(lon, lat){
-  const p = (lat * 3600 - 169028.66) / 10000, l = (lon * 3600 - 26782.5) / 10000;
-  return [2600072.37 + 211455.93*l - 10938.51*l*p - 0.36*l*p*p - 44.54*l*l*l,
-          1200147.07 + 308807.95*p + 3745.25*l*l + 76.63*p*p - 194.56*l*l*p + 119.79*p*p*p];
+/* Karte: Landeskarte von swisstopo, Klick setzt die Lage */
+let map = null;
+if (window.L) {
+  map = L.map('map', {minZoom: 8, maxZoom: 19}).setView([47.4997, 8.7290], 15);
+  L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg', {maxNativeZoom: 18, maxZoom: 19, attribution: '© swisstopo'}).addTo(map);
+  map.on('click', e => setPos([e.latlng.lng, e.latlng.lat], false));
+} else {
+  $('map').textContent = 'Die Karte konnte nicht geladen werden. Die Lage lässt sich über die Adresse setzen.';
 }
-$('to3d').addEventListener('click', async () => {
-  const c = map.getCenter(), [E, N] = toLV95(c.lng, c.lat);
-  let ground = 450;   /* Ersatzwert, falls die Höhenabfrage scheitert */
-  $('to3d').disabled = true;
-  try {
-    const ac = new AbortController(), t = setTimeout(() => ac.abort(), 3000);
-    const j = await (await fetch(`https://api3.geo.admin.ch/rest/services/height?easting=${E.toFixed(1)}&northing=${N.toFixed(1)}&sr=2056`, {signal: ac.signal})).json();
-    clearTimeout(t);
-    if (Number.isFinite(+j.height)) ground = +j.height;
-  } catch (e) {}
-  const cmp = !$('pCmp').hidden, key = cmp ? $('lSrc').value : $('tSrc').value, y = +(cmp ? $('lYear').value : $('tYear').value);
-  const q = new URLSearchParams({lon: c.lng.toFixed(6), lat: (c.lat - 0.0055).toFixed(6), h: Math.round(ground + 600), hdg: 0, pitch: -38,
-    c: c.lng.toFixed(5) + ',' + c.lat.toFixed(5), mode: 'fly'});
-  if ((key === 'sieg' || key === 'zeit') && y >= 1870 && y <= 1949) q.set('year', y);
-  location.href = 'flug-3d.html?' + q.toString();
-});
-window.addEventListener('pageshow', () => { $('to3d').disabled = false; });   /* nach «Zurück» wieder bereit */
-
-/* ---------- Permalink: ?lat=&lon=&z=&mode=(time|cmp)&t=&y=&op=&l=&ly=&r=&ry= ---------- */
-function permalink(){
-  const c = map.getCenter(), cmp = !$('pCmp').hidden;
-  const q = new URLSearchParams({lat: c.lat.toFixed(5), lon: c.lng.toFixed(5), z: map.getZoom(), mode: cmp ? 'cmp' : 'time'});
-  if (cmp) { q.set('l', $('lSrc').value); q.set('ly', $('lYear').value); q.set('r', $('rSrc').value); q.set('ry', $('rYear').value); }
-  else { q.set('t', $('tSrc').value); q.set('y', $('tYear').value); q.set('op', $('tOp').value); }
-  return location.origin + location.pathname + '?' + q.toString();
-}
-$('linkBtn').addEventListener('click', async () => {
-  const url = permalink();
-  try { await navigator.clipboard.writeText(url); $('linkMsg').textContent = 'Link kopiert.'; }
-  catch (e) { window.prompt('Link zu dieser Ansicht:', url); }
-});
-const Q = new URLSearchParams(location.search), qn = k => (Q.get(k) !== null && Q.get(k) !== '' ? Number(Q.get(k)) : NaN);
-{
-  const lat = qn('lat'), lon = qn('lon'), z = qn('z');
-  if (lat > 45.5 && lat < 48 && lon > 5.5 && lon < 11) map.setView([lat, lon], Number.isFinite(z) ? Math.min(19, Math.max(12, Math.round(z))) : 15);
-  if (tKeys.includes(Q.get('t'))) { $('tSrc').value = Q.get('t'); setRange($('tYear'), Q.get('t'), qn('y')); }
-  else if (Number.isFinite(qn('y'))) setRange($('tYear'), $('tSrc').value, qn('y'));
-  if (qn('op') >= 0 && qn('op') <= 100) { $('tOp').value = Math.round(qn('op')); $('opV').textContent = $('tOp').value + ' %'; }
-  for (const sd of ['l', 'r']) {
-    if (cKeys.includes(Q.get(sd))) $(sd + 'Src').value = Q.get(sd);
-    setRange($(sd + 'Year'), $(sd + 'Src').value, Number.isFinite(qn(sd + 'y')) ? qn(sd + 'y') : $(sd + 'Year').value);
-  }
-}
-if (Q.get('mode') === 'cmp') mode(true); else showTime();
+loadDraft(); fillForm(null); render();
+const pts0 = doc.geschichten.filter(s => Number.isFinite(s.lon)).map(s => [s.lat, s.lon]);
+if (map && pts0.length) map.fitBounds(pts0, {padding: [30, 30], maxZoom: 16});
 }

@@ -67,10 +67,10 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
         <div><label for="ort">Ort</label><input type="text" id="ort" placeholder="z. B. Winterthur" autocomplete="off"></div>
         <div><label for="fname">Dateiname <small>(ohne .json)</small></label><input type="text" id="fname" placeholder="winterthur" autocomplete="off" pattern="[a-z0-9-]{1,40}"></div>
       </div>
-      <p class="hint">Dateiname nur Kleinbuchstaben, Ziffern und Bindestrich. Eine bestehende Datei können Sie zum Bearbeiten öffnen.</p>
+      <p class="hint">Dateiname nur Kleinbuchstaben, Ziffern und Bindestrich. Eine bestehende JSON-Datei können Sie zum Bearbeiten öffnen. Eine Tabelle (CSV aus Excel o. Ä.) mit den Spalten titel, text, von, bis, adresse, lon, lat, quelle, url wird an die Liste angehängt.</p>
       <div class="row">
         <label class="btn" for="importFile" style="margin:0;display:inline-flex;align-items:center">Datei öffnen …</label>
-        <input type="file" id="importFile" accept=".json,application/json" hidden>
+        <input type="file" id="importFile" accept=".json,.csv,.txt,application/json,text/csv" hidden>
         <button class="btn" id="clearAll" type="button">Alles leeren</button>
       </div>
       <p class="err" id="fileErr" role="alert"></p>
@@ -253,7 +253,9 @@ $('importFile').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = ''; $('fileErr').textContent = '';
   if (!f) return;
   try {
-    const d = JSON.parse(await f.text());
+    const raw = await f.text();
+    if (/\.(csv|txt)$/i.test(f.name) || !/^\s*[\[{]/.test(raw)) { importCsv(raw); return; }
+    const d = JSON.parse(raw);
     if (!d || !Array.isArray(d.geschichten)) throw new Error('kein Feld «geschichten»');
     const num = v => typeof v === 'number' && Number.isFinite(v) ? v : undefined, str = v => typeof v === 'string' ? v : '';
     doc = {ort: str(d.ort), geschichten: d.geschichten.filter(x => x && typeof x === 'object').map(x => ({
@@ -266,6 +268,46 @@ $('importFile').addEventListener('change', async e => {
     if (map && pts.length) map.fitBounds(pts, {padding: [30, 30], maxZoom: 16});
   } catch (err) { $('fileErr').textContent = 'Datei konnte nicht gelesen werden: ' + (err && err.message ? err.message : 'kein gültiges JSON'); }
 });
+/* Tabelle (CSV) einlesen: Trennzeichen ; , oder Tab, Felder in Anführungszeichen erlaubt; Zeilen werden angehängt */
+function parseCsv(t){
+  t = t.replace(/^\ufeff/, '');
+  const first = t.split(/\r?\n/)[0], delim = [';', '\t', ','].sort((a, b) => first.split(b).length - first.split(a).length)[0];
+  const rows = []; let row = [], cur = '', q = false;
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (q) { if (c === '"') { if (t[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += c; }
+    else if (c === '"') q = true;
+    else if (c === delim) { row.push(cur); cur = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && t[i + 1] === '\n') i++; row.push(cur); rows.push(row); row = []; cur = ''; }
+    else cur += c;
+  }
+  if (cur || row.length) { row.push(cur); rows.push(row); }
+  return rows.filter(r => r.some(v => v.trim()));
+}
+function importCsv(raw){
+  const rows = parseCsv(raw);
+  if (rows.length < 2) throw new Error('Tabelle ohne Datenzeilen');
+  const head = rows[0].map(h => h.trim().toLowerCase().replace(/^"|"$/g, ''));
+  const col = k => head.indexOf(k);
+  if (col('titel') < 0 || col('text') < 0) throw new Error('Spalten «titel» und «text» fehlen in der ersten Zeile');
+  const get = (r, k) => col(k) >= 0 ? String(r[col(k)] ?? '').trim() : '';
+  const yr = v => { if (!v) return null; const n = Number(v); return Number.isInteger(n) ? n : NaN; };
+  const dec = v => { const n = Number(String(v).replace(',', '.')); return v && Number.isFinite(n) ? n : undefined; };
+  let n = 0;
+  for (const r of rows.slice(1)) {
+    const st = {id: get(r, 'id'), titel: get(r, 'titel'), text: get(r, 'text'), von: yr(get(r, 'von')), bis: yr(get(r, 'bis')), quelle: get(r, 'quelle')};
+    if (get(r, 'adresse')) st.adresse = get(r, 'adresse');
+    const lon = dec(get(r, 'lon')), lat = dec(get(r, 'lat'));
+    if (lon !== undefined && lat !== undefined) { st.lon = lon; st.lat = lat; }
+    if (get(r, 'url')) st.url = get(r, 'url');
+    doc.geschichten.push(st); n++;
+  }
+  edit = -1; fillForm(null); render();
+  const bad = doc.geschichten.slice(-n).filter(st => problems(st).length).length;
+  $('formOk').textContent = `${n} Zeilen aus der Tabelle angehängt` + (bad ? `, ${bad} davon unvollständig (rot markiert, zum Ergänzen auf «Bearbeiten»).` : '.');
+  const pts = doc.geschichten.filter(s => Number.isFinite(s.lon)).map(s => [s.lat, s.lon]);
+  if (map && pts.length) map.fitBounds(pts, {padding: [30, 30], maxZoom: 16});
+}
 $('dlBtn').addEventListener('click', () => {
   const name = (/^[a-z0-9-]{1,40}$/.test($('fname').value.trim()) ? $('fname').value.trim() : slug(doc.ort) || 'geschichten') + '.json';
   const a = document.createElement('a');
