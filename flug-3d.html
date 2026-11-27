@@ -53,6 +53,12 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 .legend a{color:var(--blue)}
 .legend .chk{font-size:13px;min-height:32px;margin:2px 0 0;color:var(--ink)}
 .info small{font-size:12px;color:var(--mute)}
+.epochs{display:grid;gap:3px;margin:4px 0 2px;font-size:12px;color:var(--ink)}
+.epochs div{display:grid;grid-template-columns:14px minmax(0,1fr) 44px;gap:6px;align-items:center}
+.epochs i{width:12px;height:12px;border-radius:2px;border:0}
+.epochs s{display:block;height:6px;border-radius:3px;background:var(--line);text-decoration:none;grid-column:2}
+.epochs s u{display:block;height:100%;border-radius:3px;text-decoration:none}
+.epochs b{font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
 .info em{font-style:normal;font-size:12px;font-weight:600;letter-spacing:.02em;justify-self:start;padding:1px 8px;border-radius:9px;background:var(--line);color:var(--ink)}
 .info em.rec{background:#c9dcf0;color:#173c63}
 .panel{transition:transform .25s ease,opacity .25s ease}
@@ -151,6 +157,8 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
     <div><i style="background:#e8d6b4"></i><span><b>Belegt:</b> steht heute noch, 3D-Modell swisstopo, Baujahr GWR</span></div>
     <div><i id="lgRec" style="background:#bfa98a"></i><span><b>Rekonstruiert:</b> aus der Siegfriedkarte, Höhe geschätzt</span></div>
     <label class="chk"><input type="checkbox" id="recHl"> Rekonstruierte hervorheben</label>
+    <label class="chk"><input type="checkbox" id="epochOn"> Analyse: nach Bauepoche einfärben</label>
+    <div id="epochBox" hidden><div class="epochs" id="epochList"></div><span id="epochSum"></span></div>
     <div><a href="methodik.html" target="_blank" rel="noopener">Wie das entsteht</a></div>
   </div>
 
@@ -442,7 +450,7 @@ const yearOk = f => {
   const y = gwr.years.get(Number(f.getProperty('EGID')));
   return y !== undefined && y <= gwr.year;
 };
-let specTs = null;
+let specTs = null, specColor = null, bldShader = null;
 async function buildingLayer(){
   if (!bldTs) {
     bldTs = await C.Cesium3DTileset.fromUrl(BLD_URL);
@@ -464,7 +472,10 @@ async function buildingLayer(){
     specTs.style = new C.Cesium3DTileStyle();
     specTs.style.show = { evaluate: f => isSpecial(f) && yearOk(f) };
     const stone = C.Color.fromCssColorString('#d9d2c2'), brick = C.Color.fromCssColorString('#9a5a42');
-    specTs.style.color = { evaluateColor: (f, res) => C.Color.clone(f.getProperty('OBJEKTART') === 'Hochkamin' ? brick : stone, res) };
+    specColor = { evaluateColor: (f, res) => C.Color.clone(f.getProperty('OBJEKTART') === 'Hochkamin' ? brick : stone, res) };
+    specTs.style.color = specColor;
+    bldShader = bldTs.customShader;
+    if (analysis) setAnalysis(true);
   }
   bldTs.show = specTs.show = $('bld').checked || $('oldOn').checked;
   bldTs.makeStyleDirty();
@@ -832,6 +843,54 @@ function recolor(ed, on){
 }
 $('recHl').addEventListener('change', e => { $('lgRec').style.background = e.target.checked ? '#9fbfe0' : '#bfa98a'; });
 
+/* ---------- Analyse-Modus: Gebäude nach Bauepoche (Baujahr bzw. Bauperiode im GWR) ---------- */
+const EPOCHS = [
+  {max: 1849, label: 'vor 1850', col: '#5b2a1a'}, {max: 1879, label: '1850–1879', col: '#93401f'},
+  {max: 1899, label: '1880–1899', col: '#c8662c'}, {max: 1918, label: '1900–1918', col: '#e3a23f'},
+  {max: 1945, label: '1919–1945', col: '#cdbf3e'}, {max: 1980, label: '1946–1980', col: '#79ad62'},
+  {max: 2000, label: '1981–2000', col: '#348a86'}, {max: Infinity, label: 'ab 2001', col: '#2f5c9c'}];
+const EP_OLD = {label: 'vor 1919, Jahr unbekannt', col: '#b67f95'}, EP_NONE = {label: 'ohne Baujahr', col: '#9b9b9b'};
+EPOCHS.forEach(e => { e.c = C.Color.fromCssColorString(e.col); }); EP_OLD.c = C.Color.fromCssColorString(EP_OLD.col); EP_NONE.c = C.Color.fromCssColorString(EP_NONE.col);
+const epochOf = r => !r ? EP_NONE : (!r.exact && r.y === PERIOD[8011]) ? EP_OLD : EPOCHS.find(e => r.y <= e.max);
+const epochColor = { evaluateColor: (f, res) => C.Color.clone(epochOf(gwr.info && gwr.info.get(Number(f.getProperty('EGID')))).c, res) };
+let analysis = false;
+function setAnalysis(on){
+  analysis = on;
+  $('epochBox').hidden = !on;
+  if (bldTs && specTs) {
+    bldTs.customShader = on ? undefined : bldShader;
+    for (const t of [bldTs, specTs]) {
+      t.colorBlendMode = C.Cesium3DTileColorBlendMode.MIX;
+      t.colorBlendAmount = on ? 0.85 : 0.6;
+    }
+    if (!on) bldTs.colorBlendMode = C.Cesium3DTileColorBlendMode.HIGHLIGHT;
+    bldTs.style.color = on ? epochColor : undefined;
+    specTs.style.color = on ? epochColor : specColor;
+    bldTs.makeStyleDirty(); specTs.makeStyleDirty();
+  }
+  updateStats();
+}
+function updateStats(){
+  if (!analysis) return;
+  const list = $('epochList'); list.textContent = '';
+  const all = [...EPOCHS, EP_OLD], n = new Map(all.map(e => [e, 0]));
+  let total = 0;
+  if (gwr.info) for (const r of gwr.info.values()) if (r.y <= gwr.year) { n.set(epochOf(r), n.get(epochOf(r)) + 1); total++; }
+  const mx = Math.max(1, ...n.values());
+  for (const e of all) {
+    if (!n.get(e)) continue;
+    const row = document.createElement('div'), sw = document.createElement('i'), lab = document.createElement('span'), num = document.createElement('b');
+    const bar = document.createElement('s'), fill = document.createElement('u');
+    sw.style.background = e.col; lab.textContent = e.label; num.textContent = n.get(e);
+    fill.style.width = (n.get(e) / mx * 100).toFixed(1) + '%'; fill.style.background = e.col; bar.appendChild(fill);
+    row.append(sw, lab, num, document.createElement('span'), bar);
+    list.appendChild(row);
+  }
+  const ed = city && city.edition ? city.eds.get(city.edition) : null;
+  $('epochSum').textContent = `${total} belegte Gebäude bis ${present ? 'heute' : gwr.year}` + (ed && !present ? ` · dazu ${ed.nGen} rekonstruierte (Karte ${ed.year}), nicht eingefärbt` : '') + '. Quelle: GWR (BFS).';
+}
+$('epochOn').addEventListener('change', e => setAnalysis(e.target.checked));
+
 /* Jahr anwenden: echte Häuser nach Baujahr, nachgebaute aus der passenden Kartenausgabe */
 function applyYear(y){
   gwr.year = y;
@@ -845,9 +904,10 @@ function applyYear(y){
   city.edition = pick;
   if (city.groundFor !== pick) makeGround(city.eds.get(pick));
   const ed = city.eds.get(pick);
-  if (present) { say('Heute: Luftbild, alle 3D-Gebäude und Bäume von swisstopo.'); return; }
+  if (present) { say('Heute: Luftbild, alle 3D-Gebäude und Bäume von swisstopo.'); updateStats(); return; }
   const nOldNow = [...gwr.years.values()].filter(v => v <= y).length;
   say(`${y}: ${nOldNow} echte Altbauten und ${ed.nGen} nachgebaute Häuser (Karte ${pick}).` + (avail.length < EDITIONS.length ? ' Weitere Jahrgänge werden noch gebaut …' : ' Zieh am Jahr-Regler für den Zeitsprung.'));
+  updateStats();
 }
 
 async function buildHouses(center){

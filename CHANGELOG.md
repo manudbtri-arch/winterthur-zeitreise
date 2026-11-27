@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Analyse-Modus «nach Bauepoche einfärben»: belegte Gebäude farbig nach Baujahr bzw. Bauperiode (GWR), mit Legende und Balkenstatistik der Epochen im Gebiet zum gewählten Jahr.
 - Gebäude-Export als CSV (Excel-tauglich, Semikolon) und GeoJSON: belegte Häuser mit EGID, Adresse, Baujahr, rekonstruierte mit Kartenstand, Fläche und geschätzten Geschossen, je mit WGS84- und LV95-Koordinaten und Quelle.
 - Bild speichern (Knopf «Bild» oder Taste P): PNG der aktuellen Ansicht mit Leiste für Jahr, Ort, Kartengrund, LV95-Koordinaten und Quellenangabe.
 - Permalink: Knopf «Link zu dieser Ansicht kopieren» speichert Ort, Jahr, Blick und Modus in der Adresse; beim Öffnen wird die Ansicht wiederhergestellt, auch «Im Vollbild öffnen» aus der Einbettung übernimmt sie.
