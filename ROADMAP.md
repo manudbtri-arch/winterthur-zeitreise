@@ -167,4 +167,4 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 ## 19. Zeigen, wann, zugänglich
 - [x] Produktseite: QR-Codes im Abschnitt «So setzen Sie es ein» (Museum: QR-Code am Exponat; Gemeinde: Druckblatt für Tafeln aus der Story-Werkstatt).
 - [x] Gemeinden und Schulen: Infokarte einer Geschichte nennt den Zeitraum aus der Story-Datei («1869–1900», «ab 1869»).
-- [ ] Barrierefreiheit: Fenster (Einbetten, QR-Code, Tasten) halten den Tastaturfokus beim Tabben im Fenster und geben ihn beim Schliessen an den auslösenden Knopf zurück.
+- [x] Barrierefreiheit: Fenster (Einbetten, QR-Code, Tasten) halten den Tastaturfokus beim Tabben im Fenster und geben ihn beim Schliessen an den auslösenden Knopf zurück.

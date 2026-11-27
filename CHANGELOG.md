@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Barrierefreiheit im 3D-Flug: In den Fenstern «Einbetten», «QR-Code» und «Tasten und Gesten» bleibt der Tastaturfokus beim Tabben im Fenster; nach dem Schliessen steht er wieder auf dem Knopf, der das Fenster geöffnet hat.
 - Infokarte einer Geschichte nennt neben «Geschichte» den Zeitraum aus der Story-Datei («1869–1900», «ab 1869»).
 - Produktseite: «So setzen Sie es ein» nennt den QR-Code für Exponate im Museum und das QR-Druckblatt der Story-Werkstatt für Tafeln in der Gemeinde.
 - Story-Werkstatt: Knopf «QR-Codes drucken» erstellt ein Druckblatt mit einem QR-Code je vollständiger Geschichte (Titel, Code, Direktlink in den 3D-Flug) für Tafeln am Ort; in der Partner-Anleitung erklärt.

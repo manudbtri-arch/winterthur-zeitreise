@@ -2397,6 +2397,29 @@ $('qrSave').addEventListener('click', () => {
 $('qrClose').addEventListener('click', () => { $('qrDlg').hidden = true; });
 $('qrDlg').addEventListener('click', e => { if (e.target === $('qrDlg')) $('qrDlg').hidden = true; });
 $('qrDlg').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') $('qrDlg').hidden = true; });
+/* ---------- Fenster (Einbetten, QR-Code, Tasten): Tab bleibt im Fenster, beim Schliessen zurück zum auslösenden Knopf ---------- */
+{
+  /* nur nach Klick auf einen dieser Knöpfe zurückspringen (nicht nach Taste H, sonst löst die Leertaste beim Gehen den Knopf aus) */
+  let lastOutside = null;
+  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('#qrBtn, #iQr, #embedBtn, #helpBtn'); if (b) lastOutside = b; }, true);
+  document.addEventListener('keydown', e => { if (e.code === 'KeyH') lastOutside = null; }, true);
+  for (const id of ['embedDlg', 'qrDlg', 'helpDlg']) {
+    const dlg = $(id);
+    dlg.addEventListener('keydown', e => {
+      if (e.key !== 'Tab') return;
+      const f = [...dlg.querySelectorAll('button, textarea, input, a[href]')].filter(el => !el.disabled && el.offsetParent !== null);
+      if (!f.length) return;
+      const i = f.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+      else if (!e.shiftKey && (i === f.length - 1 || i < 0)) { e.preventDefault(); f[0].focus(); }
+    });
+    new MutationObserver(() => {
+      if (!dlg.hidden) return;
+      const b = lastOutside; lastOutside = null;
+      if (b && b.isConnected && b.offsetParent !== null && (!document.activeElement || document.activeElement === document.body || dlg.contains(document.activeElement))) b.focus();
+    }).observe(dlg, {attributes: true, attributeFilter: ['hidden']});
+  }
+}
 $('openFull').addEventListener('click', () => { $('openFull').href = permalink(); });
 /* 2D-Karte am aktuellen Ort und im gewählten Jahr öffnen */
 $('to2d').addEventListener('click', () => {
