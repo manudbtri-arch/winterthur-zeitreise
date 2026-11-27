@@ -104,7 +104,7 @@ footer a{color:var(--mute)}
 <p>Häuser, die auf der historischen Karte stehen, heute aber nicht mehr, werden aus dem Kartenbild nachgebaut. Das geschieht im Browser, für die Kartenstände 1880, 1900, 1920 und 1940.</p>
 <ol>
   <li><b>Hausflächen finden:</b> Auf der Siegfriedkarte sind Gebäude schwarz gefüllt. Dunkle Bildpunkte werden ausgewählt; ein morphologisches Öffnen (Erosion, dann Dilatation) entfernt dünne Linien und einen Teil der Schrift.</li>
-  <li><b>Raster:</b> Je 2 × 2 Bildpunkte der Kartenkacheln (Zoomstufe 16) bilden einen Block von etwa 3 m Kantenlänge. Zusammenhängende Blöcke ergeben ein Haus. Sehr kleine Flecken und dünn gefüllte, grosse Gitter (Gleisfelder, Strassennetze) werden verworfen.</li>
+  <li><b>Raster:</b> Je 2 × 2 Bildpunkte der Kartenkacheln (Zoomstufe 16) bilden einen Block von etwa 3 m Kantenlänge. Zusammenhängende Blöcke ergeben ein Haus. Sehr kleine Flecken und dünn gefüllte, grosse Gitter (Gleisfelder, Strassennetze) werden verworfen, ebenso Formen, die eher Schrift oder Linie sind: nur einen Block breit und lang, schräg und locker gefüllt, oder lang ohne inneren Block. Solche Formen bleiben aber, wenn dort ein heute noch stehendes Gebäude liegt.</li>
   <li><b>Abgleich mit dem Register:</b> Liegt ein heute noch stehendes Gebäude mit passendem Baujahr in oder dicht neben einem Kartenhaus (etwa 6 m), übernimmt das echte 3D-Modell. Nur die übrigen Kartenhäuser werden nachgebaut.</li>
   <li><b>Höhe:</b> Die Siegfriedkarte enthält keine Gebäudehöhen. Die Zahl der Geschosse wird aus der Grundfläche geschätzt (2 bis 4 Geschosse à 3,3 m); sehr grosse Flächen gelten als eingeschossige Halle. Das Dach ist ein vereinfachtes Stufendach.</li>
   <li><b>Boden:</b> Bis rund 19 m um Häuser wird Pflaster gezeichnet, sonst Wiese; blaue Kartenflächen werden als Wasser gezeigt.</li>
@@ -127,7 +127,7 @@ footer a{color:var(--mute)}
 <h2 id="grenzen">5. Bekannte Grenzen</h2>
 <ul>
   <li><b>Kartenstand:</b> Die Blätter der Siegfriedkarte wurden zu verschiedenen Zeiten nachgeführt. Der Kartenstand eines Orts kann darum einige Jahre vom gewählten Jahr abweichen.</li>
-  <li><b>Fehlklötze:</b> Schrift, Signaturen und dicke Linien der Karte können als Klötze erscheinen, die keine Häuser sind.</li>
+  <li><b>Fehlklötze:</b> Schrift, Signaturen und dicke Linien der Karte werden über ihre Form grösstenteils herausgefiltert. Kompakte Zeichen (etwa fette Buchstaben) können trotzdem als Klötze erscheinen, die keine Häuser sind; umgekehrt kann ein sehr schmales Haus wegfallen.</li>
   <li><b>Verschmolzene Häuser:</b> Eng aneinander gebaute Häuser erscheinen oft als ein langer Block.</li>
   <li><b>Ersetzte Häuser:</b> Wurde ein altes Haus abgerissen und an gleicher Stelle neu gebaut, erscheint vor dem neuen Baujahr das rekonstruierte Haus aus der Karte – mit geschätzter Höhe.</li>
   <li><b>Bauperiode «vor 1919»:</b> Solche Häuser erscheinen ab 1880, auch wenn sie erst kurz vor 1919 gebaut wurden.</li>

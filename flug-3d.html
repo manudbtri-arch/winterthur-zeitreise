@@ -168,7 +168,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
     <button class="btn" id="home">Blick von oben auf die Altstadt</button>
 
     <p class="note" id="terrMsg" hidden style="color:var(--brown)">Das 3D-Gelände konnte nicht geladen werden. Öffne die Seite über ihre Webadresse statt als Datei, und lade sie neu.</p>
-    <p class="note">Häuser, die heute noch stehen, sind die echten 3D-Modelle von swisstopo, ausgewählt nach Baujahr im Gebäuderegister. Abgerissene Häuser sind aus der Siegfriedkarte nachgebaut, ihre Höhe ist geschätzt. Schrift und dicke Linien der Karte können als Klötze erscheinen.<br>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a>, BFS Gebäuderegister · <a href="methodik.html" target="_blank" rel="noopener">Methodik und Grenzen</a></p>
+    <p class="note">Häuser, die heute noch stehen, sind die echten 3D-Modelle von swisstopo, ausgewählt nach Baujahr im Gebäuderegister. Abgerissene Häuser sind aus der Siegfriedkarte nachgebaut, ihre Höhe ist geschätzt. Schrift und Linien der Karte werden über ihre Form herausgefiltert; einzelne Fehlklötze sind möglich.<br>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a>, BFS Gebäuderegister · <a href="methodik.html" target="_blank" rel="noopener">Methodik und Grenzen</a></p>
   </details>
 </aside>
 
@@ -572,14 +572,20 @@ async function buildEdition(area, year, reg, token){
   for (let i = 0; i < cw * ch; i++) {
     if (!occ[i] || comp[i] >= 0) continue;
     const id = comps.length, stack = [i]; comp[i] = id;
-    let n = 0, sx = 0, sy = 0, x0 = 1e9, x1 = -1, y0 = 1e9, y1 = -1;
+    let n = 0, sx = 0, sy = 0, x0 = 1e9, x1 = -1, y0 = 1e9, y1 = -1, inner = 0;
     while (stack.length) {
       const c = stack.pop(), x = c % cw, y = (c - x) / cw;
-      n++; sx += x; sy += y; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+      n++; sx += x; sy += y;
+      if (x > 0 && y > 0 && x < cw - 1 && y < ch - 1 && occ[c - 1] && occ[c + 1] && occ[c - cw] && occ[c + cw]) inner++; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
       for (const [nx, ny] of [[x+1,y],[x-1,y],[x,y+1],[x,y-1]])
         if (nx >= 0 && ny >= 0 && nx < cw && ny < ch) { const q = ny * cw + nx; if (occ[q] && comp[q] < 0) { comp[q] = id; stack.push(q); } }
     }
-    comps.push({n, cx: sx / n, cy: sy / n, x0, x1, y0, y1});
+    /* Formmerkmale gegen Fehlklötze: Schrift und Linien sind dünn, lang oder schräg und locker gefüllt */
+    const bw = x1 - x0 + 1, bh = y1 - y0 + 1, lng = Math.max(bw, bh), shrt = Math.min(bw, bh), fill = n / (bw * bh);
+    const bad = (shrt <= 1 && lng >= 5)                 /* gerade Linie, ein Block breit */
+             || (n < 200 && fill < 0.22 && lng >= 8)    /* schräge Linie oder Schriftzug */
+             || (inner === 0 && lng >= 12);             /* langer, dünner Strich ohne Inneres */
+    comps.push({n, cx: sx / n, cy: sy / n, x0, x1, y0, y1, bad});
   }
   /* Häuser sind kompakt; Gleisfelder und Strassennetze sind dünn gefüllte Gitter */
   const keep = comps.map(c => c.n >= 6 && !(c.n > 200 && c.n / ((c.x1 - c.x0 + 1) * (c.y1 - c.y0 + 1)) < 0.3));
@@ -596,6 +602,9 @@ async function buildEdition(area, year, reg, token){
       if (xx >= 0 && yy >= 0 && xx < cw && yy < ch) { const id = comp[yy * cw + xx]; if (id >= 0) real[id] = 1; }
     }
   }
+  /* auffällige Formen nur verwerfen, wenn dort kein echtes Haus steht (sonst fehlt dessen Wand) */
+  let nDrop = 0;
+  comps.forEach((c, i) => { if (keep[i] && c.bad && !real[i]) { keep[i] = false; nDrop++; } });
 
   /* Bodenhöhe, Geschosse, Farben, Dachrichtung */
   const pts = comps.map(c => C.Cartographic.fromDegrees(x2lon(px0 + (c.cx + .5) * CELL), y2lat(py0 + (c.cy + .5) * CELL)));
@@ -695,7 +704,7 @@ async function buildEdition(area, year, reg, token){
     shadows: C.ShadowMode.ENABLED
   })) : null;
   if (prim) prim.show = false;
-  return {year, prim, roof, nGen, nOld, occ, wat, parts, hl: false};
+  return {year, prim, roof, nGen, nOld, occ, wat, parts, hl: false, nDrop};
 }
 
 /* ---------- Boden: Pflaster in Gassen und auf Plätzen, sonst Wiese, Bäche blau ---------- */

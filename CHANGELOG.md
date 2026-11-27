@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Weniger Fehlklötze: Kartenschrift und Linien werden über Formmerkmale (Breite, Füllgrad, inneres Volumen) verworfen, ausser dort steht ein echtes Haus; Methodik-Seite ergänzt.
 - 3D-Flug: Legende «belegt» und «rekonstruiert» in der Seitenleiste, Infokarte mit Status und Quelle (inkl. EGID), Umschalter «Rekonstruierte hervorheben» färbt nachgebaute Häuser bläulich.
 - Neue Methodik-Seite `methodik.html` mit Datenquellen, Verfahren für belegte und rekonstruierte Häuser, Genauigkeit, bekannten Grenzen und Zitiervorschlag; verlinkt aus Übersicht und 3D-Flug.
 
