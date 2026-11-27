@@ -59,6 +59,12 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 .search li{padding:8px 10px;border-radius:6px;cursor:pointer;font-size:15px;color:var(--ink)}
 .search li small{display:block;color:var(--mute);font-size:12px}
 .search li:hover,.search li[aria-selected=true]{background:var(--line)}
+.dlg{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;background:rgba(0,0,0,.45);padding:16px}
+.dlg .box{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:18px;width:min(460px,100%);box-shadow:0 10px 40px rgba(0,0,0,.4)}
+.dlg h2{font-size:19px;margin:0 0 6px}
+.dlg p{font-size:14px;color:var(--mute);margin:0 0 10px}
+.qrwrap{display:grid;place-items:center;margin:0 0 12px}
+.qrwrap canvas{width:min(300px,70vw);height:auto;border:1px solid var(--line);border-radius:8px;background:#fff}
 .ptog{display:none}
 @media(max-width:600px){.panel{top:auto;left:8px;right:8px;bottom:8px;width:auto;max-height:46vh;padding:14px}.year{margin-top:0}.tag{top:8px}
   .ptog{display:block;width:100%;margin:0 0 10px}
@@ -119,10 +125,20 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
   <label class="chk"><input type="checkbox" id="storyOn" checked> Geschichten an Orten (Marker)</label>
   <button class="btn primary" id="to3d" style="width:100%;margin-top:12px">Hier im 3D-Flug ansehen</button>
   <button class="btn" id="linkBtn" style="width:100%;margin-top:8px">Link zu dieser Ansicht kopieren</button>
+  <button class="btn" id="qrBtn" style="width:100%;margin-top:8px" title="Link als QR-Code zum Aushängen oder Ausdrucken">QR-Code zu dieser Ansicht</button>
   <p class="sub" id="linkMsg" aria-live="polite" style="margin:6px 0 0"></p>
 
   <p class="note">Luftbilder gibt es nicht für jedes Jahr: Ist die Karte leer, wurde der Ort in diesem Jahr nicht beflogen. Die Zeitreihe zeigt jeweils den Kartenstand am 31. Dezember. Bei der Siegfriedkarte steht das Blatt am Kartenmittelpunkt mit seinem tatsächlichen Kartenstand dabei.<br>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a></p>
 </aside>
+
+<div class="dlg" id="qrDlg" hidden role="dialog" aria-modal="true" aria-labelledby="qrH">
+  <div class="box">
+    <h2 id="qrH">QR-Code zu dieser Ansicht</h2>
+    <p id="qrTxt"></p>
+    <div class="qrwrap"><canvas id="qrCv" width="10" height="10" aria-label="QR-Code"></canvas></div>
+    <div class="row"><button class="btn primary" id="qrSave" style="flex:1">Als Bild speichern</button><button class="btn" id="qrClose" style="flex:1">Schliessen</button></div>
+  </div>
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -474,6 +490,53 @@ $('linkBtn').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(url); $('linkMsg').textContent = 'Link kopiert.'; }
   catch (e) { window.prompt('Link zu dieser Ansicht:', url); }
 });
+/* ---------- QR-Code zur Ansicht (Bibliothek qrcode-generator, erst beim ersten Gebrauch geladen), wie im 3D-Flug ---------- */
+let qrLib = null, qrFile = '';
+const loadQrLib = () => qrLib || (qrLib = new Promise((res, rej) => {
+  const sc = document.createElement('script');
+  sc.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
+  sc.onload = () => typeof window.qrcode === 'function' ? res() : rej(new Error('qrcode fehlt'));
+  sc.onerror = () => { qrLib = null; rej(new Error('nicht geladen')); };
+  document.head.appendChild(sc);
+}));
+function drawQr(cv, url, title){
+  const q = window.qrcode(0, 'M'); q.addData(url); q.make();
+  const n = q.getModuleCount(), cell = Math.max(6, Math.floor(480 / (n + 8))), pad = 4 * cell, side = n * cell + 2 * pad, band = 96;
+  cv.width = side; cv.height = side + band;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, cv.width, cv.height);
+  g.fillStyle = '#151515';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) g.fillRect(pad + c * cell, pad + r * cell, cell, cell);
+  g.textAlign = 'center';
+  g.fillStyle = '#8a5a2b'; g.font = '800 24px Archivo, system-ui, sans-serif';
+  g.fillText(title, side / 2, side + 30, side - 24);
+  g.fillStyle = '#151515'; g.font = '600 15px Archivo, system-ui, sans-serif';
+  g.fillText('Mit der Handykamera scannen: Karte öffnen', side / 2, side + 56, side - 24);
+  g.fillStyle = '#5b5b5b'; g.font = '400 12px Archivo, system-ui, sans-serif';
+  g.fillText('Karten: © swisstopo · Zeitreise Schweiz', side / 2, side + 80, side - 24);
+}
+$('qrBtn').addEventListener('click', async () => {
+  const cmp = !$('pCmp').hidden;
+  const title = cmp ? $('tagL').textContent.split(' · ').slice(0, 2).join(' ') + ' / ' + $('tagR').textContent.split(' · ').slice(0, 2).join(' ')
+    : SRC[$('tSrc').value].name + ' ' + $('yBig').textContent;
+  try { await loadQrLib(); drawQr($('qrCv'), permalink(), title); }
+  catch (e) { $('linkMsg').textContent = 'QR-Code konnte nicht erstellt werden – Internet prüfen.'; return; }
+  qrFile = 'qr-karte-' + (cmp ? 'vergleich' : $('tSrc').value + '-' + $('yBig').textContent) + '.png';
+  $('qrTxt').textContent = 'Öffnet die 2D-Karte mit diesem Ausschnitt: ' + title + '. Zum Ausdrucken für Ausstellung, Schulzimmer oder Arbeitsblatt.';
+  $('qrDlg').hidden = false; $('qrSave').focus();
+});
+$('qrSave').addEventListener('click', () => {
+  $('qrCv').toBlob(b => {
+    if (!b) return;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = qrFile || 'qr-karte.png';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    $('linkMsg').textContent = 'QR-Code gespeichert.';
+  }, 'image/png');
+});
+$('qrClose').addEventListener('click', () => { $('qrDlg').hidden = true; $('qrBtn').focus(); });
+$('qrDlg').addEventListener('click', e => { if (e.target === $('qrDlg')) $('qrDlg').hidden = true; });
+$('qrDlg').addEventListener('keydown', e => { if (e.key === 'Escape') $('qrDlg').hidden = true; });
 const Q = new URLSearchParams(location.search), qn = k => (Q.get(k) !== null && Q.get(k) !== '' ? Number(Q.get(k)) : NaN);
 {
   const lat = qn('lat'), lon = qn('lon'), z = qn('z');

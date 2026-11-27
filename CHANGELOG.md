@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- 2D-Karte: Knopf «QR-Code zu dieser Ansicht» zeigt den Link mit Ausschnitt, Quelle und Jahr (bzw. beiden Vergleichsebenen) als QR-Code und speichert ihn als PNG.
 - Infokarte einer Geschichte mit Knopf «QR-Code zu dieser Geschichte»: speichert den Direktlink (`?story=<id>`) als QR-Code, z. B. für eine Tafel am Ort; in der Partner-Anleitung erklärt.
 - Übersicht «Tasten und Gesten»: Taste H oder Knopf in den Einstellungen zeigt alle Tasten (Computer) bzw. Gesten (Handy) in einem Fenster; Esc oder H schliesst es.
 - Neuer Knopf «QR-Code» im Reiter «Export»: zeigt den Link zum aktuellen Blick als QR-Code mit Ort und Jahr und speichert ihn als PNG zum Aushängen in Ausstellung, Schulzimmer oder auf dem Arbeitsblatt; auf der Produktseite genannt.
