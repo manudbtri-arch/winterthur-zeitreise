@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Geschichten an Orten: `stories/winterthur.json` mit vier belegten Einträgen (Rathaus, Stadthaus, Bahnhof, Technikum), Marker im 3D-Bild je nach Jahr, Infokarte mit Quelle und Link; abschaltbar.
 - Produktseite: Export, Zitieren und Analyse nach Bauepoche als verfügbare Funktionen aufgeführt.
 - Knopf «Einbetten»: zeigt den iframe-Code für die eigene Website mit der aktuellen Ansicht (Ort, Jahr, Blick) zum Kopieren.
 - Minikarte unten links (auf breiten Bildschirmen): Siegfriedkarte des gewählten Jahres mit Standort und Blickrichtung, Klick öffnet die grosse Karte; abschaltbar in den Einstellungen.

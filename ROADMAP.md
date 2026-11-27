@@ -22,7 +22,7 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Knopf «Einbetten» im Menü liefert den iframe-Code zum Kopieren.
 
 ## 3. Inhalte
-- [ ] Geschichten an Orten: `stories/winterthur.json` (Titel, Text, Jahr von–bis, Koordinaten, Quelle); Marker im 3D-Bild, Infokarte beim Anklicken. Nur gesicherte, mit Quelle belegte Fakten.
+- [x] Geschichten an Orten: `stories/winterthur.json` (Titel, Text, Jahr von–bis, Koordinaten, Quelle); Marker im 3D-Bild, Infokarte beim Anklicken. Nur gesicherte, mit Quelle belegte Fakten.
 - [ ] Geführte Tour: Kamera fliegt Stationen einer Story-Datei nacheinander an (Weiter/Zurück).
 - [ ] Bekannte Orte als Sprungziele je Stadt (aus der Story-Datei).
 

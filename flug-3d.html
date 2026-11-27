@@ -53,6 +53,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 .legend a{color:var(--blue)}
 .legend .chk{font-size:13px;min-height:32px;margin:2px 0 0;color:var(--ink)}
 .info small{font-size:12px;color:var(--mute)}
+.info a{font-size:13px;color:var(--blue)}
 .epochs{display:grid;gap:3px;margin:4px 0 2px;font-size:12px;color:var(--ink)}
 .epochs div{display:grid;grid-template-columns:14px minmax(0,1fr) 44px;gap:6px;align-items:center}
 .epochs i{width:12px;height:12px;border-radius:2px;border:0}
@@ -186,6 +187,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
     <label class="chk"><input type="checkbox" id="bld"> Alle heutigen Gebäude</label>
     <label class="chk"><input type="checkbox" id="veg"> Heutige Bäume</label>
     <label class="chk"><input type="checkbox" id="miniOn" checked> Minikarte (breiter Bildschirm)</label>
+    <label class="chk"><input type="checkbox" id="storyOn" checked> Geschichten an Orten (Marker)</label>
 
     <label>Bewegung</label>
     <div class="seg" role="group" aria-label="Bewegungsart">
@@ -222,7 +224,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
     <div class="row2"><button class="btn primary" id="embedCopy">Code kopieren</button><button class="btn" id="embedClose">Schliessen</button></div>
   </div>
 </div>
-<div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small></div>
+<div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small><a id="iLink" hidden target="_blank" rel="noopener">Quelle öffnen</a></div>
 
 <a class="pill openfull" id="openFull" href="flug-3d.html" target="_blank" rel="noopener" hidden>↗ Im Vollbild öffnen</a>
 <button class="pill" id="pill" hidden>☰ Menü <span style="color:var(--mute)">(Tab)</span></button>
@@ -235,7 +237,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
   <div><b>I</b>/<b>U</b> Flugtempo 1–100× · <b>J</b> Fernsicht</div>
   <div><b>M</b> Karte · <b>F3</b> Koordinaten · <b>B</b> Look</div>
   <div><b>P</b> Bild mit Quellenangabe speichern</div>
-  <div><b>Klick</b> auf ein Haus: Infos</div>
+  <div><b>Klick</b> auf ein Haus oder einen Marker: Infos</div>
   <div><b>Tab</b> Menü · <b>Esc</b> Maus freigeben</div>
 </div>
 
@@ -925,6 +927,7 @@ function applyYear(y){
   city.edition = pick;
   if (city.groundFor !== pick) makeGround(city.eds.get(pick));
   const ed = city.eds.get(pick);
+  updateStories();
   if (present) { say('Heute: Luftbild, alle 3D-Gebäude und Bäume von swisstopo.'); updateStats(); return; }
   const nOldNow = [...gwr.years.values()].filter(v => v <= y).length;
   say(`${y}: ${nOldNow} echte Altbauten und ${ed.nGen} nachgebaute Häuser (Karte ${pick}).` + (avail.length < EDITIONS.length ? ' Weitere Jahrgänge werden noch gebaut …' : ' Zieh am Jahr-Regler für den Zeitsprung.'));
@@ -1209,8 +1212,13 @@ $('go').addEventListener('click', () => { try { canvas.requestPointerLock(); } c
 /* Klick auf ein Haus: Infokarte. Mit übernommener Maus zählt das Fadenkreuz. */
 let infoTimer;
 function showInfo(p){
-  let title = '', text = '', badge = '', src = '', rec = false;
-  if (p instanceof C.Cesium3DTileFeature) {
+  let title = '', text = '', badge = '', src = '', rec = false, link = '', hold = 7000;
+  if (p && p.id instanceof C.Entity && p.id.story) {
+    const st = p.id.story;
+    title = st.titel; text = st.text; badge = 'Geschichte'; hold = 20000;
+    src = 'Quelle: ' + st.quelle;
+    link = /^https:\/\//.test(st.url || '') ? st.url : '';
+  } else if (p instanceof C.Cesium3DTileFeature) {
     const egid = Number(p.getProperty('EGID')), r = gwr.info && gwr.info.get(egid);
     const art = p.getProperty('OBJEKTART'), hgt = Math.round(p.getProperty('GESAMTHOEHE') || 0);
     const kind = art === 'Sakrales Gebaeude' ? 'Kirche' : art === 'Hochkamin' ? 'Hochkamin' : art === 'Gebaeude Einzelhaus' ? 'Gebäude' : art;
@@ -1227,8 +1235,9 @@ function showInfo(p){
   } else return false;
   $('iTitle').textContent = title; $('iText').textContent = text; $('iSrc').textContent = src;
   $('iBadge').textContent = badge; $('iBadge').classList.toggle('rec', rec);
+  $('iLink').hidden = !link; if (link) $('iLink').href = link;
   $('info').hidden = false;
-  clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, 7000);
+  clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, hold);
   return true;
 }
 canvas.addEventListener('click', e => {
@@ -1402,6 +1411,43 @@ $('linkBtn').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(url); toast('Link kopiert'); }
   catch (e) { window.prompt('Link zu dieser Ansicht:', url); }
 });
+/* ---------- Geschichten an Orten: stories/<ort>.json, Marker im 3D-Bild ---------- */
+const stories = [];
+async function geocodeAddr(adr){
+  const u = `https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(adr)}&type=locations&origins=address&sr=4326&limit=1`;
+  const r = ((await (await fetch(u)).json()).results || [])[0];
+  return r && Number.isFinite(+r.attrs.lon) ? [+r.attrs.lon, +r.attrs.lat] : null;
+}
+async function loadStories(file){
+  let data;
+  try { data = await (await fetch(file)).json(); } catch (e) { return; }
+  for (const st of (data.geschichten || [])) {
+    if (typeof st.titel !== 'string' || typeof st.text !== 'string' || typeof st.quelle !== 'string') continue;
+    let ll = Number.isFinite(st.lon) && Number.isFinite(st.lat) ? [st.lon, st.lat] : null;
+    if (!ll && typeof st.adresse === 'string') { try { ll = await geocodeAddr(st.adresse); } catch (e) {} }
+    if (!ll) continue;
+    st.lon = ll[0]; st.lat = ll[1];
+    const ent = viewer.entities.add({
+      position: C.Cartesian3.fromDegrees(ll[0], ll[1]),
+      point: {pixelSize: 14, color: C.Color.fromCssColorString('#c8803f'), outlineColor: C.Color.WHITE, outlineWidth: 2,
+        heightReference: C.HeightReference.CLAMP_TO_GROUND, disableDepthTestDistance: Number.POSITIVE_INFINITY},
+      label: {text: st.titel, font: '600 15px Archivo, sans-serif', fillColor: C.Color.WHITE, outlineColor: C.Color.BLACK, outlineWidth: 3,
+        style: C.LabelStyle.FILL_AND_OUTLINE, pixelOffset: new C.Cartesian2(0, -18), verticalOrigin: C.VerticalOrigin.BOTTOM,
+        heightReference: C.HeightReference.CLAMP_TO_GROUND, disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        distanceDisplayCondition: new C.DistanceDisplayCondition(0, 2500)}
+    });
+    ent.story = st;
+    stories.push(ent);
+  }
+  updateStories();
+}
+function updateStories(){
+  const y = present ? 9999 : gwr.year, on = $('storyOn').checked;
+  for (const e of stories) e.show = on && (e.story.von == null || e.story.von <= y) && (e.story.bis == null || e.story.bis >= y);
+}
+$('storyOn').addEventListener('change', updateStories);
+loadStories('stories/winterthur.json');
+
 /* ---------- Minikarte unten links: Standort und Blickrichtung ---------- */
 const mini = {map: null, layer: null, key: '', last: 0, busy: false};
 const miniVisible = () => $('miniOn').checked && matchMedia('(min-width:1200px)').matches && $('intro').classList.contains('off');

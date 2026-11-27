@@ -1,0 +1,47 @@
+{
+  "ort": "Winterthur",
+  "hinweis": "Nur belegte Angaben mit Quelle. Fehlen lon/lat, sucht die Seite die Adresse über geo.admin.ch. Weichen Quellen voneinander ab, ist das im Text vermerkt.",
+  "geschichten": [
+    {
+      "id": "rathaus",
+      "titel": "Rathaus",
+      "text": "Erbaut 1782–84 nach Plänen von Johann Ulrich Büchel, 1872–74 durch den Semper-Schüler Joseph Bösch umgebaut, restauriert 1968–70. Gilt als eine der bedeutendsten Leistungen des schweizerischen Frühklassizismus.",
+      "von": 1784,
+      "bis": null,
+      "adresse": "Marktgasse 20, 8400 Winterthur",
+      "quelle": "Schweizerisches Inventar der Kulturgüter (KGS 7765), Text aus dem Kunstführer der GSK",
+      "url": "https://data.geo.admin.ch/ch.babs.kulturgueter/PDF/kgs_07765_gsk-d.pdf"
+    },
+    {
+      "id": "stadthaus",
+      "titel": "Stadthaus von Gottfried Semper",
+      "text": "Erbaut 1865–69 von Gottfried Semper, eines der bedeutendsten Bauwerke des europäischen Historismus. Später um zwei Fensterachsen nach Norden verlängert (Kunstführer: 1932–34; Winterthur-Glossar: 1930).",
+      "von": 1869,
+      "bis": null,
+      "adresse": "Stadthausstrasse 4a, 8400 Winterthur",
+      "quelle": "Schweizerisches Inventar der Kulturgüter (KGS 7768), Text aus dem Kunstführer der GSK",
+      "url": "https://api3.geo.admin.ch/featureattachments/ch.babs.kulturgueter/PDF/kgs_07768_gsk-d.pdf"
+    },
+    {
+      "id": "bahnhof",
+      "titel": "Bahnhof",
+      "text": "Am 16. Mai 1855 wird der erste, provisorische Bahnhof eröffnet. 1857–1860 entsteht das erste Empfangsgebäude von Jakob Friedrich Wanner; 1894/95 erweitern Ernst Jung und Otto Bridler es auf seine heutige Grösse.",
+      "von": 1855,
+      "bis": null,
+      "lon": 8.723786,
+      "lat": 47.500328,
+      "quelle": "Winterthur-Glossar, «Hauptbahnhof Winterthur»; Koordinaten: Wikipedia",
+      "url": "https://winterthur-glossar.ch/mpdf/createPDF/hauptbahnhof-winterthur"
+    },
+    {
+      "id": "technikum",
+      "titel": "Technikum",
+      "text": "Die Technikerschule wurde 1874 gegründet. Ihr Hauptgebäude entstand 1877–1878 durch Stadtbaumeister Theodor Gohl auf dem damaligen Viehmarkt. Heute ZHAW School of Engineering.",
+      "von": 1878,
+      "bis": null,
+      "adresse": "Technikumstrasse 9, 8401 Winterthur",
+      "quelle": "Winterthur-Glossar, «Kantonales Technikum»",
+      "url": "https://www.winterthur-glossar.ch/mpdf/createPDF/kantonales-technikum"
+    }
+  ]
+}
