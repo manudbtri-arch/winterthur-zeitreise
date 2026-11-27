@@ -65,3 +65,6 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Produktseite und Methodik: Statistik-CSV, Kompass und Story-Werkstatt aufführen; Methodik erklärt die Spalten der Statistik.
 - [x] Gemeinden: Direktlink zu einer Geschichte `flug-3d.html?story=<id>` fliegt hin und öffnet die Infokarte; Knopf «Link zu dieser Geschichte» in der Infokarte.
 - [x] Schulen: Unterrichtsseite um einen Auftrag mit der Statistik-CSV ergänzen (Diagramm der Bauepochen in der Tabellenkalkulation, zwei Orte vergleichen).
+- [ ] 2D-Karte: Infofenster einer Geschichte mit Link «Im 3D-Flug ansehen» (Direktlink `?story=<id>`).
+- [ ] Story-Werkstatt: Tabelle (CSV mit den Spalten der Anleitung, Semikolon oder Komma) importieren, damit Gemeinden bestehende Listen übernehmen können.
+- [ ] Story-Werkstatt: Knopf «Lage im 3D-Flug ansehen» öffnet den 3D-Flug mit Blick auf den gesetzten Punkt und baut dort die Häuser.
