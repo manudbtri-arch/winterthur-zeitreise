@@ -1512,6 +1512,7 @@ function setPanel(show){
   $('pill').hidden = show;
 }
 $('pill').addEventListener('click', () => setPanel(true));
+if (matchMedia('(pointer:coarse)').matches && navigator.share) { $('linkBtn').textContent = 'Link teilen'; $('iShare').textContent = 'Link zu dieser Geschichte teilen'; }
 /* Handy: Seitenleiste als unteres Blatt, halb oder ganz offen */
 $('sheetSize').addEventListener('click', () => {
   const full = $('panel').classList.toggle('full');
@@ -1744,10 +1745,17 @@ function permalink(){
   if (STORY_NAME) q.set('stories', STORY_NAME);
   return location.origin + location.pathname + '?' + q.toString();
 }
-$('linkBtn').addEventListener('click', async () => {
-  const url = permalink();
-  try { await navigator.clipboard.writeText(url); toast('Link kopiert'); }
-  catch (e) { window.prompt('Link zu dieser Ansicht:', url); }
+/* Link weitergeben: auf Touch-Geräten mit Teilen-Funktion das System-Teilen (Nachricht, Mail), sonst kopieren */
+async function shareLink(url, title, label){
+  if (COARSE && navigator.share) {
+    try { await navigator.share({title, url}); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; }   /* abgebrochen: nichts weiter tun */
+  }
+  try { await navigator.clipboard.writeText(url); toast(label + ' kopiert'); }
+  catch (e) { window.prompt(label + ':', url); }
+}
+$('linkBtn').addEventListener('click', () => {
+  shareLink(permalink(), `Zeitreise Schweiz – ${placeName} ${present ? 'heute' : +$('yr').value || 1880}`, 'Link');
 });
 /* ---------- Geschichten an Orten: stories/<ort>.json, Marker im 3D-Bild ---------- */
 const stories = [];
@@ -1840,8 +1848,7 @@ $('iShare').addEventListener('click', async () => {
   const q = new URLSearchParams({story: infoStory}); if (STORY_NAME) q.set('stories', STORY_NAME);
   const url = location.origin + location.pathname + '?' + q.toString();
   clearTimeout(infoTimer);
-  try { await navigator.clipboard.writeText(url); toast('Link zur Geschichte kopiert'); }
-  catch (e) { window.prompt('Link zu dieser Geschichte:', url); }
+  shareLink(url, `Zeitreise Schweiz – ${$('iTitle').textContent}`, 'Link zur Geschichte');
 });
 loadStories(`stories/${STORY_NAME || 'winterthur'}.json`, !!STORY_NAME);
 
