@@ -264,6 +264,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
         <div class="stack">
           <button class="btn primary" id="pngBtn" type="button">Epochen-Streifen als Bild (PNG)</button>
           <button class="btn" id="vidBtn" type="button">Zeitraffer als Video (WebM)</button>
+          <button class="btn" id="csvBtn" type="button" title="Jahr, Quelle, Ebene und Zeitstand jedes gezeigten Bilds – zum Zitieren">Liste der Stände (CSV)</button>
           <div class="two-col">
             <button class="btn" id="linkBtn" type="button">Link kopieren</button>
             <button class="btn" id="qrBtn" type="button">QR-Code</button>
@@ -497,6 +498,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
           label: String(it.year),
           epoch: epochName(it.year),
           sub: 'Luftbild' + (det ? ' (' + det + ')' : ''),
+          color: it.mode, gsd: it.gsd,
           layer: 'ch.swisstopo.swissimage-product',
           ts,
           fmt: 'jpeg'
@@ -522,6 +524,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
       const j = await (await fetch(u)).json();
       raw = (j.results || []).filter(s => /^\d{8}$/.test(s));
     } catch (e) {}
+    const fallback = !raw.length;
     if (!raw.length) raw = ['18601231','18801231','19001231','19201231','19451231','19601231','19781231','19921231','20061231','20181231'];
 
     let items = raw.map(ts => {
@@ -529,7 +532,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
       const src = y < 1870 ? 'Dufourkarte' : (y <= 1945 ? 'Siegfriedkarte' : 'Landeskarte');
       return {
         year: y, label: String(y), epoch: epochName(y), sub: src + ' · Zeitreihe',
-        layer: 'ch.swisstopo.zeitreihen', ts, fmt: 'png'
+        layer: 'ch.swisstopo.zeitreihen', ts, fmt: 'png', fallback
       };
     });
     if (st.density === 'key') items = pickKeyEpochs(items, 10);
@@ -1238,6 +1241,30 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
     if (e.code === 'Space' && st.mode !== 'cmp') { e.preventDefault(); if (st.playing) pause(); else play(); }
     if (e.key === 'ArrowLeft' && st.mode !== 'cmp') { e.preventDefault(); $('prevBtn').click(); }
     if (e.key === 'ArrowRight' && st.mode !== 'cmp') { e.preventDefault(); $('nextBtn').click(); }
+  });
+
+  /* Export: Liste der gezeigten Stände als CSV (zum Zitieren der Bildreihe) */
+  $('csvBtn').addEventListener('click', () => {
+    if (!st.frames.length) { $('status').textContent = 'Noch keine Stände geladen.'; return; }
+    const d = new Date(), today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const [E, N] = toLV95(st.lon, st.lat);
+    const widthKm = (metersPerPixel(st.lat, st.z) * W / 1000).toFixed(2);
+    const esc = v => { const t = String(v ?? ''); return /[;"\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+    const cols = ['jahr', 'bezeichnung', 'kartenwerk', 'ebene', 'zeitstand', 'farbe', 'bodenaufloesung', 'ort', 'mitte_e_lv95', 'mitte_n_lv95', 'ausschnitt_km', 'stand_geprueft', 'quelle', 'abgerufen_am'];
+    const rows = st.frames.map(fr => [
+      fr.label === 'Heute' ? 'heute' : fr.year, fr.epoch, fr.sub, fr.layer, fr.ts, fr.color || '', fr.gsd || '', st.title,
+      Math.round(E), Math.round(N), widthKm,
+      fr.fallback ? 'nein (Ersatzliste, Dienst nicht erreichbar)' : 'ja',
+      'swisstopo, geo.admin.ch (' + fr.layer + ')', today
+    ].map(esc).join(';'));
+    const csv = '\ufeff' + [cols.join(';'), ...rows].join('\r\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv;charset=utf-8'}));
+    const slug = (st.spotId || st.title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    a.download = `zeitraffer-staende-${slug || 'schweiz'}-${st.mode === 'cmp' ? st.cmpBase : st.mode}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    $('status').textContent = `Liste mit ${st.frames.length} Ständen als CSV gespeichert.`;
   });
 
   /* Export 1: Epochen-Streifen als druckfertiges PNG (4 Stationen nebeneinander) */
