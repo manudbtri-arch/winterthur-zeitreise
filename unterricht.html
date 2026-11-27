@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unterricht – Zeitreise Schweiz</title>
+<meta name="description" content="Unterrichtsvorschlag: Mit Zeitreise Schweiz den eigenen Ort zwischen 1880 und 1940 erkunden – Lernziele, Aufträge und Hinweise für Lehrpersonen.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: klar und ermutigend, wie ein gutes Arbeitsblatt
+   IDEA: Auftragskarten, die man ausdrucken oder am Bildschirm abarbeiten kann
+   PICTURE: kein Bild, nur klare Tabellen und Listen
+   COLOUR and TYPE: wie die Produktseite – Papierweiss, Tusche, Gewässerblau, Ziegelbraun; Archivo
+   LAYOUT: eine Lesespalte, Inhaltsverzeichnis oben */
+:root{color-scheme:light dark;--bg:light-dark(#fbfaf7,#121417);--card:light-dark(#ffffff,#1a1d21);--ink:light-dark(#16161a,#ecebe7);--mute:light-dark(#5a5a5f,#a8a7a2);--line:light-dark(#e2e0da,#2b3036);--blue:light-dark(#1f5fa8,#76aee8);--brick:light-dark(#9a4a2c,#e0956f)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 Archivo,system-ui,sans-serif}
+a{color:var(--blue)}
+a:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.wrap{max-width:760px;margin:0 auto;padding:0 max(5vw,16px)}
+nav{border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:18px;align-items:center;min-height:60px;flex-wrap:wrap}
+nav b{margin-right:auto;font-size:19px}
+nav a{font-weight:600;font-size:15px;text-decoration:none}
+header{padding:clamp(32px,5vw,56px) 0 8px}
+.kicker{color:var(--brick);font-weight:600;font-size:15px;margin:0 0 10px}
+h1{font-size:clamp(32px,5vw,48px);line-height:1.06;margin:0 0 14px;font-weight:800;text-wrap:balance}
+h2{font-size:clamp(23px,3vw,29px);line-height:1.15;margin:44px 0 10px;font-weight:800;scroll-margin-top:16px}
+h3{font-size:18px;margin:22px 0 4px}
+.lead{font-size:19px;color:var(--mute);margin:0 0 20px}
+.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 20px;margin:20px 0 0}
+.toc ol{margin:0;padding-left:20px}
+.toc li{margin:3px 0}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card);margin:14px 0}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--mute);font-size:13px}
+tr:last-child td{border-bottom:0}
+code{font:14px ui-monospace,Menlo,Consolas,monospace;background:var(--line);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.box{border-left:4px solid var(--brick);background:var(--card);padding:12px 18px;border-radius:0 10px 10px 0;margin:14px 0}
+.box.blue{border-left-color:var(--blue)}
+ul,ol{padding-left:22px}
+li{margin:5px 0}
+.cite{font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;white-space:pre-wrap;overflow-wrap:anywhere}
+footer{margin-top:56px;padding:28px 0 44px;border-top:1px solid var(--line);font-size:15px;color:var(--mute)}
+footer a{color:var(--mute)}
+.task{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 22px 16px;margin:16px 0}
+.task h3{font-size:20px;margin:16px 0 2px}
+.meta{font-size:14px;color:var(--brick);font-weight:600;margin:0 0 8px}
+@media print{nav,footer{display:none}.task{break-inside:avoid}body{background:#fff}}
+</style>
+</head>
+<body>
+<nav aria-label="Navigation">
+  <div class="wrap">
+    <b>Zeitreise Schweiz</b>
+    <a href="./">Übersicht</a><a href="flug-3d.html">3D-Flug</a><a href="methodik.html">Methodik</a>
+  </div>
+</nav>
+
+<main class="wrap">
+<header>
+  <p class="kicker">Für Schulen</p>
+  <h1>Den eigenen Ort von 1880 bis 1940 erkunden</h1>
+  <p class="lead">Ein Unterrichtsvorschlag für zwei bis drei Lektionen. Die Schülerinnen und Schüler gehen durch ihren Wohnort, wie ihn die Siegfriedkarte zeigt, vergleichen Jahrzehnte und prüfen, wie sicher das Gezeigte ist.</p>
+  <div class="toc">
+    <ol>
+      <li><a href="#ziele">Lernziele</a></li>
+      <li><a href="#a1">Auftrag 1: Was hat sich verändert?</a></li>
+      <li><a href="#a2">Auftrag 2: Wie alt sind die Häuser?</a></li>
+      <li><a href="#a3">Auftrag 3: Wie sicher ist das Bild?</a></li>
+      <li><a href="#lp">Hinweise für Lehrpersonen</a></li>
+    </ol>
+  </div>
+</header>
+
+<h2 id="ziele">Lernziele</h2>
+<ul>
+  <li>Die Schülerinnen und Schüler beschreiben, wie sich ein Ort zwischen 1880 und 1940 baulich verändert hat.</li>
+  <li>Sie lesen eine historische Karte und vergleichen sie mit dem heutigen Zustand.</li>
+  <li>Sie unterscheiden belegte von rekonstruierten Informationen und begründen, warum das wichtig ist.</li>
+</ul>
+<p>Passt zu den Fachbereichen Natur, Mensch, Gesellschaft (NMG, Zyklus 2) und Räume, Zeiten, Gesellschaften (RZG, Zyklus 3) des Lehrplans 21.</p>
+
+<div class="task" id="a1">
+  <h3>Auftrag 1: Was hat sich verändert?</h3>
+  <p class="meta">Einzel- oder Partnerarbeit · etwa 25 Minuten</p>
+  <ol>
+    <li>Öffne den <a href="flug-3d.html">3D-Flug</a> und suche deinen Wohnort oder deine Schule im Suchfeld.</li>
+    <li>Stelle den Zeitregler unten auf <b>1880</b>. Speichere ein Bild mit dem Knopf «Bild» (oder Taste <b>P</b>).</li>
+    <li>Stelle den Regler auf <b>1940</b> und speichere ein zweites Bild aus demselben Blickwinkel.</li>
+    <li>Drücke «Heute» und vergleiche ein drittes Mal.</li>
+    <li>Notiere drei Veränderungen: Wo sind Häuser dazugekommen? Was ist verschwunden? Wie haben sich Strassen, Bahn oder Gewässer verändert?</li>
+  </ol>
+</div>
+
+<div class="task" id="a2">
+  <h3>Auftrag 2: Wie alt sind die Häuser?</h3>
+  <p class="meta">Partnerarbeit · etwa 20 Minuten</p>
+  <ol>
+    <li>Öffne in der Seitenleiste das Häkchen <b>«Analyse: nach Bauepoche einfärben»</b>.</li>
+    <li>Lies die Statistik ab: Aus welcher Epoche stammen die meisten heute noch stehenden Gebäude in deinem Gebiet?</li>
+    <li>Klicke auf drei verschiedenfarbige Häuser. Notiere Adresse und Baujahr aus der Infokarte.</li>
+    <li>Suche das älteste Haus, das du findest. Steht in der Infokarte ein genaues Jahr oder nur «vor 1919»? Was bedeutet das?</li>
+  </ol>
+  <p>Für ältere Klassen: Mit «Liste CSV» die Gebäudeliste herunterladen und in einer Tabellenkalkulation ein Diagramm der Baujahre erstellen.</p>
+</div>
+
+<div class="task" id="a3">
+  <h3>Auftrag 3: Wie sicher ist das Bild?</h3>
+  <p class="meta">Gruppenarbeit · etwa 20 Minuten</p>
+  <ol>
+    <li>Klicke auf ein Haus mit dem Etikett <b>«Belegt»</b> und auf eines mit <b>«Rekonstruiert»</b>. Schreibe auf, woher die Angaben jeweils stammen.</li>
+    <li>Schalte in der Seitenleiste <b>«Rekonstruierte hervorheben»</b> ein. Wo in deinem Ort stehen besonders viele abgerissene Häuser?</li>
+    <li>Lies auf der Seite <a href="methodik.html">Methodik</a> den Abschnitt «Bekannte Grenzen». Wählt zwei Grenzen aus und erklärt sie der Klasse in eigenen Worten.</li>
+    <li>Diskutiert: Warum ist es wichtig, bei einer Rekonstruktion zu sagen, was geschätzt ist?</li>
+  </ol>
+</div>
+
+<h2 id="lp">Hinweise für Lehrpersonen</h2>
+<ul>
+  <li><b>Geräte:</b> Am besten Computer oder Laptop mit aktuellem Browser. Auf Tablets und Handys gibt es einen Joystick zum Gehen und Wischen zum Umschauen.</li>
+  <li><b>Steuerung am Computer:</b> Ins Bild klicken, dann <b>W A S D</b> zum Gehen, Maus zum Umschauen, <b>M</b> für die Karte, <b>Tab</b> für das Menü, <b>Esc</b> gibt die Maus frei.</li>
+  <li><b>Ladezeit:</b> Beim ersten Besuch eines Orts kann das Bauen eine Weile dauern. Danach merkt sich der Browser die Daten, beim zweiten Mal geht es schneller. Tipp: Den Ort vor der Lektion einmal öffnen.</li>
+  <li><b>Gemeinsamer Start:</b> Mit «Link kopieren» eine Ansicht (Ort, Jahr, Blick) als Link an die Klasse verteilen.</li>
+  <li><b>Anmeldung:</b> Keine nötig.</li>
+  <li><b>Quellen angeben:</b> Gespeicherte Bilder tragen die Quellenangabe bereits. Ein Zitiervorschlag steht auf der <a href="methodik.html#zitieren">Methodik-Seite</a>.</li>
+</ul>
+<p>Diese Seite lässt sich ausdrucken; Navigation und Fusszeile werden dabei weggelassen.</p>
+</main>
+
+<footer>
+  <div class="wrap">Zeitreise Schweiz · Daten © swisstopo, BFS Gebäuderegister · <a href="./">Übersicht</a> · <a href="methodik.html">Methodik</a></div>
+</footer>
+</body>
+</html>

@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Neue Unterrichtsseite `unterricht.html` mit Lernzielen, drei Aufträgen (Veränderung, Baualter, Quellenkritik) und Hinweisen für Lehrpersonen, druckbar; verlinkt aus der Übersicht.
 - Zwischenspeicher im Browser (IndexedDB): ausgewertete Kartenausgaben und Gebäuderegister-Abfragen (30 Tage) werden gemerkt, ein zweiter Besuch am gleichen Ort baut ohne erneutes Laden.
 - Die Auswertung der Kartenbilder (Hausflächen, Wasser, Formfilter) läuft jetzt in einem Web Worker, damit die Seite beim Bauen nicht stockt; ohne Worker-Unterstützung wie bisher im Hauptfaden.
 - Handy-Steuerung: virtueller Joystick zum Gehen (stufenlos, setzt einen beim ersten Antippen in die Gasse) und Wischen mit einem Finger zum Umschauen.

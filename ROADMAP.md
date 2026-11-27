@@ -27,7 +27,7 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Bekannte Orte als Sprungziele je Stadt (aus der Story-Datei).
 
 ## 4. Einsatz bei Kunden
-- [ ] Unterrichtsseite `unterricht.html` für Schulen: Lernziele, drei Aufträge mit dem 3D-Flug (Zeitregler, Analyse nach Bauepoche, Export), Hinweise für Lehrpersonen; verlinkt aus Übersicht.
+- [x] Unterrichtsseite `unterricht.html` für Schulen: Lernziele, drei Aufträge mit dem 3D-Flug (Zeitregler, Analyse nach Bauepoche, Export), Hinweise für Lehrpersonen; verlinkt aus Übersicht.
 - [ ] Veränderungen sichtbar machen: Umschalter «Neu seit der letzten Kartenausgabe» hebt belegte Gebäude hervor, die seit dem vorherigen Kartenstand gebaut wurden, mit Zählung.
 - [ ] Handy: Seitenleiste als unteres Blatt mit Griff (halb/ganz/zu), damit das 3D-Bild sichtbar bleibt.
 - [x] Kiosk-Modus `?kiosk=1`: automatischer Rundflug, Neustart nach 2 Minuten ohne Eingabe, grosse Touch-Knöpfe.
