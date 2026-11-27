@@ -136,6 +136,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
     <button class="btn" id="mapBtn">Karte (M)</button>
     <button class="btn" id="fullBtn">Vollbild</button>
   </div>
+  <button class="btn" id="linkBtn">Link zu dieser Ansicht kopieren</button>
   <button class="btn" id="build">Hier neu bauen</button>
   <div class="prog" aria-hidden="true"><i id="progBar"></i></div>
   <p class="sub" id="bStat" style="margin:8px 0 0">Baue Winterthur …</p>
@@ -241,6 +242,21 @@ const $ = id => document.getElementById(id);
 const C = Cesium;
 /* Höhe über Ellipsoid: Winterthur liegt rund 500 m darüber, also 300 m über Boden */
 const HOME = {lon:8.7290, lat:47.4890, h:800, heading:15, pitch:-22};
+/* Permalink: ?lon=&lat=&h=&hdg=&pitch=&year=&mode=(fly|walk|now)&c=lon,lat (Mitte des gebauten Gebiets) */
+const LINK = (() => {
+  const q = new URLSearchParams(location.search), num = k => (q.has(k) && q.get(k) !== '' ? Number(q.get(k)) : NaN);
+  const lon = num('lon'), lat = num('lat');
+  if (!(lon > 5.5 && lon < 11 && lat > 45.5 && lat < 48)) return null;
+  const h = num('h'), hdg = num('hdg'), pitch = num('pitch'), year = Math.round(num('year'));
+  const cc = String(q.get('c') || '').split(',').map(Number);
+  const c = cc.length === 2 && cc[0] > 5.5 && cc[0] < 11 && cc[1] > 45.5 && cc[1] < 48 ? cc : [lon, lat];
+  return {lon, lat, c,
+    h: Number.isFinite(h) ? Math.min(20000, Math.max(200, h)) : 1000,
+    hdg: Number.isFinite(hdg) ? hdg : 0,
+    pitch: Number.isFinite(pitch) ? Math.min(90, Math.max(-90, pitch)) : -30,
+    year: year >= 1870 && year <= 1949 ? year : null,
+    mode: ['fly', 'walk', 'now'].includes(q.get('mode')) ? q.get('mode') : 'fly'};
+})();
 
 const viewer = new C.Viewer('scene', {
   baseLayer:false, geocoder:false, baseLayerPicker:false, timeline:false, animation:false,
@@ -259,7 +275,7 @@ if (location.protocol === 'file:') {
   $('hud').textContent = 'Als Datei geöffnet – Gelände braucht eine Webadresse';
 }
 C.CesiumTerrainProvider.fromUrl('https://3d.geo.admin.ch/ch.swisstopo.terrain.3d/v1/', {requestVertexNormals:true})
-  .then(tp => { viewer.terrainProvider = tp; terrainOk = true; globe.enableLighting = false; setTimeout(() => buildHouses([8.7290, 47.4997]), 500); })
+  .then(tp => { viewer.terrainProvider = tp; terrainOk = true; globe.enableLighting = false; setTimeout(() => buildHouses(LINK ? LINK.c : [8.7290, 47.4997]), 500); })
   .catch(err => {
     console.error(err);
     $('hud').textContent = 'Gelände nicht erreichbar – flache Ansicht';
@@ -1275,6 +1291,31 @@ scene.preRender.addEventListener(() => {
     $('f3').textContent = `E ${fmt(E)}   N ${fmt(N)}\nHöhe ${Math.round(c2.height)} m ü. M. · ${Math.round(agl)} m über Boden\nBlick ${DIRS[Math.round(hdg / 45) % 8]} (${Math.round(hdg)}°) · Tempo ${speed.toFixed(1)} m/s\n${Math.round(fps)} Bilder/s · Fernsicht ${farView ? 'an' : 'aus'}`;
   }
 });
+
+/* ---------- Permalink: Ort, Jahr, Blick und Modus als Link ---------- */
+function permalink(){
+  const c = C.Cartographic.fromCartesian(camera.position), r = (v, d) => Number(v.toFixed(d));
+  const q = new URLSearchParams({
+    lon: r(C.Math.toDegrees(c.longitude), 6), lat: r(C.Math.toDegrees(c.latitude), 6), h: r(c.height, 1),
+    hdg: r((C.Math.toDegrees(camera.heading) + 360) % 360, 1), pitch: r(C.Math.toDegrees(camera.pitch), 1),
+    year: +$('yr').value || 1880, mode: present ? 'now' : walk ? 'walk' : 'fly'});
+  if (city) q.set('c', city.center.map(v => v.toFixed(5)).join(','));
+  return location.origin + location.pathname + '?' + q.toString();
+}
+$('linkBtn').addEventListener('click', async () => {
+  const url = permalink();
+  try { await navigator.clipboard.writeText(url); toast('Link kopiert'); }
+  catch (e) { window.prompt('Link zu dieser Ansicht:', url); }
+});
+$('openFull').addEventListener('click', () => { $('openFull').href = permalink(); });
+if (LINK) {
+  closeIntro();
+  camera.setView({destination: C.Cartesian3.fromDegrees(LINK.lon, LINK.lat, LINK.h),
+    orientation: {heading: C.Math.toRadians(LINK.hdg), pitch: C.Math.toRadians(LINK.pitch), roll: 0}});
+  if (LINK.year) { $('yr').value = LINK.year; $('yBig').textContent = LINK.year; applyYear(LINK.year); showLayer(); }
+  if (LINK.mode === 'now') setPresent(true);
+  if (LINK.mode === 'walk') { setMode(true); setPanel(false); }
+}
 }
 </script>
 </body>
