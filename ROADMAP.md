@@ -191,5 +191,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 24. Zeitraffer zitieren und einsetzen
 - [x] Forschung: Methodik mit Zitiervorschlag für eine Bildreihe aus dem Zeitraffer (Ort, Stände, Ebene, Abrufdatum).
-- [ ] Produktseite: Karte «In der Forschung» nennt die Liste der Stände (CSV) aus dem Zeitraffer.
+- [x] Produktseite: Karte «In der Forschung» nennt die Liste der Stände (CSV) aus dem Zeitraffer.
 - [ ] Schulen: Hinweise für Lehrpersonen nennen den Zeitraffer als Einstieg auf langsamen Geräten (ohne 3D).
