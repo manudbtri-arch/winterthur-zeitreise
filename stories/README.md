@@ -56,6 +56,10 @@ Liegt die Datei im Ordner `stories/`, zeigt dieser Link sie im 3D-Flug an (Name 
 
 Eine kurze Meldung nennt die Zahl der geladenen Geschichten. Übersprungene Einträge (fehlendes Feld, Adresse nicht gefunden) stehen mit Grund in der Browser-Konsole (F12).
 
+## Direktlink zu einer Geschichte
+
+`flug-3d.html?story=<id>` fliegt direkt zur Geschichte mit dieser `id` und öffnet ihre Infokarte, z. B. `flug-3d.html?story=rathaus`. Für eine eigene Datei kommt `&stories=meinort` dazu. Den Link liefert auch der Knopf «Link zu dieser Geschichte kopieren» in der Infokarte.
+
 ## Ablauf
 
 1. Datei nach diesem Muster erstellen (oder eine Tabelle mit den gleichen Spalten schicken).

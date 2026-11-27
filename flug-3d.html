@@ -120,6 +120,8 @@ details.more[open] summary::after{content:"▴"}
 @media(max-width:700px){.info{bottom:96px}}
 .info{padding-right:46px}
 .iclose{position:absolute;top:4px;right:4px;width:38px;height:38px;border:0;border-radius:8px;background:transparent;color:var(--mute);font:600 18px Archivo,sans-serif;cursor:pointer}
+.ishare{justify-self:start;border:0;background:none;padding:2px 0;color:var(--blue);font:600 13px Archivo,sans-serif;cursor:pointer;text-decoration:underline;min-height:32px}
+@media(pointer:coarse){.ishare{min-height:44px}}
 .iclose:hover{background:var(--line);color:var(--ink)}
 @media(pointer:coarse){.iclose{width:44px;height:44px}}
 .intro{position:absolute;z-index:20;inset:0;display:grid;place-items:center;padding:24px;background:linear-gradient(180deg,rgba(20,18,14,.55),rgba(20,18,14,.8));color:#f3eee3;transition:opacity .4s}
@@ -300,7 +302,7 @@ body.kiosk .compass{display:none}
     <div class="row2"><button class="btn primary" id="embedCopy">Code kopieren</button><button class="btn" id="embedClose">Schliessen</button></div>
   </div>
 </div>
-<div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small><a id="iLink" hidden target="_blank" rel="noopener">Quelle öffnen</a><button class="iclose" id="iClose" type="button" aria-label="Infokarte schliessen" title="Schliessen (Esc)">✕</button></div>
+<div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small><a id="iLink" hidden target="_blank" rel="noopener">Quelle öffnen</a><button class="ishare nokiosk" id="iShare" type="button" hidden>Link zu dieser Geschichte kopieren</button><button class="iclose" id="iClose" type="button" aria-label="Infokarte schliessen" title="Schliessen (Esc)">✕</button></div>
 
 <a class="pill openfull" id="openFull" href="flug-3d.html" target="_blank" rel="noopener" hidden>↗ Im Vollbild öffnen</a>
 <button class="pill" id="pill" hidden>☰ Menü <span style="color:var(--mute)">(Tab)</span></button>
@@ -1407,14 +1409,15 @@ $('mFly').addEventListener('click', () => setMode(false));
 $('mWalk').addEventListener('click', () => setMode(true));
 $('go').addEventListener('click', () => { try { canvas.requestPointerLock(); } catch(e){} });
 /* Klick auf ein Haus: Infokarte. Mit übernommener Maus zählt das Fadenkreuz. */
-let infoTimer;
+let infoTimer, infoStory = null;
 function showInfo(p){
-  let title = '', text = '', badge = '', src = '', rec = false, link = '', hold = 7000;
+  let title = '', text = '', badge = '', src = '', rec = false, link = '', hold = 7000, story = null;
   if (p && p.id instanceof C.Entity && p.id.story) {
     const st = p.id.story;
     title = st.titel; text = st.text; badge = 'Geschichte'; hold = 20000;
     src = 'Quelle: ' + st.quelle;
     link = /^https:\/\//.test(st.url || '') ? st.url : '';
+    story = STORY_ID_RE.test(String(st.id || '')) ? String(st.id) : null;
   } else if (p instanceof C.Cesium3DTileFeature) {
     const egid = Number(p.getProperty('EGID')), r = gwr.info && gwr.info.get(egid);
     const art = p.getProperty('OBJEKTART'), hgt = Math.round(p.getProperty('GESAMTHOEHE') || 0);
@@ -1433,6 +1436,7 @@ function showInfo(p){
   $('iTitle').textContent = title; $('iText').textContent = text; $('iSrc').textContent = src;
   $('iBadge').textContent = badge; $('iBadge').classList.toggle('rec', rec);
   $('iLink').hidden = !link; if (link) $('iLink').href = link;
+  infoStory = story; $('iShare').hidden = !story;
   $('info').hidden = false;
   clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, hold);
   return true;
@@ -1476,7 +1480,7 @@ function measureAt(pos){
   $('iText').textContent = `waagrecht ${m(flat)} · Höhenunterschied ${dz >= 0 ? '+' : '−'}${Math.round(Math.abs(dz))} m${slope}`;
   $('iSrc').textContent = 'Gemessen im 3D-Bild (Gelände und Gebäude von swisstopo). Richtwert, keine amtliche Vermessung.';
   $('iBadge').textContent = 'Messung'; $('iBadge').classList.remove('rec');
-  $('iLink').hidden = true; $('info').hidden = false;
+  $('iLink').hidden = true; $('iShare').hidden = true; infoStory = null; $('info').hidden = false;
   clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, 30000);
 }
 $('measBtn').addEventListener('click', () => setMeasure(!meas.on));
@@ -1751,6 +1755,12 @@ async function loadStories(file, check){
     stories.push(ent);
   }
   updateStories();
+  /* ?story=<id>: direkt zur Geschichte fliegen und die Infokarte öffnen */
+  if (STORY_ID) {
+    const i = stories.findIndex(e => String(e.story.id) === STORY_ID);
+    if (i >= 0) { closeIntro(); tourGo(i, false); }
+    else toast(`Geschichte «${STORY_ID}» nicht gefunden`, 6000);
+  }
   if (check) {
     /* Prüfmodus für Partner: Ergebnis kurz melden, Details in der Browser-Konsole */
     toast(`${stories.length} Geschichten geladen` + (skipped.length ? `, ${skipped.length} übersprungen (Details: Konsole)` : ''), 8000);
@@ -1796,6 +1806,17 @@ $('storyOn').addEventListener('change', updateStories);
 /* ?stories=<name> lädt stories/<name>.json (zum Prüfen einer Partner-Datei), sonst Winterthur */
 const STORY_Q = new URLSearchParams(location.search).get('stories');
 const STORY_NAME = /^[a-z0-9-]{1,40}$/.test(STORY_Q || '') ? STORY_Q : null;
+const STORY_ID_RE = /^[A-Za-z0-9_-]{1,60}$/;
+const STORY_ID = STORY_ID_RE.test(new URLSearchParams(location.search).get('story') || '') ? new URLSearchParams(location.search).get('story') : null;
+/* Link zu einer Geschichte: öffnet den 3D-Flug direkt dort, mit Infokarte */
+$('iShare').addEventListener('click', async () => {
+  if (!infoStory) return;
+  const q = new URLSearchParams({story: infoStory}); if (STORY_NAME) q.set('stories', STORY_NAME);
+  const url = location.origin + location.pathname + '?' + q.toString();
+  clearTimeout(infoTimer);
+  try { await navigator.clipboard.writeText(url); toast('Link zur Geschichte kopiert'); }
+  catch (e) { window.prompt('Link zu dieser Geschichte:', url); }
+});
 loadStories(`stories/${STORY_NAME || 'winterthur'}.json`, !!STORY_NAME);
 
 /* ---------- Minikarte unten links: Standort und Blickrichtung ---------- */

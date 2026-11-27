@@ -63,5 +63,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Handy: Kompass-Knopf im 3D-Flug zeigt die Blickrichtung; Antippen dreht den Blick nach Norden.
 - [x] Gemeinden und Museen: «Story-Werkstatt» `stories/werkstatt.html` – Geschichten im Formular erfassen, Lage per Klick in der Karte, Pflichtfelder prüfen, JSON im richtigen Format herunterladen; verlinkt aus der Partner-Anleitung.
 - [x] Produktseite und Methodik: Statistik-CSV, Kompass und Story-Werkstatt aufführen; Methodik erklärt die Spalten der Statistik.
-- [ ] Gemeinden: Direktlink zu einer Geschichte `flug-3d.html?story=<id>` fliegt hin und öffnet die Infokarte; Knopf «Link zu dieser Geschichte» in der Infokarte.
+- [x] Gemeinden: Direktlink zu einer Geschichte `flug-3d.html?story=<id>` fliegt hin und öffnet die Infokarte; Knopf «Link zu dieser Geschichte» in der Infokarte.
 - [ ] Schulen: Unterrichtsseite um einen Auftrag mit der Statistik-CSV ergänzen (Diagramm der Bauepochen in der Tabellenkalkulation, zwei Orte vergleichen).
