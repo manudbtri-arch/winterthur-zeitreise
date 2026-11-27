@@ -138,3 +138,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Gemeinden und Museen: Sprung zu einer Geschichte (Rundgang, bekannte Orte, Direktlink), die im gewählten Jahr noch nicht oder nicht mehr gilt, wechselt zur ersten passenden Kartenausgabe und meldet das; die Knöpfe der bekannten Orte nennen den Zeitraum.
 - [x] Forschung: 2D-Karte zeigt wie der 3D-Flug das Blatt der Siegfriedkarte am Kartenmittelpunkt mit seinem tatsächlichen Kartenstand (ch.swisstopo.hiks-siegfried.metadata).
 - [x] Handy: Rundgang-Leiste auf schmalen Bildschirmen einzeilig mit gekürztem Titel und grossen Tasten, damit sie das Bild nicht verdeckt.
+
+## 14. Partner, Museen, Handy
+- [x] Museen: Produktseite mit Beispiel-Link «Kiosk-Rundgang ansehen» (`flug-3d.html?kiosk=1&stories=winterthur`).
+- [ ] Gemeinden: Story-Werkstatt warnt, wenn der Zeitraum (von/bis) keine Kartenausgabe (1880, 1900, 1920, 1940) trifft – solche Geschichten erscheinen nur heute und im Kiosk-Rundgang nicht.
+- [ ] Handy: Seitenleiste der 2D-Karte einklappbar (Knopf), damit die Karte ganz sichtbar wird.
