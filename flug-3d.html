@@ -872,6 +872,85 @@ async function analyseAsync(px, W, H, cw, ch){
   return analyseMap(px, W, H, cw, ch, CELL);
 }
 
+/* Nachgebaute Häuser: Fenster als Wandmuster statt als eigene Klötze.
+   Jede Box bekommt Texturkoordinaten in Blöcken (st.x, ein Fenster pro Block) und Geschossen (st.y, ab Erdgeschoss);
+   st.y = -10 heisst ohne Fenster (Dach, Boden, Tür), +50 = Halle mit breitem Fensterband im Erdgeschoss. */
+function wallBox(w, d, hgt, kind, cm){
+  const g = C.BoxGeometry.createGeometry(C.BoxGeometry.fromDimensions({dimensions: new C.Cartesian3(w, d, hgt), vertexFormat: C.VertexFormat.POSITION_NORMAL_AND_ST}));
+  const P = g.attributes.position.values, Nn = g.attributes.normal.values, S = g.attributes.st.values;
+  for (let i = 0, k = 0; k < S.length; i += 3, k += 2) {
+    if (!kind || Math.abs(Nn[i + 2]) > 0.5) { S[k] = 0; S[k + 1] = -10; continue; }
+    S[k] = (Math.abs(Nn[i]) > 0.5 ? P[i + 1] + d / 2 : P[i] + w / 2) / cm;
+    S[k + 1] = (P[i + 2] + hgt / 2 - 1.5) / 3.3 + (kind === 2 ? 50 : 0);   /* 1,5 m der Wand stecken im Boden */
+  }
+  return g;
+}
+const WALL_VS = `
+in vec3 position3DHigh;
+in vec3 position3DLow;
+in vec3 normal;
+in vec2 st;
+in vec4 color;
+in float batchId;
+out vec3 v_positionEC;
+out vec3 v_normalEC;
+out vec4 v_color;
+out vec2 v_st;
+void main() {
+  vec4 p = czm_computePosition();
+  v_positionEC = (czm_modelViewRelativeToEye * p).xyz;
+  v_normalEC = czm_normal * normal;
+  v_color = color;
+  v_st = st;
+  gl_Position = czm_modelViewProjectionRelativeToEye * p;
+}`;
+const WALL_FS = `
+in vec3 v_positionEC;
+in vec3 v_normalEC;
+in vec4 v_color;
+in vec2 v_st;
+void main() {
+  vec3 toEye = -v_positionEC;
+  vec3 nEC = normalize(v_normalEC);
+  nEC = faceforward(nEC, vec3(0.0, 0.0, 1.0), -nEC);
+  vec3 base = czm_gammaCorrect(v_color).rgb;
+  vec3 c = base;
+  if (v_st.y > -5.0) {
+    bool hall = v_st.y > 40.0;
+    float fl = hall ? v_st.y - 50.0 : v_st.y;
+    float fx = fract(v_st.x), fy = fract(fl);
+    float on = step(0.0, fl) * (hall ? step(fl, 1.0) : 1.0);
+    float x0 = hall ? 0.13 : 0.33, x1 = 1.0 - x0, y0 = hall ? 0.24 : 0.30, y1 = hall ? 0.97 : 0.73;
+    float win   = on * step(y0, fy) * step(fy, y1) * step(x0, fx) * step(fx, x1);
+    float frame = on * step(y0 - 0.03, fy) * step(fy, y1 + 0.03) * step(x0 - 0.03, fx) * step(fx, x1 + 0.03) * (1.0 - win);
+    float sill  = on * step(y0 - 0.06, fy) * step(fy, y0 - 0.02) * step(x0 - 0.05, fx) * step(fx, x1 + 0.05) * (1.0 - frame);
+    float bars  = win * max(step(abs(fx - 0.5), 0.015), step(abs(fy - (y0 + (y1 - y0) * 0.62)), 0.012));
+    float wr = fract(sin(dot(floor(vec2(v_st.x, fl)), vec2(12.9898, 78.233))) * 43758.5453);
+    vec3 glass = mix(vec3(0.10, 0.13, 0.17), vec3(0.36, 0.44, 0.53), clamp((fy - y0) / (y1 - y0), 0.0, 1.0) * (0.3 + 0.5 * wr));
+    vec3 w = base;
+    w = mix(w, vec3(0.93, 0.92, 0.88), frame);
+    w = mix(w, base * 0.82, sill);
+    w = mix(w, glass, win);
+    w = mix(w, vec3(0.90, 0.89, 0.85), bars);
+    /* in der Ferne zur Mischfarbe auflösen, sonst flimmert das Raster */
+    float fw = max(fwidth(v_st.x), fwidth(fl));
+    vec3 avg = mix(base, vec3(0.22, 0.27, 0.33), on * (hall ? 0.5 : 0.15));
+    c = mix(w, avg, smoothstep(0.12, 0.35, fw));
+  }
+  czm_materialInput mi;
+  mi.normalEC = nEC;
+  mi.positionToEyeEC = toEye;
+  czm_material m = czm_getDefaultMaterial(mi);
+  m.diffuse = c;
+  m.alpha = 1.0;
+  out_FragColor = czm_phong(normalize(toEye), m, czm_lightDirectionEC);
+}`;
+let wallApp = null;
+const wallAppearance = () => wallApp || (wallApp = new C.Appearance({
+  translucent: false, closed: false, vertexShaderSource: WALL_VS, fragmentShaderSource: WALL_FS,
+  renderState: {depthTest: {enabled: true}}
+}));
+
 /* Eine Kartenausgabe auswerten: Hausflächen → Blöcke mit Stufendach und Fenstern */
 async function buildEdition(area, year, reg, token, emit, lite){
   const {px0, py0, W, H, cw, ch, lat} = area;
@@ -945,10 +1024,10 @@ async function buildEdition(area, year, reg, token, emit, lite){
 
   const roof = new Float32Array(cw * ch).fill(NaN);
   const inst = [], parts = [];   /* parts: [id, Farbe, Dach?] für das Hervorheben */
-  const box = (lonC, latC, w, d, z0, hgt, col, meta) => {
+  const box = (lonC, latC, w, d, z0, hgt, col, meta, kind = 0) => {
     inst.push(new C.GeometryInstance({
       id: meta,
-      geometry: C.BoxGeometry.fromDimensions({dimensions:new C.Cartesian3(w, d, hgt), vertexFormat:C.PerInstanceColorAppearance.VERTEX_FORMAT}),
+      geometry: wallBox(w, d, hgt, kind, cm),
       modelMatrix: C.Transforms.eastNorthUpToFixedFrame(C.Cartesian3.fromDegrees(lonC, latC, z0 + hgt / 2)),
       attributes: {color: C.ColorGeometryInstanceAttribute.fromColor(col)}
     }));
@@ -977,7 +1056,7 @@ async function buildEdition(area, year, reg, token, emit, lite){
           const wc = tint(c.wall, shade), rc = tint(c.roof, shade * (1 - 0.06 * ((Math.abs(a - c.mid) | 0) % 2)));
           const far = reg === NO_REG;   /* fern: noch nicht mit dem Register abgeglichen */
           const mw = {gen: year, floors: c.floors, hall: c.hall, far}, mr = {gen: year, floors: c.floors, hall: c.hall, far};
-          box(lonC, latC, w, d, c.base, c.h, wc, mw);
+          box(lonC, latC, w, d, c.base, c.h, wc, mw, c.hall ? 2 : 1);
           box(lonC, latC, w, d, c.base + c.h, rh, rc, mr);
           parts.push([mw, wc, 0], [mr, rc, 1]);
         }
@@ -987,28 +1066,19 @@ async function buildEdition(area, year, reg, token, emit, lite){
   };
   pass(true); pass(false);
 
-  /* Fenster: auf jeder Aussenwand ein Fenster pro Block und Geschoss, im Erdgeschoss eine Tür */
-  const glass = C.Color.fromCssColorString('#2a3038'), door = C.Color.fromCssColorString('#4a3326');
+  /* Fenster zeichnet der Wand-Shader als Muster (WALL_FS); als Klotz bleibt nur eine Tür pro Haus auf der Südseite */
+  const door = C.Color.fromCssColorString('#4a3326');
   let nGen = 0;
   const doorDone = new Uint8Array(comps.length);
-  /* ferne Kacheln (lite): ohne Fenster und Türen, das spart den Grossteil der Klötze */
+  /* ferne Kacheln (lite): ohne Türen */
   if (!lite) for (let cy = 0; cy < ch; cy++) for (let cx = 0; cx < cw; cx++) {
     const id = comp[cy * cw + cx];
-    if (id < 0 || !keep[id] || real[id]) continue;
-    const c = comps[id];
-    for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
-      const nx = cx + dx, ny = cy + dy;
-      if (nx >= 0 && ny >= 0 && nx < cw && ny < ch && comp[ny * cw + nx] === id) continue;
-      const off = cm / 2 + 0.12;
-      const lonW = cellLon(cx) + dx * off * mLon, latW = cellLat(cy) - dy * off * mLat;   /* y wächst nach Süden */
-      const w = dx ? 0.2 : 1.1, d = dx ? 1.1 : 0.2;
-      for (let f = 0; f < c.floors; f++) {
-        if (c.hall && f > 0) break;
-        const z = c.base + 1.5 + f * 3.3;
-        if (f === 0 && !doorDone[id] && dy === 1 && !c.hall) { box(lonW, latW, w, d, z, 2.2, door); doorDone[id] = 1; continue; }
-        box(lonW, latW, c.hall ? (dx ? 0.14 : 2.4) : w, c.hall ? (dx ? 2.4 : 0.14) : d, z + (c.hall ? 0.8 : 1.0), c.hall ? 2.6 : 1.4, glass);
-      }
-    }
+    if (id < 0 || !keep[id] || real[id] || doorDone[id] || comps[id].hall) continue;
+    const ny = cy + 1;
+    if (ny < ch && comp[ny * cw + cx] === id) continue;
+    const off = cm / 2 + 0.12;
+    box(cellLon(cx), cellLat(cy) - off * mLat, 1.1, 0.2, comps[id].base + 1.5, 2.2, door);
+    doorDone[id] = 1;
   }
   comps.forEach((c, i) => { if (keep[i] && !real[i]) nGen++; });
   /* für den Export: Mittelpunkt, Fläche und geschätzte Geschosse der rekonstruierten Häuser */
@@ -1017,7 +1087,8 @@ async function buildEdition(area, year, reg, token, emit, lite){
 
   const prim = inst.length ? scene.primitives.add(new C.Primitive({
     geometryInstances: inst,
-    appearance: new C.PerInstanceColorAppearance({flat:false, translucent:false}),
+    appearance: wallAppearance(),
+    compressVertices: false,   /* Texturkoordinaten sind Blöcke und Geschosse, nicht 0–1 */
     asynchronous: true,
     shadows: C.ShadowMode.ENABLED
   })) : null;

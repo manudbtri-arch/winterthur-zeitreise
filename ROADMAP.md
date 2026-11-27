@@ -95,8 +95,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 9. Absichern, Tempo, Optik, Bedienung (Auftrag Manuel)
 - [x] Automatischer Bildtest bei GitHub (Bilder, Tempo, Fehler an festen Orten; Zweig «bildtest»); Themen per Link `?themen=`.
-- [ ] Offene Fragen anhand der Testbilder klären (Kartenstand, Luftbild-Orte, Arealstatistik, Brücken, Seen).
-- [ ] Fenster der nachgebauten Häuser als Wandmuster statt Klötze.
+- [ ] Offene Fragen anhand der Testbilder klären (Kartenstand, Luftbild-Orte, Arealstatistik, Brücken, Seen). – zurückgestellt: der erste Bildtest lief am 27.11. noch, Zweig «bildtest» gab es noch nicht.
+- [x] Fenster der nachgebauten Häuser als Wandmuster statt Klötze.
 - [ ] Heutige 3D-Gebäude nur einmal laden.
 - [ ] Handy: kleinere Sichtweite.
 - [ ] Baujahre vorberechnet mitliefern (prüfen, ob machbar).
