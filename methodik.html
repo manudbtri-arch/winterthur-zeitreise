@@ -68,6 +68,7 @@ footer a{color:var(--mute)}
       <li><a href="#rekonstruiert">Rekonstruierte Häuser: aus der Siegfriedkarte</a></li>
       <li><a href="#genauigkeit">Genauigkeit</a></li>
       <li><a href="#grenzen">Bekannte Grenzen</a></li>
+      <li><a href="#zeitraffer">Zeitraffer von oben</a></li>
       <li><a href="#zitieren">Zitiervorschlag</a></li>
     </ol>
   </div>
@@ -173,7 +174,16 @@ footer a{color:var(--mute)}
 <p>Die Zählung zeigt den heutigen Bestand nach Baualter, nicht den Bestand im gewählten Jahr: abgerissene Gebäude fehlen im Register.</p>
 <p>Die Gebäudeliste («Liste CSV» und «GeoJSON») enthält pro Gebäude Status (belegt oder rekonstruiert), EGID, Adresse, Baujahr oder Bauperiode, Kartenstand, Koordinaten und Quelle. Die Spalte <code>alter_im_jahr</code> nennt bei genauem Baujahr das Alter des Gebäudes im gewählten Jahr (Jahr minus Baujahr); bei Bauperiode «vor 1919» und bei rekonstruierten Häusern bleibt sie leer. Die Spalte <code>gwr_link</code> führt bei belegten Gebäuden zu map.geo.admin.ch mit der Ebene des Gebäuderegisters an der Lage des Gebäudes; so lässt sich jede Zeile in der Quelle nachprüfen. Bei rekonstruierten Häusern bleibt sie leer, weil sie im Register nicht vorkommen.</p>
 
-<h2 id="zitieren">7. Zitiervorschlag</h2>
+<h2 id="zeitraffer">7. Zeitraffer von oben</h2>
+<p>Der <a href="zeitraffer.html">Zeitraffer</a> zeigt einen gerahmten Ausschnitt nacheinander in allen Ständen, die swisstopo für diese Stelle anbietet. Gezeigt werden die Originalbilder der Dienste; es wird nichts nachgebaut oder geschätzt.</p>
+<ul>
+  <li><b>Luftbilder:</b> Die Jahre stammen aus der Abfrage der Bildflüge an der Mitte des Rahmens (<code>ch.swisstopo.swissimage-product.metadata</code>, Felder Flugjahr, Farbe/Schwarzweiss und Bodenauflösung). Gezeigt wird das zugehörige Luftbild aus <code>ch.swisstopo.swissimage-product</code>; am Schluss steht das aktuelle SWISSIMAGE.</li>
+  <li><b>Karten:</b> Die Stände stammen aus der Liste der Ausgaben der Zeitreihe an der Mitte des Rahmens (<code>ch.swisstopo.zeitreihen</code>, Abfrage «releases»). Jeder Stand gilt auf den 31. Dezember des genannten Jahres. Die Beschriftung Dufourkarte (vor 1870), Siegfriedkarte (bis 1945) und Landeskarte richtet sich nach dem Jahr. Am Schluss folgen die heutige Landeskarte und, wenn gewählt, das heutige Luftbild.</li>
+  <li><b>Auswahl:</b> «Schlüsselepochen» zeigt rund 10 bis 12 gleichmässig verteilte Stände, «Alle verfügbaren Stände» die vollständige Liste.</li>
+</ul>
+<div class="box">Grenzen: Nicht jedes Jahr wurde beflogen, und ein Bildflug deckt den Rahmen nicht immer ganz ab – fehlende Teile bleiben grau. Die Jahre gelten für die Mitte des Rahmens; am Rand kann ein anderes Kartenblatt mit anderem Stand liegen. Antwortet der Dienst nicht, verwendet der Zeitraffer eine feste Liste üblicher Kartenstände, die an dieser Stelle nicht geprüft ist. Die Jahrzahl nennt das Flugjahr bzw. den Kartenstand, nicht das Jahr, in dem eine Veränderung tatsächlich geschah.</div>
+
+<h2 id="zitieren">8. Zitiervorschlag</h2>
 <p>Bitte immer die zugrunde liegenden Daten mitnennen:</p>
 <div class="cite" id="cite">Zeitreise Schweiz: 3D-Ansicht [Ort], Kartenstand [Jahr].
 https://manudbtri-arch.github.io/winterthur-zeitreise/ (abgerufen am [Datum]).
