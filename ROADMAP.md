@@ -121,3 +121,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Forschung: Blatt und Kartenstand der Siegfriedkarte in Gebäudeliste (CSV, GeoJSON) und Statistik-CSV mitschreiben.
 - [x] Darstellung: Ziegelmuster auf den Satteldächern der nachgebauten Häuser, passend zu den echten Altbauten.
 - [x] Gemeinden und Museen: Vorher-Nachher-Bild – gleicher Blick im gewählten Jahr und heute nebeneinander als PNG, mit Jahr, Ort und Quellen.
+
+## 11. Für andere Orte und Klassen
+- [x] Museen und Gemeinden: Kiosk-Rundflug um jeden Ort – `?kiosk=1` mit Ort aus dem Link (`lon`, `lat` bzw. `c`), Höhe aus dem Gelände; auf der Produktseite erklärt.
+- [ ] Schulen: Unterrichtsseite um einen Auftrag mit dem Vorher-Nachher-Bild ergänzen (Veränderung beschreiben und belegen).
+- [ ] Handy: im Querformat Zeitregler und Menü schmaler, damit mehr vom Bild sichtbar bleibt.

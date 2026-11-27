@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Kiosk für jeden Ort: `flug-3d.html?kiosk=1` mit Ort im Link (z. B. aus «Link kopieren») kreist um diesen Ort statt um Winterthur, die Höhe kommt aus dem Gelände; Produktseite erklärt, wie man den Link baut.
 - Neuer Knopf «Vorher-Nachher-Bild» im Reiter «Export»: speichert den gleichen Blick im gewählten Jahr und heute nebeneinander als PNG, mit Jahr, Kartenblatt, Ort, Koordinaten und Quellen; danach ist alles wie vorher eingestellt. Auf der Produktseite genannt.
 - Die Satteldächer der nachgebauten Häuser tragen jetzt Biberschwanz-Ziegel in versetzten Reihen wie die echten Altbauten; die Reihen laufen über das ganze Dach durch und werden in der Ferne zu einer ruhigen Dachfarbe.
 - Wiederhergestellt, was bei der Übernahme der Kachel-Welt verloren ging: Link «Im Gebäuderegister prüfen» und Alter im gewählten Jahr in der Infokarte, System-Teilen auf dem Handy, Spalten `gwr_link` und `abgerufen_am` in Gebäudeliste, GeoJSON und Statistik-CSV. Neu steht in allen drei Exporten das Blatt der Siegfriedkarte mit Kartenstand (`siegfried_blatt`); in der Methodik erklärt.

@@ -2153,7 +2153,16 @@ $('to2d').addEventListener('click', () => {
 /* ---------- Kiosk-Modus (?kiosk=1): Rundflug im Leerlauf, Neustart nach 2 Minuten ohne Eingabe ---------- */
 const KIOSK = new URLSearchParams(location.search).get('kiosk') === '1';
 const kiosk = {auto: false, last: performance.now(), hdg: 0, yearT: 0, ei: 0};
-const KIOSK_CENTER = C.Cartesian3.fromDegrees(8.7290, 47.4997, 450), KIOSK_ENU = C.Transforms.eastNorthUpToFixedFrame(KIOSK_CENTER);
+/* Mittelpunkt des Rundflugs: Altstadt Winterthur, oder mit Link (?kiosk=1&lon=&lat=, bzw. c=) der Ort aus dem Link; Höhe aus dem Gelände */
+const KIOSK_LL = LINK ? LINK.c : [8.7290, 47.4997];
+let KIOSK_ENU = C.Transforms.eastNorthUpToFixedFrame(C.Cartesian3.fromDegrees(KIOSK_LL[0], KIOSK_LL[1], 450));
+if (KIOSK) (async () => {
+  while (!terrainOk) await new Promise(r => setTimeout(r, 500));
+  try {
+    const [p] = await C.sampleTerrainMostDetailed(viewer.terrainProvider, [C.Cartographic.fromDegrees(KIOSK_LL[0], KIOSK_LL[1])]);
+    if (Number.isFinite(p.height)) KIOSK_ENU = C.Transforms.eastNorthUpToFixedFrame(C.Cartesian3.fromDegrees(KIOSK_LL[0], KIOSK_LL[1], p.height - 40));
+  } catch (e) {}
+})();
 /* Kamera im Kreis um die Altstadt: Blickrichtung aus Kurs und Neigung, Abstand r */
 function kioskView(h, pDeg, r){
   const p = C.Math.toRadians(pDeg);
