@@ -25,6 +25,8 @@ for (const o of ORTE) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
   const errs = [];
   page.on('pageerror', e => errs.push('Fehler: ' + String(e.message).slice(0, 300)));
+  page.on('response', r => { if (r.status() >= 400) errs.push(`HTTP ${r.status()}: ${r.url().slice(0, 160)}`); });
+  await page.addInitScript(() => { try { localStorage.setItem('zr-hint-walk', '1'); localStorage.setItem('zr-hint-fly', '1'); } catch (e) {} });
   page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') errs.push(m.type() + ': ' + m.text().slice(0, 300)); });
   const t0 = Date.now();
   let hud = '';

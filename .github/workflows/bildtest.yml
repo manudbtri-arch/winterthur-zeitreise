@@ -10,7 +10,7 @@ permissions:
   contents: write
 concurrency:
   group: bildtest
-  cancel-in-progress: true
+  cancel-in-progress: false   # bei vielen Pushes nicht abbrechen, sonst entsteht nie ein Ergebnis
 jobs:
   bilder:
     runs-on: ubuntu-latest
