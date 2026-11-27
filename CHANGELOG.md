@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Unterrichtsseite: Auftrag 1 nennt den Wischvergleich in der 2D-Karte als Alternative für Geräte ohne 3D.
 - 2D-Karte: Knopf «Hier im 3D-Flug ansehen» öffnet den 3D-Flug mit Blick auf den Kartenmittelpunkt (Höhe über die Höhenabfrage von geo.admin.ch) und baut dort die Häuser im gewählten Jahr.
 - 3D-Flug: der Link «2D-Karte» öffnet die Karte am aktuellen Ort und im gewählten Jahr der Siegfriedkarte.
 - 2D-Karte: Ortssuche für die ganze Schweiz (Gemeinde, Adresse, Flurname) über geo.admin.ch; Titel heisst jetzt «Zeitreise Schweiz».
