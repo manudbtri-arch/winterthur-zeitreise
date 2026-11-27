@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Brücken aus swissTLM3D (heutiger Stand) im 3D-Flug, damit Strassen und Bahnen nicht ins Flusstal tauchen; abschaltbar, in der Infokarte und Methodik als heutiger Stand gekennzeichnet; im Heute-Modus auch Seilbahnen und übrige Bauten.
 - Boden nicht mehr überall grün: Pflaster nur in Gassen und Höfen (in der Stadt breiter als auf dem Land), Wiese nur in Gärten bei Häusern, Seen als geschlossene Wasserfläche; überall sonst zeigt sich die Siegfriedkarte mit Wald, Fels, Seen und Feldern; in der Methodik beschrieben.
 - Boden mit Pflaster und Wiese geht ab rund 300 m weich in die Siegfriedkarte über, statt in eckigen Flecken zu enden; die Anzeige oben rechts zeigt beim Laden den Fortschritt in Prozent.
 - Ferne Klötze (noch ohne Gebäuderegister) heissen in der Infokarte «Haus aus der Karte» statt «abgerissen» und zählen nicht in Statistik und Export.

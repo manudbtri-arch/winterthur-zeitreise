@@ -255,6 +255,7 @@ body.kiosk .compass{display:none}
     <label class="chk"><input type="checkbox" id="shadowOn"> Schatten (schöner, etwas langsamer)</label>
     <label class="chk"><input type="checkbox" id="bld"> Alle heutigen Gebäude</label>
     <label class="chk"><input type="checkbox" id="veg"> Heutige Bäume</label>
+    <label class="chk"><input type="checkbox" id="bridgeOn" checked> Brücken (heutiger Stand, swisstopo)</label>
     <label class="chk"><input type="checkbox" id="miniOn" checked> Minikarte (breiter Bildschirm)</label>
     <label class="chk"><input type="checkbox" id="storyOn" checked> Geschichten an Orten (Marker)</label>
 
@@ -396,7 +397,7 @@ if (location.protocol === 'file:') {
   $('hud').textContent = 'Als Datei geöffnet – Gelände braucht eine Webadresse';
 }
 C.CesiumTerrainProvider.fromUrl('https://3d.geo.admin.ch/ch.swisstopo.terrain.3d/v1/', {requestVertexNormals:true})
-  .then(tp => { viewer.terrainProvider = tp; terrainOk = true; globe.enableLighting = false; buildHouses(LINK ? LINK.c : [8.7290, 47.4997]); })
+  .then(tp => { viewer.terrainProvider = tp; terrainOk = true; globe.enableLighting = false; buildHouses(LINK ? LINK.c : [8.7290, 47.4997]); bridgeLayer(); })
   .catch(err => {
     console.error(err);
     $('hud').textContent = 'Gelände nicht erreichbar – flache Ansicht';
@@ -565,7 +566,7 @@ const gwr = {years:new Map(), all:new Map(), year:1880};   /* years/all: alle bi
 let bldTs = null;
 const PLAIN = new Set(['Gebaeude Einzelhaus', 'Hochhaus', 'Im Bau']);   /* nur diese bekommen Wohnhaus-Fenster */
 const isSpecial = f => !PLAIN.has(f.getProperty('OBJEKTART'));
-const flags = {bld: false, old: true, gen: true};   /* Zustand der Häkchen, damit der Stil nicht für jedes Gebäude im HTML nachschaut */
+const flags = {bld: false, old: true, gen: true, bridge: true};   /* Zustand der Häkchen, damit der Stil nicht für jedes Gebäude im HTML nachschaut */
 const yearOk = f => {
   if (flags.bld) return true;
   if (!flags.old) return false;
@@ -652,6 +653,30 @@ async function loadGwr(w, s, e, n, onProgress, N = 4){
   await Promise.all(Array.from({length:6}, async () => { while (queue.length) await one(queue.shift()); }));
   return out;
 }
+/* Brücken aus swissTLM3D (heutiger Stand): das Geländemodell hat keine Brücken, ohne sie tauchen Strassen ins Flusstal.
+   In früheren Jahren nur Brücken, im Heute-Modus auch Seilbahnen und übrige Bauten. */
+const TLM_URL = 'https://3d.geo.admin.ch/ch.swisstopo.swisstlm3d.3d/v1/tileset.json';
+const BRIDGE_RE = /br(ue|ü)cke|viadukt|passerelle|steg\b/i;
+let tlmTs = null;
+function isBridge(f){
+  if (f.__br !== undefined) return f.__br;
+  let b = false;
+  try { for (const id of f.getPropertyIds()) { const v = f.getProperty(id); if (typeof v === 'string' && BRIDGE_RE.test(v)) { b = true; break; } } } catch (e) {}
+  f.__br = b; return b;
+}
+async function bridgeLayer(){
+  try {
+    if (!tlmTs) {
+      tlmTs = await C.Cesium3DTileset.fromUrl(TLM_URL);
+      scene.primitives.add(tlmTs);
+      tlmTs.style = new C.Cesium3DTileStyle();
+      tlmTs.style.show = { evaluate: f => present || (flags.bridge && isBridge(f)) };
+    }
+    tlmTs.show = present || flags.bridge;
+    tlmTs.makeStyleDirty();
+  } catch (e) { console.warn('Brücken nicht erreichbar', e); }
+}
+$('bridgeOn').addEventListener('change', e => { flags.bridge = e.target.checked; bridgeLayer(); });
 $('veg').addEventListener('change', e => toggleTiles('v','https://3d.geo.admin.ch/ch.swisstopo.vegetation.3d/v1/tileset.json', e.target.checked));
 
 /* ---------- Häuser aus der Siegfriedkarte bauen ---------- */
@@ -1431,6 +1456,7 @@ function setPresent(on){
   $('veg').checked = on;
   buildingLayer().catch(() => {});
   toggleTiles('v', 'https://3d.geo.admin.ch/ch.swisstopo.vegetation.3d/v1/tileset.json', on);
+  bridgeLayer();
   refreshGrounds();
   applyYear(on ? 2100 : +$('yr').value);
   $('yBig').textContent = on ? 'Heute' : $('yr').value;
@@ -1613,6 +1639,10 @@ function showInfo(p){
     src = 'Quelle: ' + st.quelle;
     link = /^https:\/\//.test(st.url || '') ? st.url : '';
     story = STORY_ID_RE.test(String(st.id || '')) ? String(st.id) : null;
+  } else if (p instanceof C.Cesium3DTileFeature && tlmTs && p.tileset === tlmTs) {
+    title = isBridge(p) ? 'Brücke' : 'Bauwerk';
+    text = 'Heutiger Stand aus dem Landschaftsmodell swissTLM3D. Ob es im gewählten Jahr schon stand, zeigt die Karte darunter.';
+    badge = 'Heute'; src = 'Quelle: swissTLM3D (swisstopo)';
   } else if (p instanceof C.Cesium3DTileFeature) {
     const egid = Number(p.getProperty('EGID')), r = gwr.all.get(egid);
     const art = p.getProperty('OBJEKTART'), hgt = Math.round(p.getProperty('GESAMTHOEHE') || 0);
