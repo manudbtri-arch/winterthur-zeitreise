@@ -67,4 +67,4 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Schulen: Unterrichtsseite um einen Auftrag mit der Statistik-CSV ergänzen (Diagramm der Bauepochen in der Tabellenkalkulation, zwei Orte vergleichen).
 - [x] 2D-Karte: Infofenster einer Geschichte mit Link «Im 3D-Flug ansehen» (Direktlink `?story=<id>`).
 - [x] Story-Werkstatt: Tabelle (CSV mit den Spalten der Anleitung, Semikolon oder Komma) importieren, damit Gemeinden bestehende Listen übernehmen können.
-- [ ] Story-Werkstatt: Knopf «Lage im 3D-Flug ansehen» öffnet den 3D-Flug mit Blick auf den gesetzten Punkt und baut dort die Häuser.
+- [x] Story-Werkstatt: Knopf «Lage im 3D-Flug ansehen» öffnet den 3D-Flug mit Blick auf den gesetzten Punkt und baut dort die Häuser.

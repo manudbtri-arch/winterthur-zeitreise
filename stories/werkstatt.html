@@ -89,6 +89,7 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
       <label for="adresse">Adresse <small>(Strasse Nr, PLZ Ort – oder Punkt in der Karte setzen)</small></label>
       <div class="search"><input type="search" id="adresse" autocomplete="off" aria-label="Adresse suchen"><ul id="adrRes" hidden role="listbox"></ul></div>
       <p class="coord" id="coordLbl">Noch keine Lage gesetzt.</p>
+      <button class="btn" id="view3d" type="button" disabled title="Öffnet den 3D-Flug in einem neuen Fenster">Lage im 3D-Flug ansehen</button>
       <label for="quelle">Quelle <small>(überprüfbar, in Worten)</small></label>
       <input type="text" id="quelle" placeholder="z. B. Historisches Lexikon der Schweiz, Artikel …">
       <label for="url">Link zur Quelle <small>(nur https://)</small></label>
@@ -179,6 +180,7 @@ function fillForm(st){
 function setPos(ll, pan){
   pos = ll;
   $('coordLbl').textContent = ll ? `Lage: ${ll[1].toFixed(5)} N, ${ll[0].toFixed(5)} O (WGS84)` : 'Noch keine Lage gesetzt.';
+  $('view3d').disabled = !ll;
   if (!map) return;
   if (marker) { map.removeLayer(marker); marker = null; }
   if (ll) { marker = L.circleMarker([ll[1], ll[0]], {radius: 9, color: '#fff', weight: 2, fillColor: '#c8803f', fillOpacity: 1}).addTo(map); if (pan) map.setView([ll[1], ll[0]], Math.max(map.getZoom(), 16)); }
@@ -319,6 +321,30 @@ $('copyBtn').addEventListener('click', async () => {
   const t = JSON.stringify(output(), null, 2);
   try { await navigator.clipboard.writeText(t); $('testHint').textContent = 'JSON kopiert.'; }
   catch (e) { $('preview').parentElement.open = true; getSelection().selectAllChildren($('preview')); }
+});
+
+/* Lage im 3D-Flug prüfen: Blick von Süden auf den Punkt, Höhe aus der Höhenabfrage von geo.admin.ch */
+function toLV95(lon, lat){
+  const p = (lat * 3600 - 169028.66) / 10000, l = (lon * 3600 - 26782.5) / 10000;
+  return [2600072.37 + 211455.93*l - 10938.51*l*p - 0.36*l*p*p - 44.54*l*l*l,
+          1200147.07 + 308807.95*p + 3745.25*l*l + 76.63*p*p - 194.56*l*l*p + 119.79*p*p*p];
+}
+$('view3d').addEventListener('click', async () => {
+  if (!pos) return;
+  const [lon, lat] = pos, w = window.open('', '_blank');   /* sofort öffnen, sonst blockiert der Browser das Fenster */
+  let ground = 450;   /* Ersatzwert, falls die Höhenabfrage scheitert */
+  try {
+    const [E, N] = toLV95(lon, lat), ac = new AbortController(), t = setTimeout(() => ac.abort(), 3000);
+    const j = await (await fetch(`https://api3.geo.admin.ch/rest/services/height?easting=${E.toFixed(1)}&northing=${N.toFixed(1)}&sr=2056`, {signal: ac.signal})).json();
+    clearTimeout(t);
+    if (Number.isFinite(+j.height)) ground = +j.height;
+  } catch (e) {}
+  const q = new URLSearchParams({lon: lon.toFixed(6), lat: (lat - 0.0035).toFixed(6), h: Math.round(ground + 380), hdg: 0, pitch: -44,
+    c: lon.toFixed(5) + ',' + lat.toFixed(5), mode: 'fly'});
+  const y = yearOrNull($('von').value);
+  if (Number.isInteger(y) && y >= 1870 && y <= 1949) q.set('year', y);
+  const url = new URL('../flug-3d.html?' + q.toString(), location.href).href;
+  if (w) { w.opener = null; w.location.href = url; } else location.href = url;
 });
 
 /* Suche über geo.admin.ch: Ergebnisse als Text einfügen */

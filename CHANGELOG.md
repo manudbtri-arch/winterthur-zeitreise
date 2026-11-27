@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Story-Werkstatt: Knopf «Lage im 3D-Flug ansehen» öffnet den 3D-Flug in einem neuen Fenster mit Blick von Süden auf den gesetzten Punkt (im Jahr «ab», falls zwischen 1870 und 1949) und baut dort die Häuser.
 - Story-Werkstatt: Tabellen (CSV mit Semikolon, Komma oder Tab, z. B. aus Excel) mit den Spalten der Anleitung werden eingelesen und an die Liste angehängt; unvollständige Zeilen sind markiert.
 - 2D-Karte: das Infofenster einer Geschichte hat den Link «Im 3D-Flug ansehen» (Direktlink zur Geschichte); der Titel am Marker wird als reiner Text eingefügt.
 - Unterrichtsseite: Auftrag 5 «Zwei Orte im Vergleich» mit der Statistik-CSV (Diagramm in der Tabellenkalkulation, Erklärung prüfen, Grenze der Zählung); Produktseite nennt fünf Aufträge.
