@@ -143,3 +143,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Museen: Produktseite mit Beispiel-Link «Kiosk-Rundgang ansehen» (`flug-3d.html?kiosk=1&stories=winterthur`).
 - [x] Gemeinden: Story-Werkstatt warnt, wenn der Zeitraum (von/bis) keine Kartenausgabe (1880, 1900, 1920, 1940) trifft – solche Geschichten erscheinen nur heute und im Kiosk-Rundgang nicht.
 - [x] Handy: Seitenleiste der 2D-Karte einklappbar (Knopf), damit die Karte ganz sichtbar wird.
+
+## 15. Rundgang zum Mitmachen, Partner-Dateien in 2D, Quellenkritik
+- [x] Museen: Kiosk-Rundgang zeigt die Rundgang-Leiste (Station x von n); eine Berührung hält den Rundgang an, Besucher blättern selbst weiter.
+- [ ] Gemeinden: 2D-Karte lädt mit `?stories=<name>` eine eigene Story-Datei wie der 3D-Flug; «Im 3D-Flug ansehen» in der Geschichte nimmt den Namen mit.
+- [ ] Schulen: Unterrichtsseite um einen Auftrag zum Kartenstand ergänzen (Blatt und Stand unter dem Zeitregler lesen, mit dem gewählten Jahr vergleichen, Abweichung erklären).

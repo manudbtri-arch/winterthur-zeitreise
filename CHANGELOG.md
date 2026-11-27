@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Kiosk-Rundgang zum Mitmachen: oben steht die Leiste mit Station und Titel; eine Berührung hält den Rundgang an, Besucher blättern mit ‹ und › selbst weiter; nach zwei Minuten ohne Eingabe läuft er wieder von selbst.
 - 2D-Karte auf dem Handy: Knopf «Karte ganz zeigen» klappt die Steuerung zu einer schmalen Leiste mit der Jahrzahl ein, «Steuerung zeigen» holt sie zurück.
 - Story-Werkstatt: Hinweis beim Zeitraum (von/bis), wenn eine Geschichte keine Kartenausgabe trifft (im Kiosk-Rundgang übersprungen), nur heute sichtbar wäre oder ausserhalb des Zeitreglers 1870–1949 liegt; auch in der Liste.
 - Produktseite: Beispiel-Link «Kiosk-Rundgang ansehen» (Rundgang zu den Geschichten von Winterthur im Kiosk-Modus).

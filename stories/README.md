@@ -62,7 +62,7 @@ Eine kurze Meldung nennt die Zahl der geladenen Geschichten. Übersprungene Eint
 
 ## Kiosk mit Rundgang
 
-`flug-3d.html?kiosk=1&stories=meinort` zeigt auf einem Touchscreen im Leerlauf einen Rundgang statt des Rundflugs: alle 24 Sekunden fliegt die Kamera zur nächsten Geschichte und öffnet ihre Infokarte. Das Jahr ist jeweils die erste Kartenausgabe (1880, 1900, 1920, 1940), in der die Geschichte gilt (`von`/`bis`); Geschichten ausserhalb dieser Jahre werden im Rundgang übersprungen. Eine Berührung beendet den Rundgang, nach zwei Minuten ohne Eingabe beginnt er von vorn.
+`flug-3d.html?kiosk=1&stories=meinort` zeigt auf einem Touchscreen im Leerlauf einen Rundgang statt des Rundflugs: alle 24 Sekunden fliegt die Kamera zur nächsten Geschichte und öffnet ihre Infokarte. Das Jahr ist jeweils die erste Kartenausgabe (1880, 1900, 1920, 1940), in der die Geschichte gilt (`von`/`bis`); Geschichten ausserhalb dieser Jahre werden im Rundgang übersprungen. Oben steht die Leiste mit Station und Titel. Eine Berührung hält den Rundgang an; Besucherinnen und Besucher blättern dann mit ‹ und › selbst weiter. Nach zwei Minuten ohne Eingabe beginnt er von vorn.
 
 ## Ablauf
 

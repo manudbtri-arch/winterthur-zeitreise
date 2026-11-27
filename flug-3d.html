@@ -2204,7 +2204,7 @@ function kioskStation(){
     if (y == null) continue;
     kiosk.si = (i + 1) % n;
     $('yr').value = y; $('yBig').textContent = y; applyYear(y); showLayer();
-    tourGo(i, false);
+    tourGo(i, true);   /* Leiste mit Station x/n; nach einer Berührung blättern Besucher selbst weiter */
     return true;
   }
   return false;
@@ -2222,7 +2222,7 @@ function kioskStart(){
 function kioskStop(){
   if (!kiosk.auto) return;
   kiosk.auto = false;
-  if (kiosk.tour) { camera.cancelFlight(); tourEnd(); kiosk.tour = false; }
+  if (kiosk.tour) { camera.cancelFlight(); kiosk.tour = false; }
   $('attract').hidden = true;
 }
 if (KIOSK) {
