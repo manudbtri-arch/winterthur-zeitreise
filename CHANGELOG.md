@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Wiederhergestellt, was bei der Übernahme der Kachel-Welt verloren ging: Link «Im Gebäuderegister prüfen» und Alter im gewählten Jahr in der Infokarte, System-Teilen auf dem Handy, Spalten `gwr_link` und `abgerufen_am` in Gebäudeliste, GeoJSON und Statistik-CSV. Neu steht in allen drei Exporten das Blatt der Siegfriedkarte mit Kartenstand (`siegfried_blatt`); in der Methodik erklärt.
 - 3D-Flug aufgeteilt, dritter Schritt: die Gestaltung (CSS) liegt in `flug-3d.css`.
 - 3D-Flug aufgeteilt, zweiter Schritt: die Auswertung der Kartenbilder liegt in `flug-3d-worker.js` und läuft direkt als Web Worker; startet er nicht, rechnet die Seite wie bisher selbst.
 - 3D-Flug aufgeteilt, erster Schritt: die Shader (Fassaden, Wände mit Fenstern, Boden) liegen jetzt in `flug-3d-shader.js`; der Bildtest läuft auch bei Änderungen an `flug-3d-*.js`.

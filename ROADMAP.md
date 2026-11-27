@@ -70,7 +70,7 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Story-Werkstatt: Knopf «Lage im 3D-Flug ansehen» öffnet den 3D-Flug mit Blick auf den gesetzten Punkt und baut dort die Häuser.
 - [x] Flüssiger und grösser: automatisch nachbauen beim Verlassen des Gebiets, echte Altbauten aller besuchten Gebiete behalten, Gebiet 1,5 km, weniger Rechenarbeit pro Bild, Qualität automatisch senken bei Ruckeln.
 - [x] Welt in Kacheln wie in Minecraft: Testseite `flug-3d-welt.html` (Kacheln von rund 400 m laden rund um den Standort, die nächsten zuerst, ferne werden entladen).
-- [ ] (Manuel) Testseite `flug-3d-welt.html` prüfen und freigeben; danach wird sie als `flug-3d.html` übernommen. Bei der Übernahme mitnehmen, was seither in `flug-3d.html` dazukam: Link «Im Gebäuderegister prüfen», System-Teilen auf dem Handy, Spalte `gwr_link`.
+- [ ] (Manuel) Testseite `flug-3d-welt.html` prüfen und freigeben; danach wird sie als `flug-3d.html` übernommen. Bei der Übernahme mitnehmen, was seither in `flug-3d.html` dazukam: Link «Im Gebäuderegister prüfen», System-Teilen auf dem Handy, Spalte `gwr_link`. (Die Übernahme ist erfolgt; diese Teile fehlten danach und sind am 27.11. wiederhergestellt.)
 
 ## 8. Prüfen, teilen, drucken
 - [x] Forschung und Gemeinden: Infokarte eines belegten Gebäudes mit Link «Im Gebäuderegister prüfen» (map.geo.admin.ch mit GWR-Ebene an der Lage des Gebäudes), damit Baujahr und Adresse selbst nachgeprüft werden können.
@@ -118,6 +118,6 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
   - [ ] Themen aus Bundesdaten in `flug-3d-themen.js`. – zurückgestellt: nutzt viele Variablen des Hauptscripts; erst sinnvoll nach Umstellung auf Module.
 
 ## 10. Zitierbar, schöner, vergleichbar
-- [ ] Forschung: Blatt und Kartenstand der Siegfriedkarte in Gebäudeliste (CSV, GeoJSON) und Statistik-CSV mitschreiben.
+- [x] Forschung: Blatt und Kartenstand der Siegfriedkarte in Gebäudeliste (CSV, GeoJSON) und Statistik-CSV mitschreiben.
 - [ ] Darstellung: Ziegelmuster auf den Satteldächern der nachgebauten Häuser, passend zu den echten Altbauten.
 - [ ] Gemeinden und Museen: Vorher-Nachher-Bild – gleicher Blick im gewählten Jahr und heute nebeneinander als PNG, mit Jahr, Ort und Quellen.
