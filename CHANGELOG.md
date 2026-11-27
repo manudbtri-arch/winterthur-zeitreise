@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Unterrichtsseite: Hinweise für Lehrpersonen nennen Zeitraffer und 2D-Karte als Weg für langsame Geräte ohne 3D-Grafik.
 - Produktseite: «In der Forschung» nennt die Liste der Stände (CSV) aus dem Zeitraffer zum Zitieren von Bildreihen.
 - Methodik: Zitiervorschlag für eine Bildreihe aus dem Zeitraffer (Ort, Stände, Ebenen, Abrufdatum) mit Hinweis auf die Liste der Stände als Anhang.
 - Zeitraffer, Barrierefreiheit: im QR-Fenster bleibt der Tastaturfokus beim Tabben im Fenster; Schliessen per Knopf, Esc oder Klick daneben setzt den Fokus zurück auf «QR-Code», und Wiedergabe-Tasten wirken nicht, solange das Fenster offen ist.
