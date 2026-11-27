@@ -78,7 +78,16 @@ details.more[open] summary::after{content:"▴"}
 .track input{display:block;height:28px;margin:0}
 .ticks{position:absolute;left:10px;right:10px;bottom:0;height:16px;pointer-events:none}
 .ticks span{position:absolute;transform:translateX(-50%);font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
-.ticks span::before{content:"";position:absolute;left:50%;top:-6px;width:1px;height:5px;background:var(--mute)}
+.ticks span::before,.ticks button::before{content:"";position:absolute;left:50%;top:-6px;width:1px;height:5px;background:var(--mute)}
+.ticks button{position:absolute;transform:translateX(-50%);top:0;font:12px Archivo,sans-serif;color:var(--mute);font-variant-numeric:tabular-nums;background:none;border:0;padding:0 6px;cursor:pointer;pointer-events:auto;line-height:16px}
+.ticks button:hover,.ticks button[aria-pressed=true]{color:var(--brown);font-weight:600}
+@media(pointer:coarse){
+  .track{padding-bottom:36px}
+  .ticks{height:32px}
+  .ticks button{top:2px;min-height:32px;min-width:52px;padding:4px 10px;border:1px solid var(--line);border-radius:16px;background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;line-height:22px}
+  .ticks button::before{display:none}
+  .ticks button[aria-pressed=true]{background:var(--brown);border-color:var(--brown);color:#fff}
+}
 
 .pill{position:absolute;z-index:11;left:16px;top:16px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:8px 14px;font-size:14px;cursor:pointer;color:var(--ink);font-family:inherit}
 .keys{bottom:auto;top:60px}
@@ -167,6 +176,15 @@ body.intro-on .joy{visibility:hidden}
 .intro .st{font-size:14px;color:#cfc6b6;margin-top:8px;min-height:21px}
 @media(max-width:700px){.keys{display:none}.timeline{bottom:8px;width:calc(100% - 16px);padding:8px 12px 10px;gap:2px 12px}}
 @media(prefers-reduced-motion:reduce){.panel,.intro{transition:none}}
+/* Handy mit Touch: Regler über die ganze Breite, damit die Jahr-Knöpfe Platz haben; --tl = Oberkante des Zeitreglers */
+@media(pointer:coarse) and (max-width:700px){
+  .timeline .year,.nowbtn{grid-row:auto}
+  .timeline .track{grid-column:1 / -1}
+  .panel{bottom:calc(var(--tl,130px) + 6px)}
+  .panel.full{max-height:calc(100% - var(--tl,130px) - 22px)}
+  .info{bottom:calc(var(--tl,130px) + 10px)}
+  .joy,.pill{bottom:calc(var(--tl,130px) + 14px)}
+}
 .pill.openfull{left:auto;right:16px;top:58px;bottom:auto;text-decoration:none;font-weight:600}
 @media(max-width:700px){.pill.openfull{right:8px;top:48px;left:auto;bottom:auto}}
 </style>
@@ -415,7 +433,21 @@ function setRange(){
   if (!s.fixed){ $('yr').min = s.min; $('yr').max = s.max; $('yr').value = s.def; }
   /* Markierungen: die Kartenausgaben, aus denen Häuser gebaut werden */
   const marks = s.fixed ? [] : (EDITIONS_MARKS.filter(e => e >= s.min && e <= s.max));
-  $('ticks').innerHTML = marks.map(e => `<span style="left:${((e - s.min) / (s.max - s.min) * 100).toFixed(2)}%">${e}</span>`).join('');
+  /* als Knöpfe: Antippen springt direkt zur Kartenausgabe (auf dem Handy gross) */
+  const tk = $('ticks'); tk.textContent = '';
+  for (const e of marks) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = e; b.dataset.y = e;
+    b.style.left = ((e - s.min) / (s.max - s.min) * 100).toFixed(2) + '%';
+    b.setAttribute('aria-label', `Kartenausgabe ${e}`);
+    b.addEventListener('click', () => { $('yr').value = e; $('yBig').textContent = e; applyYear(e); showLayer(); });
+    tk.appendChild(b);
+  }
+  markTicks();
+}
+function markTicks(){
+  const y = +$('yr').value, cur = EDITIONS_MARKS.filter(e => e <= y).pop();
+  for (const b of $('ticks').children) b.setAttribute('aria-pressed', +b.dataset.y === cur);
 }
 function showLayer(){
   const key = $('src').value, s = SRC[key], y = +$('yr').value;
@@ -429,6 +461,8 @@ let deb;
 $('src').addEventListener('change', () => { setRange(); showLayer(); });
 $('yr').addEventListener('input', () => { $('yBig').textContent = $('yr').value; applyYear(+$('yr').value); clearTimeout(deb); deb = setTimeout(showLayer, 250); });
 setRange(); showLayer();
+{ const tl = document.querySelector('.timeline'), setTl = () => document.documentElement.style.setProperty('--tl', (tl.offsetHeight + 8) + 'px');
+  if (window.ResizeObserver) new ResizeObserver(setTl).observe(tl); setTl(); }
 
 /* Heutige 3D-Objekte (aus, damit 1880 nicht mit Neubauten zugestellt ist) */
 const tiles = {};
@@ -1042,6 +1076,7 @@ $('newOn').addEventListener('change', e => setAnalysis(e.target.checked ? 'new' 
 /* Jahr anwenden: echte Häuser nach Baujahr, nachgebaute aus der passenden Kartenausgabe */
 function applyYear(y){
   gwr.year = y;
+  markTicks();
   if (bldTs) { bldTs.makeStyleDirty(); specTs.makeStyleDirty(); }
   if (!city) return;
   const avail = [...city.eds.keys()].sort((a, b) => a - b);
