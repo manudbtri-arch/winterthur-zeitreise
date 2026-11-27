@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Statistik-CSV, Gebäudeliste und GeoJSON enthalten das Abrufdatum (`abgerufen_am`), damit Exporte zitierbar sind; in der Methodik erklärt.
 - Infokarte eines belegten Gebäudes mit genauem Baujahr nennt sein Alter im gewählten Jahr (z. B. «1880 war es 34 Jahre alt»).
 - Unterrichtsseite: Auftrag 2 lässt das Baujahr über «Im Gebäuderegister prüfen» in der Quelle nachprüfen.
 - Gebäudeliste (CSV und GeoJSON) mit neuer Spalte `gwr_link`: belegte Gebäude lassen sich im Gebäuderegister auf map.geo.admin.ch nachprüfen; in der Methodik erklärt.

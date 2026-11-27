@@ -1102,10 +1102,10 @@ $('epochCsv').addEventListener('click', () => {
   const yr = present ? 'heute' : gwr.year, [E, N] = toLV95(city.center[0], city.center[1]);
   const esc = v => { const t = String(v ?? ''); return /[;"\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
   const pct = v => stats.total ? (v / stats.total * 100).toFixed(1) : '0.0';
-  const lines = [['auswertung', 'kategorie', 'anzahl', 'anteil_prozent', 'stand_jahr', 'ort', 'mitte_e_lv95', 'mitte_n_lv95', 'gebiet', 'quelle'].join(';'),
+  const lines = [['auswertung', 'kategorie', 'anzahl', 'anteil_prozent', 'stand_jahr', 'ort', 'mitte_e_lv95', 'mitte_n_lv95', 'gebiet', 'quelle', 'abgerufen_am'].join(';'),
     ...stats.rows.map(r => [stats.kind, r.label, r.n, pct(r.n), yr, placeName, Math.round(E), Math.round(N), 'rund 1,5 x 1,5 km um die Mitte',
-      'Gebäuderegister GWR (BFS), nur heute noch stehende Gebäude; Bauperiode «vor 1919» ohne genaues Jahr'].map(esc).join(';')),
-    ['summe', 'alle belegten Gebäude', stats.total, '100.0', yr, placeName, Math.round(E), Math.round(N), '', ''].map(esc).join(';')];
+      'Gebäuderegister GWR (BFS), nur heute noch stehende Gebäude; Bauperiode «vor 1919» ohne genaues Jahr', today()].map(esc).join(';')),
+    ['summe', 'alle belegten Gebäude', stats.total, '100.0', yr, placeName, Math.round(E), Math.round(N), '', '', today()].map(esc).join(';')];
   download(`bauepochen-${fileSlug()}-${yr}.csv`, '\ufeff' + lines.join('\r\n'), 'text/csv;charset=utf-8');
   toast('Statistik gespeichert');
 });
@@ -1937,16 +1937,18 @@ function exportRows(){
   for (const [egid, r] of gwr.info) if (r.y <= year) {
     const [E, N] = toLV95(r.lon, r.lat);
     rows.push({status: 'belegt', egid, adresse: r.adr, baujahr: r.exact ? r.y : '', bauperiode: r.exact ? '' : 'vor 1919',
-      kartenstand: '', geschosse_geschaetzt: '', flaeche_m2: '', lon: +r.lon.toFixed(6), lat: +r.lat.toFixed(6), e_lv95: Math.round(E), n_lv95: Math.round(N), quelle: SRC_OLD, gwr_link: gwrLink(r.lon, r.lat)});
+      kartenstand: '', geschosse_geschaetzt: '', flaeche_m2: '', lon: +r.lon.toFixed(6), lat: +r.lat.toFixed(6), e_lv95: Math.round(E), n_lv95: Math.round(N), quelle: SRC_OLD, gwr_link: gwrLink(r.lon, r.lat), abgerufen_am: today()});
   }
   for (const h of ed.recs) {
     const [E, N] = toLV95(h.lon, h.lat);
     rows.push({status: 'rekonstruiert', egid: '', adresse: '', baujahr: '', bauperiode: '', kartenstand: ed.year,
       geschosse_geschaetzt: h.floors, flaeche_m2: h.m2, lon: +h.lon.toFixed(6), lat: +h.lat.toFixed(6), e_lv95: Math.round(E), n_lv95: Math.round(N),
-      quelle: `Siegfriedkarte ${ed.year} (swisstopo), Grundriss aus der Karte, Höhe geschätzt`, gwr_link: ''});
+      quelle: `Siegfriedkarte ${ed.year} (swisstopo), Grundriss aus der Karte, Höhe geschätzt`, gwr_link: '', abgerufen_am: today()});
   }
   return {year, rows};
 }
+/* Abrufdatum für zitierbare Exporte (JJJJ-MM-TT, Ortszeit) */
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 function download(name, text, type){
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([text], {type}));
@@ -1965,7 +1967,7 @@ $('csvBtn').addEventListener('click', () => {
 $('geoBtn').addEventListener('click', () => {
   const x = exportRows(); if (!x) { toast('Zuerst ein Gebiet bauen'); return; }
   const gj = {type: 'FeatureCollection', name: `Zeitreise Schweiz – ${placeName} ${x.year}`,
-    quelle: 'Daten: © swisstopo (Siegfriedkarte, swissBUILDINGS3D), BFS Gebäuderegister GWR; Methodik: methodik.html',
+    quelle: 'Daten: © swisstopo (Siegfriedkarte, swissBUILDINGS3D), BFS Gebäuderegister GWR; Methodik: methodik.html', abgerufen_am: today(),
     features: x.rows.map(r => { const {lon, lat, ...props} = r; return {type: 'Feature', geometry: {type: 'Point', coordinates: [lon, lat]}, properties: props}; })};
   download(`gebaeude-${fileSlug()}-${x.year}.geojson`, JSON.stringify(gj, null, 1), 'application/geo+json');
   toast(`${x.rows.length} Gebäude exportiert`);
