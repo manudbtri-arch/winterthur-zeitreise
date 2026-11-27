@@ -900,7 +900,8 @@ async function buildEdition(area, year, reg, token, emit, lite){
           const w = alongX ? n * cm : cm, d = alongX ? cm : n * cm;
           const shade = 0.94 + hash((a + (alongX ? py0 : px0) / CELL) * 7919 + b + (alongX ? px0 : py0) / CELL) * 0.1;
           const wc = tint(c.wall, shade), rc = tint(c.roof, shade * (1 - 0.06 * ((Math.abs(a - c.mid) | 0) % 2)));
-          const mw = {gen: year, floors: c.floors, hall: c.hall}, mr = {gen: year, floors: c.floors, hall: c.hall};
+          const far = reg === NO_REG;   /* fern: noch nicht mit dem Register abgeglichen */
+          const mw = {gen: year, floors: c.floors, hall: c.hall, far}, mr = {gen: year, floors: c.floors, hall: c.hall, far};
           box(lonC, latC, w, d, c.base, c.h, wc, mw);
           box(lonC, latC, w, d, c.base + c.h, rh, rc, mr);
           parts.push([mw, wc, 0], [mr, rc, 1]);
@@ -1145,7 +1146,8 @@ function styleDirty(ms = 150){
   styleT = setTimeout(() => { styleT = 0; if (bldTs) { bldTs.makeStyleDirty(); specTs.makeStyleDirty(); } }, ms);
 }
 /* Jahr anwenden: echte Häuser nach Baujahr, nachgebaute aus der passenden Kartenausgabe jeder Kachel */
-function genCount(){ let n = 0; for (const c of world.chunks.values()) { const ed = c.eds.get(c.shown); if (ed) n += ed.nGen; } return n; }
+/* nur Kacheln mit Gebäuderegister zählen: ferne Klötze sind noch nicht in belegt und rekonstruiert unterschieden */
+function genCount(){ let n = 0; for (const c of world.chunks.values()) { const ed = c.eds.get(c.shown); if (ed && ed.level >= 1) n += ed.nGen; } return n; }
 function showChunk(c){
   if (!c.eds.size) return;
   const avail = [...c.eds.keys()].sort((a, b) => a - b);
@@ -1601,6 +1603,11 @@ function showInfo(p){
     text = `${kind} · ${bj} · steht heute noch${hgt ? ` · ${hgt} m hoch` : ''}`;
     badge = 'Belegt';
     src = `Quelle: swissBUILDINGS3D (swisstopo), Gebäuderegister GWR (BFS)${egid ? ` · EGID ${egid}` : ''}`;
+  } else if (p && p.id && p.id.gen && p.id.far) {
+    title = 'Haus aus der Karte';
+    text = `Auf der Siegfriedkarte ${p.id.gen} eingezeichnet · noch nicht mit dem Gebäuderegister abgeglichen – näher heran, dann zeigt sich, ob es heute noch steht`;
+    badge = 'Fernsicht'; rec = true;
+    src = `Quelle: Siegfriedkarte, Kartenstand ${p.id.gen} (swisstopo) · vereinfachte Darstellung, Höhe geschätzt`;
   } else if (p && p.id && p.id.gen) {
     title = p.id.hall ? 'Abgerissene Fabrikhalle' : 'Abgerissenes Haus';
     text = `Nachgebaut nach der Siegfriedkarte ${p.id.gen}` + (p.id.hall ? '' : ` · ${p.id.floors} Geschosse geschätzt`) + ' · steht heute nicht mehr';
@@ -2077,7 +2084,7 @@ function exportRows(){
     rows.push({status: 'belegt', egid, adresse: r.adr, baujahr: r.exact ? r.y : '', bauperiode: r.exact ? '' : 'vor 1919',
       kartenstand: '', geschosse_geschaetzt: '', flaeche_m2: '', lon: +r.lon.toFixed(6), lat: +r.lat.toFixed(6), e_lv95: Math.round(E), n_lv95: Math.round(N), quelle: SRC_OLD});
   }
-  for (const c of world.chunks.values()) { const ed = c.eds.get(c.shown); if (ed) for (const h of ed.recs) {
+  for (const c of world.chunks.values()) { const ed = c.eds.get(c.shown); if (ed && ed.level >= 1) for (const h of ed.recs) {
     const [E, N] = toLV95(h.lon, h.lat);
     rows.push({status: 'rekonstruiert', egid: '', adresse: '', baujahr: '', bauperiode: '', kartenstand: ed.year,
       geschosse_geschaetzt: h.floors, flaeche_m2: h.m2, lon: +h.lon.toFixed(6), lat: +h.lat.toFixed(6), e_lv95: Math.round(E), n_lv95: Math.round(N),
