@@ -190,6 +190,12 @@ body.intro-on .joy{visibility:hidden}
   .info{bottom:calc(var(--tl,130px) + 10px)}
   .joy,.pill{bottom:calc(var(--tl,130px) + 14px)}
 }
+.compass{position:absolute;z-index:11;right:16px;bottom:calc(var(--tl,110px) + 10px);width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--panel);box-shadow:0 4px 14px rgba(0,0,0,.3);padding:0;cursor:pointer;display:grid;place-items:center}
+.compass svg{width:40px;height:40px;pointer-events:none}
+.compass text{font:800 9px Archivo,sans-serif;fill:var(--ink)}
+body.intro-on .compass{visibility:hidden}
+body.kiosk .compass{display:none}
+@media(max-width:700px){.compass{right:8px;bottom:calc(var(--tl,130px) + 64px)}.panel:not(.off) ~ .compass{visibility:hidden}}
 .pill.openfull{left:auto;right:16px;top:58px;bottom:auto;text-decoration:none;font-weight:600}
 @media(max-width:700px){.pill.openfull{right:8px;top:48px;left:auto;bottom:auto}}
 </style>
@@ -278,6 +284,7 @@ body.intro-on .joy{visibility:hidden}
 </div>
 <div class="mini on" id="mini" title="Minikarte – Klick öffnet die grosse Karte (M)" aria-hidden="true"><div id="miniMap"></div><svg id="miniArrow" viewBox="0 0 30 30"><circle cx="15" cy="15" r="6" fill="#c8803f" stroke="#fff" stroke-width="2"/><path d="M15 1 L20 10 L10 10Z" fill="#c8803f" stroke="#fff" stroke-width="1.5"/></svg><span>© swisstopo</span></div>
 <div class="joy" id="joy" aria-label="Joystick zum Gehen"><span>Gehen</span><i id="joyKnob"></i></div>
+<button class="compass" id="compass" type="button" aria-label="Blick nach Norden drehen" title="Kompass – Antippen dreht den Blick nach Norden (N)"><svg viewBox="0 0 40 40" aria-hidden="true"><g id="compassRose"><path d="M20 4 L25 20 L15 20Z" fill="#c0392b"/><path d="M20 36 L25 20 L15 20Z" fill="#9a9a9a"/><circle cx="20" cy="20" r="2.4" fill="#fff" stroke="#555" stroke-width="1"/></g></svg></button>
 <div class="attract" id="attract" hidden>Berühre den Bildschirm<small>und geh durch die Stadt von damals</small></div>
 <div class="tour" id="tour" hidden role="group" aria-label="Rundgang">
   <button class="btn" id="tourPrev" aria-label="Vorherige Station">‹</button>
@@ -304,7 +311,7 @@ body.intro-on .joy{visibility:hidden}
   <div><b>Leer</b> hoch · <b>C</b> runter</div>
   <div><b>Shift</b> rennen · <b>F</b> Fliegen/Gehen</div>
   <div><b>I</b>/<b>U</b> Flugtempo 1–100× · <b>J</b> Fernsicht</div>
-  <div><b>M</b> Karte · <b>F3</b> Koordinaten · <b>B</b> Look</div>
+  <div><b>M</b> Karte · <b>F3</b> Koordinaten · <b>B</b> Look · <b>N</b> Norden</div>
   <div><b>P</b> Bild mit Quellenangabe speichern · <b>L</b> Messen</div>
   <div><b>Klick</b> auf ein Haus oder einen Marker: Infos</div>
   <div><b>Tab</b> Menü · <b>Esc</b> Maus freigeben</div>
@@ -1516,6 +1523,7 @@ document.addEventListener('keydown', e => {
   if (e.code === 'KeyM') { e.preventDefault(); $('mapov').hidden ? openMap() : closeMap(); }
   if (e.code === 'KeyP') { saveShot(); }
   if (e.code === 'KeyL') { setMeasure(!meas.on); }
+  if (e.code === 'KeyN') { faceNorth(); }
   if (e.key === 'Escape' && meas.on) { setMeasure(false); }
   if (e.code === 'KeyB') { setBlocky(!blocky); toast(`Minecraft-Look ${blocky ? 'an' : 'aus'}`); }
   if (locked && e.code === 'Space') e.preventDefault();
@@ -1667,6 +1675,33 @@ scene.preRender.addEventListener(() => {
     $('f3').textContent = `E ${fmt(E)}   N ${fmt(N)}\nHöhe ${Math.round(c2.height)} m ü. M. · ${Math.round(agl)} m über Boden\nBlick ${DIRS[Math.round(hdg / 45) % 8]} (${Math.round(hdg)}°) · Tempo ${speed.toFixed(1)} m/s\n${Math.round(fps)} Bilder/s · Fernsicht ${farView ? 'an' : 'aus'}`;
   }
 });
+
+/* ---------- Kompass: zeigt die Blickrichtung, Antippen dreht nach Norden ---------- */
+let compassDeg = null;
+scene.postRender.addEventListener(() => {
+  const d = Math.round(C.Math.toDegrees(camera.heading));
+  if (d === compassDeg) return;
+  compassDeg = d;
+  $('compassRose').setAttribute('transform', `rotate(${-d} 20 20)`);
+  $('compass').title = `Blick ${DIRS[Math.round(((d % 360) + 360) % 360 / 45) % 8]} – Antippen dreht nach Norden (N)`;
+});
+function faceNorth(){
+  look.active = false;
+  const pitch = camera.pitch, dur = flyDur(0.8);
+  /* von oben: um den Punkt in der Bildmitte drehen, damit der Ort im Bild bleibt; beim Gehen am Platz drehen */
+  let target = null;
+  if (!walk && pitch < C.Math.toRadians(-10)) {
+    const ray = camera.getPickRay(new C.Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2));
+    target = ray && globe.pick(ray, scene);
+  }
+  if (target) {
+    const range = C.Cartesian3.distance(camera.position, target);
+    camera.flyToBoundingSphere(new C.BoundingSphere(target, 1), {offset: new C.HeadingPitchRange(0, pitch, range), duration: dur});
+  } else {
+    camera.flyTo({destination: C.Cartesian3.clone(camera.position), orientation: {heading: 0, pitch, roll: 0}, duration: dur});
+  }
+}
+$('compass').addEventListener('click', faceNorth);
 
 /* ---------- Permalink: Ort, Jahr, Blick und Modus als Link ---------- */
 function permalink(){

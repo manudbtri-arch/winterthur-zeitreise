@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Kompass rechts über dem Zeitregler: zeigt die Blickrichtung, Antippen (oder Taste N) dreht den Blick nach Norden; von oben dreht die Ansicht um die Bildmitte.
 - Analyse-Modus: Knopf «Statistik als CSV» speichert die Zählung nach Bauepoche (bzw. «Neu seit der letzten Kartenausgabe») mit Anzahl, Anteil, Jahr, Ort, Gebietsmitte in LV95 und Quelle.
 - Unterrichtsseite: Auftrag 1 nennt den Wischvergleich in der 2D-Karte als Alternative für Geräte ohne 3D.
 - 2D-Karte: Knopf «Hier im 3D-Flug ansehen» öffnet den 3D-Flug mit Blick auf den Kartenmittelpunkt (Höhe über die Höhenabfrage von geo.admin.ch) und baut dort die Häuser im gewählten Jahr.
