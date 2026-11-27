@@ -23,7 +23,7 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 3. Inhalte
 - [x] Geschichten an Orten: `stories/winterthur.json` (Titel, Text, Jahr von–bis, Koordinaten, Quelle); Marker im 3D-Bild, Infokarte beim Anklicken. Nur gesicherte, mit Quelle belegte Fakten.
-- [ ] Geführte Tour: Kamera fliegt Stationen einer Story-Datei nacheinander an (Weiter/Zurück).
+- [x] Geführte Tour: Kamera fliegt Stationen einer Story-Datei nacheinander an (Weiter/Zurück).
 - [ ] Bekannte Orte als Sprungziele je Stadt (aus der Story-Datei).
 
 ## 4. Einsatz bei Kunden

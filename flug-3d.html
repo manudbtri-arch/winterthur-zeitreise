@@ -115,6 +115,10 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
 .mini #miniMap{position:absolute;inset:0}
 .mini svg{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;z-index:500;pointer-events:none}
 .mini span{position:absolute;z-index:500;left:6px;bottom:4px;font-size:10px;color:#333;background:rgba(255,255,255,.75);padding:0 4px;border-radius:3px;pointer-events:none}
+.tour{position:absolute;z-index:12;left:50%;top:16px;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:6px 8px;box-shadow:0 6px 24px rgba(0,0,0,.3);max-width:calc(100% - 32px)}
+.tour .btn{width:auto;margin:0;min-height:40px;padding:6px 14px;border-radius:20px}
+.tour span{font-size:14px;font-weight:600;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:700px){.tour{top:52px}}
 .dlg{position:absolute;inset:0;z-index:35;display:grid;place-items:center;background:rgba(0,0,0,.45);padding:16px}
 .dlg .box{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:18px;width:min(560px,100%);box-shadow:0 10px 40px rgba(0,0,0,.4)}
 .dlg h2{font-size:19px;margin:0 0 6px}
@@ -157,6 +161,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
     <button class="btn" id="linkBtn">Link kopieren</button>
     <button class="btn" id="shotBtn">Bild (P)</button>
   </div>
+  <button class="btn" id="tourBtn" disabled>Rundgang zu den Geschichten</button>
   <button class="btn" id="embedBtn">Einbetten (Code für Website)</button>
   <div class="row2">
     <button class="btn" id="csvBtn" title="Gebäudeliste des gebauten Gebiets">Liste CSV</button>
@@ -216,6 +221,12 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
   <p class="maphint">Klick auf die Karte: Du wirst dorthin teleportiert und stehst auf der Strasse. Gestrichelt: das gebaute Gebiet.</p>
 </div>
 <div class="mini on" id="mini" title="Minikarte – Klick öffnet die grosse Karte (M)" aria-hidden="true"><div id="miniMap"></div><svg id="miniArrow" viewBox="0 0 30 30"><circle cx="15" cy="15" r="6" fill="#c8803f" stroke="#fff" stroke-width="2"/><path d="M15 1 L20 10 L10 10Z" fill="#c8803f" stroke="#fff" stroke-width="1.5"/></svg><span>© swisstopo</span></div>
+<div class="tour" id="tour" hidden role="group" aria-label="Rundgang">
+  <button class="btn" id="tourPrev" aria-label="Vorherige Station">‹</button>
+  <span id="tourLbl"></span>
+  <button class="btn" id="tourNext" aria-label="Nächste Station">›</button>
+  <button class="btn" id="tourEnd">Beenden</button>
+</div>
 <div class="dlg" id="embedDlg" hidden role="dialog" aria-modal="true" aria-labelledby="embedH">
   <div class="box">
     <h2 id="embedH">Auf der eigenen Website einbetten</h2>
@@ -1440,7 +1451,30 @@ async function loadStories(file){
     stories.push(ent);
   }
   updateStories();
+  $('tourBtn').disabled = !stories.length;
 }
+/* Geführte Tour: Kamera fliegt die Geschichten der Reihe nach an */
+let tourIdx = -1;
+function tourGo(i){
+  if (!stories.length) return;
+  tourIdx = (i + stories.length) % stories.length;
+  const ent = stories[tourIdx], st = ent.story;
+  if (document.pointerLockElement) document.exitPointerLock();
+  setMode(false); setPanel(false);
+  if (!$('storyOn').checked) { $('storyOn').checked = true; updateStories(); }
+  const c = C.Cartographic.fromDegrees(st.lon, st.lat);
+  const gh = globe.getHeight(c) ?? 450;
+  camera.flyToBoundingSphere(new C.BoundingSphere(C.Cartesian3.fromDegrees(st.lon, st.lat, gh + 10), 30),
+    {offset: new C.HeadingPitchRange(C.Math.toRadians(20), C.Math.toRadians(-32), 320), duration: 2.5,
+     complete: () => { if (tourIdx >= 0 && stories[tourIdx] === ent) showInfo({id: ent}); }});
+  $('tourLbl').textContent = `${tourIdx + 1}/${stories.length} · ${st.titel}`;
+  $('tour').hidden = false;
+}
+function tourEnd(){ tourIdx = -1; $('tour').hidden = true; }
+$('tourBtn').addEventListener('click', () => { closeIntro(); tourGo(0); });
+$('tourNext').addEventListener('click', () => tourGo(tourIdx + 1));
+$('tourPrev').addEventListener('click', () => tourGo(tourIdx - 1));
+$('tourEnd').addEventListener('click', tourEnd);
 function updateStories(){
   const y = present ? 9999 : gwr.year, on = $('storyOn').checked;
   for (const e of stories) e.show = on && (e.story.von == null || e.story.von <= y) && (e.story.bis == null || e.story.bis >= y);
