@@ -997,7 +997,8 @@ czm_material czm_getMaterial(czm_materialInput mi) {
   vec3 col = mix(grass, cob, cls.r);
   col = mix(col, water, cls.g);
   m.diffuse = col;
-  m.alpha = 1.0;
+  /* ab rund 300 m weich in die Karte übergehen: keine eckigen Kachelränder, dahinter liegt die Siegfriedkarte */
+  m.alpha = 1.0 - smoothstep(300.0, 800.0, length(mi.positionToEyeEC));
   return m;
 }`;
 function makeGround(c){
@@ -1032,7 +1033,7 @@ function makeGround(c){
   const material = new C.Material({ fabric: { uniforms: { blocky: blocky ? 1 : 0, image: cv, repeat: new C.Cartesian2(CHUNK * mpp / stone, CHUNK * mpp / stone) }, source: GROUND_FS } });
   c.ground = scene.primitives.add(new C.GroundPrimitive({
     geometryInstances: new C.GeometryInstance({ geometry: new C.RectangleGeometry({ rectangle: C.Rectangle.fromDegrees(west, south, east, north), vertexFormat: C.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat }) }),
-    appearance: new C.MaterialAppearance({ material, materialSupport: C.MaterialAppearance.MaterialSupport.TEXTURED }),
+    appearance: new C.MaterialAppearance({ material, translucent: true, materialSupport: C.MaterialAppearance.MaterialSupport.TEXTURED }),
     classificationType: C.ClassificationType.TERRAIN
   }));
 }
@@ -1854,7 +1855,8 @@ scene.preRender.addEventListener(() => {
 
   /* Anzeige */
   if (terrainOk || !$('terrMsg').hidden) {
-    const ht = walk ? `Gehen${sprint ? ' · rennen' : ''}` : `Fliegen ${SPEEDS[speedIdx]}× · ${Math.round(agl / 5) * 5} m über Boden`;
+    const ht = (walk ? `Gehen${sprint ? ' · rennen' : ''}` : `Fliegen ${SPEEDS[speedIdx]}× · ${Math.round(agl / 5) * 5} m über Boden`)
+      + (!world.done && world.want && !present ? ` · lädt ${Math.round(world.ready / world.want * 100)} %` : '');
     if (ht !== hudTxt) { hudTxt = ht; $('hud').textContent = ht; }   /* nur bei Änderung: jedes Schreiben kostet Layout */
   }
   if (!$('f3').hidden) {
