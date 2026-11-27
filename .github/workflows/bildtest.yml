@@ -4,7 +4,7 @@ name: Bildtest
 on:
   push:
     branches: [main]
-    paths: ['flug-3d.html', 'flug-3d-*.js', 'tests/**', '.github/workflows/bildtest.yml']
+    paths: ['flug-3d.html', 'flug-3d-*.js', 'flug-3d.css', 'tests/**', '.github/workflows/bildtest.yml']
   workflow_dispatch:
 permissions:
   contents: write

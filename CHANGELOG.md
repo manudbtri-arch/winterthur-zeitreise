@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- 3D-Flug aufgeteilt, dritter Schritt: die Gestaltung (CSS) liegt in `flug-3d.css`.
 - 3D-Flug aufgeteilt, zweiter Schritt: die Auswertung der Kartenbilder liegt in `flug-3d-worker.js` und läuft direkt als Web Worker; startet er nicht, rechnet die Seite wie bisher selbst.
 - 3D-Flug aufgeteilt, erster Schritt: die Shader (Fassaden, Wände mit Fenstern, Boden) liegen jetzt in `flug-3d-shader.js`; der Bildtest läuft auch bei Änderungen an `flug-3d-*.js`.
 - Bildtest: läuft bei schnell aufeinanderfolgenden Änderungen zu Ende statt abgebrochen zu werden, meldet fehlgeschlagene Abrufe mit Adresse und blendet den Bedienungshinweis aus.
