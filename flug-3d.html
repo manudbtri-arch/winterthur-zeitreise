@@ -257,7 +257,7 @@ body.kiosk .compass{display:none}
     <label class="chk"><input type="checkbox" id="oldOn" checked> Echte Altbauten nach Baujahr</label>
     <label class="chk"><input type="checkbox" id="genOn" checked> Nachgebaute, abgerissene Häuser</label>
     <label class="chk"><input type="checkbox" id="groundOn" checked> Boden bei Häusern: Pflaster, Gärten, Wasser</label>
-    <label class="chk"><input type="checkbox" id="blockOn"> Minecraft-Look (Pixeltexturen)</label>
+    <label class="chk"><input type="checkbox" id="blockOn"> Minecraft-Look (Pixeltexturen, Stufendächer)</label>
     <label class="chk"><input type="checkbox" id="shadowOn"> Schatten (schöner, etwas langsamer)</label>
     <label class="chk"><input type="checkbox" id="bld"> Alle heutigen Gebäude</label>
     <label class="chk"><input type="checkbox" id="veg"> Heutige Bäume</label>
@@ -888,6 +888,19 @@ function wallBox(w, d, hgt, kind, cm){
   }
   return g;
 }
+/* Schräge Dachplatte: Box, deren obere Ecken auf die Dachhöhe zOf(q) gesenkt werden (q = Meter quer zum First);
+   axis 1 = quer ist Nord (y), 0 = quer ist Ost (x); slope = Höhenänderung pro Meter quer, für die Normale der Dachfläche */
+function gableBox(w, d, hgt, axis, zOf, slope){
+  const g = C.BoxGeometry.createGeometry(C.BoxGeometry.fromDimensions({dimensions: new C.Cartesian3(w, d, hgt), vertexFormat: C.VertexFormat.POSITION_NORMAL_AND_ST}));
+  const P = g.attributes.position.values, Nn = g.attributes.normal.values, S = g.attributes.st.values;
+  const len = Math.hypot(slope, 1), nq = -slope / len, nz = 1 / len;
+  for (let i = 0, k = 0; k < S.length; i += 3, k += 2) {
+    S[k] = 0; S[k + 1] = -10;
+    if (P[i + 2] > 0) P[i + 2] = -hgt / 2 + zOf(axis ? P[i + 1] : P[i]);
+    if (Nn[i + 2] > 0.5) { Nn[i] = axis ? 0 : nq; Nn[i + 1] = axis ? nq : 0; Nn[i + 2] = nz; }
+  }
+  return g;
+}
 const WALL_VS = `
 in vec3 position3DHigh;
 in vec3 position3DLow;
@@ -1024,6 +1037,11 @@ async function buildEdition(area, year, reg, token, emit, lite){
     const steps = Math.max(0, Math.floor(c.half - Math.abs(line - c.mid) - 0.01));
     return Math.min(7, 0.9 + steps * cm * 0.65);
   };
+  /* Satteldach: Höhe über der Traufe an der Stelle t (Kartenzeile/-spalte), 0,3 m an der Traufe, rund 40° steil, höchstens 7,5 m */
+  const gableH = (c, t) => {
+    const ridge = Math.min(7.2, c.half * cm * 0.85);
+    return 0.3 + ridge * Math.max(0, 1 - Math.abs(t - c.mid) / c.half);
+  };
 
   const roof = new Float32Array(cw * ch).fill(NaN);
   const inst = [], parts = [];   /* parts: [id, Farbe, Dach?] für das Hervorheben */
@@ -1049,19 +1067,42 @@ async function buildEdition(area, year, reg, token, emit, lite){
         const id = at(b);
         if (id < 0 || !keep[id] || comps[id].ew !== alongX) { b++; continue; }
         let n = 1; while (b + n < inner && at(b + n) === id) n++;
-        const c = comps[id], rh = roofH(c, a), top = c.base + c.h + rh;
+        const c = comps[id], gable = !blocky && !c.hall;
+        const rh = gable ? gableH(c, Math.min(a + 0.5, Math.max(a - 0.5, c.mid))) : roofH(c, a), top = c.base + c.h + rh;
         for (let k = 0; k < n; k++) roof[alongX ? a * cw + b + k : (b + k) * cw + a] = top;
         if (!real[id]) {
           const lonC = alongX ? x2lon(px0 + (b + n / 2) * CELL) : cellLon(a);
           const latC = alongX ? cellLat(a) : y2lat(py0 + (b + n / 2) * CELL);
           const w = alongX ? n * cm : cm, d = alongX ? cm : n * cm;
           const shade = 0.94 + hash((a + (alongX ? py0 : px0) / CELL) * 7919 + b + (alongX ? px0 : py0) / CELL) * 0.1;
-          const wc = tint(c.wall, shade), rc = tint(c.roof, shade * (1 - 0.06 * ((Math.abs(a - c.mid) | 0) % 2)));
+          const wc = tint(c.wall, shade), rc = tint(c.roof, shade * (gable ? 1 : 1 - 0.06 * ((Math.abs(a - c.mid) | 0) % 2)));
           const far = reg === NO_REG;   /* fern: noch nicht mit dem Register abgeglichen */
-          const mw = {gen: year, floors: c.floors, hall: c.hall, far}, mr = {gen: year, floors: c.floors, hall: c.hall, far};
+          const mw = {gen: year, floors: c.floors, hall: c.hall, far};
           box(lonC, latC, w, d, c.base, c.h, wc, mw, c.hall ? 2 : 1);
-          box(lonC, latC, w, d, c.base + c.h, rh, rc, mr);
-          parts.push([mw, wc, 0], [mr, rc, 1]);
+          parts.push([mw, wc, 0]);
+          if (!gable) {
+            const mr = {gen: year, floors: c.floors, hall: c.hall, far};
+            box(lonC, latC, w, d, c.base + c.h, rh, rc, mr);
+            parts.push([mr, rc, 1]);
+          } else {
+            /* Satteldach: Reihe als schräge Platte; liegt der First in der Reihe, zwei Platten bis zum First */
+            const segs = c.mid > a - 0.5 && c.mid < a + 0.5 ? [[a - 0.5, c.mid], [c.mid, a + 0.5]] : [[a - 0.5, a + 0.5]];
+            for (const [s0, s1] of segs) {
+              const tc = (s0 + s1) / 2, hmax = Math.max(gableH(c, s0), gableH(c, s1));
+              const sw = alongX ? n * cm : (s1 - s0) * cm, sd = alongX ? (s1 - s0) * cm : n * cm;
+              /* q: Meter quer zum First in der lokalen Achse (Nord bei Ost-West-Häusern, sonst Ost); Kartenzeilen wachsen nach Süden */
+              const tOf = q => alongX ? tc - q / cm : tc + q / cm;
+              const slope = (gableH(c, tOf(0.5)) - gableH(c, tOf(-0.5)));
+              const mr = {gen: year, floors: c.floors, hall: c.hall, far};
+              inst.push(new C.GeometryInstance({
+                id: mr,
+                geometry: gableBox(sw, sd, hmax, alongX ? 1 : 0, q => gableH(c, tOf(q)), slope),
+                modelMatrix: C.Transforms.eastNorthUpToFixedFrame(C.Cartesian3.fromDegrees(alongX ? lonC : cellLon(tc), alongX ? cellLat(tc) : latC, c.base + c.h + hmax / 2)),
+                attributes: {color: C.ColorGeometryInstanceAttribute.fromColor(rc)}
+              }));
+              parts.push([mr, rc, 1]);
+            }
+          }
         }
         b += n;
       }
@@ -1102,7 +1143,10 @@ async function buildEdition(area, year, reg, token, emit, lite){
 /* ---------- Boden: Pflaster in Gassen und auf Plätzen, sonst Wiese, Bäche blau ---------- */
 let blocky = false;
 function setBlocky(on){
+  const changed = blocky !== on;
   blocky = on; $('blockOn').checked = on;
+  /* Dachform (Stufen- oder Satteldach) steckt in der Geometrie: nachgebaute Häuser neu aufbauen */
+  if (changed && world.chunks.size) { buildToken++; for (const [k, c] of [...world.chunks]) unloadChunk(k, c); world.done = false; schedTick(); }
   if (bldTs && bldTs.customShader) bldTs.customShader.setUniform('u_blocky', on ? 1 : 0);
   refreshGrounds();
 }

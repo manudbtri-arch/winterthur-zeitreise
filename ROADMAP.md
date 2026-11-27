@@ -103,8 +103,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
   - [ ] (Manuel) Entscheiden, wo die Daten liegen (`gwr/` in main oder eigener Zweig) und wie GitHub Pages sie ausliefert.
   - [x] GitHub Action (monatlich): GWR-Download des BFS in Kacheln der Zoomstufe 13 umrechnen, mit Abrufdatum und Quelle.
   - [ ] (Manuel) Action «GWR-Daten» einmal von Hand starten (Actions → GWR-Daten → Run workflow) und prüfen, ob der Zweig «gwr-daten» entsteht.
-  - [ ] 3D-Flug: vorberechnete Kachel zuerst laden, sonst wie bisher über geo.admin.ch abfragen.
-- [ ] Satteldächer für nachgebaute Häuser (Minecraft-Look als Schalter).
+  - [ ] 3D-Flug: vorberechnete Kachel zuerst laden, sonst wie bisher über geo.admin.ch abfragen. – wartet auf den ersten Lauf der Action und den Entscheid zur Ablage.
+- [x] Satteldächer für nachgebaute Häuser (Minecraft-Look als Schalter).
 - [ ] Dunst auf fernen Häusern.
 - [ ] Türme für abgerissene Kirchen.
 - [ ] Nur Brücken, die auf der Karte des Jahres vorkommen.
