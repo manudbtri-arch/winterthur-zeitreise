@@ -70,7 +70,7 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Story-Werkstatt: Knopf «Lage im 3D-Flug ansehen» öffnet den 3D-Flug mit Blick auf den gesetzten Punkt und baut dort die Häuser.
 - [x] Flüssiger und grösser: automatisch nachbauen beim Verlassen des Gebiets, echte Altbauten aller besuchten Gebiete behalten, Gebiet 1,5 km, weniger Rechenarbeit pro Bild, Qualität automatisch senken bei Ruckeln.
 - [x] Welt in Kacheln wie in Minecraft: Testseite `flug-3d-welt.html` (Kacheln von rund 400 m laden rund um den Standort, die nächsten zuerst, ferne werden entladen).
-- [ ] (Manuel) Testseite `flug-3d-welt.html` prüfen und freigeben; danach wird sie als `flug-3d.html` übernommen.
+- [ ] (Manuel) Testseite `flug-3d-welt.html` prüfen und freigeben; danach wird sie als `flug-3d.html` übernommen. Bei der Übernahme mitnehmen, was seither in `flug-3d.html` dazukam: Link «Im Gebäuderegister prüfen», System-Teilen auf dem Handy, Spalte `gwr_link`.
 
 ## 8. Prüfen, teilen, drucken
 - [x] Forschung und Gemeinden: Infokarte eines belegten Gebäudes mit Link «Im Gebäuderegister prüfen» (map.geo.admin.ch mit GWR-Ebene an der Lage des Gebäudes), damit Baujahr und Adresse selbst nachgeprüft werden können.
@@ -79,3 +79,6 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Produktseite: Funktionsliste um «Im Gebäuderegister prüfen», Teilen auf dem Handy und das druckbare Arbeitsblatt ergänzen.
 - [x] 2D-Karte (Handy): «Link kopieren» öffnet auf Touch-Geräten das System-Teilen, sonst wie bisher kopieren.
 - [x] Forschung: Gebäudeliste (CSV und GeoJSON) mit Spalte `gwr_link`, damit jede belegte Zeile im Gebäuderegister nachgeprüft werden kann; Methodik erklärt die Spalte.
+- [ ] Schulen: Auftrag 2 der Unterrichtsseite um das Nachprüfen im Gebäuderegister ergänzen (Quellenkritik: stimmt das Baujahr in der Quelle?).
+- [ ] Infokarte eines belegten Gebäudes nennt das Alter im gewählten Jahr («1880 war es 34 Jahre alt»), nur bei genauem Baujahr.
+- [ ] Forschung: Statistik-CSV und Gebäudeliste (CSV, GeoJSON) mit Abrufdatum `abgerufen_am`, damit Exporte zitierbar sind.
