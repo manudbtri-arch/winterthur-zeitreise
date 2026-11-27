@@ -67,12 +67,13 @@
       <button class="btn" id="linkBtn">Link kopieren</button>
       <button class="btn" id="shotBtn">Bild (P)</button>
     </div>
+    <button class="btn" id="cmpBtn" title="Gleicher Blick im gewählten Jahr und heute nebeneinander">Vorher-Nachher-Bild</button>
     <button class="btn" id="embedBtn">Einbetten (Code für Website)</button>
     <div class="row2">
       <button class="btn" id="csvBtn" title="Gebäudeliste des gebauten Gebiets">Liste CSV</button>
       <button class="btn" id="geoBtn" title="Gebäude als GeoJSON für GIS">GeoJSON</button>
     </div>
-    <p class="note">Das Bild nennt Jahr, Ort und Quelle; Liste und GeoJSON zusätzlich das Abrufdatum.</p>
+    <p class="note">Die Bilder nennen Jahr, Ort und Quelle; Liste und GeoJSON zusätzlich das Abrufdatum.</p>
   </div>
 
   <details class="more">
@@ -2026,6 +2027,65 @@ function saveShot(){
   img.src = src;
 }
 $('shotBtn').addEventListener('click', saveShot);
+
+/* ---------- Vorher-Nachher-Bild: gleicher Blick im gewählten Jahr und heute nebeneinander, mit Jahr, Ort und Quellen ---------- */
+const grab = () => { viewer.render(); return viewer.canvas.toDataURL('image/png'); };
+const loadData = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+/* warten, bis Gelände, Karte und Gebäude geladen sind (mindestens 1,5 s wegen Überblenden, höchstens 20 s) */
+async function settle(){
+  const t0 = performance.now();
+  while (performance.now() - t0 < 20000) {
+    await new Promise(r => setTimeout(r, 300));
+    const ok = globe.tilesLoaded && (!bldTs || !bldTs.show || bldTs.tilesLoaded) && (!tiles.v || !tiles.v.show || tiles.v.tilesLoaded);
+    if (ok && performance.now() - t0 > 1500) return;
+  }
+}
+let cmpBusy = false;
+async function saveCompare(){
+  if (cmpBusy) return;
+  if (present || $('src').value !== 'sieg') { toast('Für den Vergleich zuerst ein Jahr der Siegfriedkarte wählen', 2600); return; }
+  cmpBusy = true; $('cmpBtn').disabled = true;
+  const keep = ['bld', 'genOn', 'groundOn', 'veg'].map(id => [id, $(id).checked]);
+  const yearTxt = $('yBig').textContent, lblA = $('yLbl').textContent, recNote = $('genOn').checked;
+  try {
+    const a = await loadData(grab());
+    toast('Lade die heutige Ansicht …', 20000);
+    setPresent(true);
+    await settle();
+    const b = await loadData(grab());
+    setPresent(false);
+    for (const [id, v] of keep) if ($(id).checked !== v) { $(id).checked = v; $(id).dispatchEvent(new Event('change')); }
+    const W = a.width, H = a.height, u = Math.max(1, W / 1400), gap = Math.round(8 * u), band = Math.round(96 * u), pad = Math.round(22 * u);
+    const cv = document.createElement('canvas'); cv.width = 2 * W + gap; cv.height = H + band;
+    const g = cv.getContext('2d');
+    g.fillStyle = '#fbfaf7'; g.fillRect(0, 0, cv.width, cv.height);
+    g.drawImage(a, 0, 0); g.drawImage(b, W + gap, 0);
+    g.fillStyle = '#e2e0da'; g.fillRect(0, H, cv.width, Math.max(1, u));
+    const c = C.Cartographic.fromCartesian(camera.position);
+    const [E, N] = toLV95(C.Math.toDegrees(c.longitude), C.Math.toDegrees(c.latitude));
+    g.textBaseline = 'alphabetic';
+    for (const [x, big, small] of [[0, yearTxt, lblA], [W + gap, 'Heute', 'Luftbild und 3D-Gebäude von swisstopo']]) {
+      g.fillStyle = '#8a5a2b'; g.font = `800 ${Math.round(34 * u)}px Archivo, system-ui, sans-serif`;
+      g.fillText(big, x + pad, H + Math.round(44 * u));
+      const bw = g.measureText(big).width;
+      g.fillStyle = '#16161a'; g.font = `600 ${Math.round(17 * u)}px Archivo, system-ui, sans-serif`;
+      g.fillText(small, x + pad + bw + pad, H + Math.round(42 * u), W - bw - 3 * pad);
+    }
+    g.fillStyle = '#5a5a5f'; g.font = `400 ${Math.round(15 * u)}px Archivo, system-ui, sans-serif`;
+    const note = recNote ? ' · Links: abgerissene Häuser aus der Karte rekonstruiert, Höhe geschätzt' : '';
+    g.fillText(`${placeName} · LV95 ${fmt(E)} / ${fmt(N)} · Daten: © swisstopo (Siegfriedkarte, SWISSIMAGE, swissBUILDINGS3D, Gelände), BFS Gebäuderegister${note} · Zeitreise Schweiz`,
+      pad, H + Math.round(76 * u), cv.width - 2 * pad);
+    await new Promise(res => cv.toBlob(bl => {
+      if (!bl) { toast('Bild konnte nicht erstellt werden'); res(); return; }
+      download(`zeitreise-${fileSlug()}-${String(yearTxt).toLowerCase()}-heute.png`, bl, 'image/png');
+      toast('Vorher-Nachher-Bild gespeichert'); res();
+    }, 'image/png'));
+  } catch (e) {
+    console.error(e); if (present) setPresent(false);
+    toast('Bild konnte nicht erstellt werden');
+  } finally { cmpBusy = false; $('cmpBtn').disabled = false; }
+}
+$('cmpBtn').addEventListener('click', saveCompare);
 
 /* ---------- Gebäude-Export: belegte und rekonstruierte Häuser des gebauten Gebiets zum gewählten Jahr ---------- */
 const SRC_OLD = 'swissBUILDINGS3D (swisstopo), Gebäuderegister GWR (BFS)';
