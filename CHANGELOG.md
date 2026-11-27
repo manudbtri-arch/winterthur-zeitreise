@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Die Kachel-Welt ist jetzt der normale 3D-Flug (`flug-3d.html`, die Testadresse leitet weiter). Gefüllt wird das ganze Bild bis zum Horizont (Gehen bis 6 km, Fliegen bis 8 km) in drei Detailstufen: nah mit Fenstern und Pflaster, mittel mit Gebäuderegister, fern als einfache Klötze aus der Karte.
 - Statistik-CSV, Gebäudeliste und GeoJSON enthalten das Abrufdatum (`abgerufen_am`), damit Exporte zitierbar sind; in der Methodik erklärt.
 - Infokarte eines belegten Gebäudes mit genauem Baujahr nennt sein Alter im gewählten Jahr (z. B. «1880 war es 34 Jahre alt»).
 - Unterrichtsseite: Auftrag 2 lässt das Baujahr über «Im Gebäuderegister prüfen» in der Quelle nachprüfen.

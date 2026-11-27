@@ -92,7 +92,7 @@ footer a{color:var(--mute)}
 <p>Nutzungsbedingungen: <a href="https://www.geo.admin.ch/de/allgemeine-nutzungsbedingungen-bgdi">Allgemeine Nutzungsbedingungen der BGDI</a> (geo.admin.ch). Zum Gebäuderegister: <a href="https://www.housing-stat.ch/">housing-stat.ch</a> (BFS). Die Karten lassen sich im Original vergleichen auf <a href="https://map.geo.admin.ch/?layers=ch.swisstopo.hiks-siegfried">map.geo.admin.ch</a>.</p>
 
 <h2 id="belegt">2. Belegte Häuser: heute noch stehend</h2>
-<p>Für das gewählte Gebiet (rund 1,5 × 1,5 km um den Suchort) fragt die Seite das Gebäuderegister ab. Berücksichtigt werden nur Gebäude mit Status «bestehend».</p>
+<p>Für das gewählte Gebiet (je Kachel von rund 400 × 400 m) fragt die Seite das Gebäuderegister ab. Berücksichtigt werden nur Gebäude mit Status «bestehend».</p>
 <ol>
   <li>Jedes Gebäude im Register hat eine eidgenössische Gebäudenummer (EGID). Dieselbe Nummer steht in swissBUILDINGS3D. Darüber werden Register und 3D-Modell verknüpft.</li>
   <li>Ein 3D-Gebäude erscheint im Jahr X, wenn sein Baujahr im Register kleiner oder gleich X ist.</li>
@@ -138,11 +138,11 @@ footer a{color:var(--mute)}
   <li><b>Bauperiode «vor 1919»:</b> Solche Häuser erscheinen ab 1880, auch wenn sie erst kurz vor 1919 gebaut wurden.</li>
   <li><b>Fehlende Registerdaten:</b> Gebäude ohne Baujahr und ohne Bauperiode im Register werden nicht als Altbau gezeigt.</li>
   <li><b>Heutiges Gelände:</b> Aufschüttungen, Bahndämme oder verlegte Bäche späterer Zeit sind im Relief bereits enthalten.</li>
-  <li><b>Gebietsgrösse:</b> Gebaut wird ein Ausschnitt von rund 1,5 × 1,5 km. Wer beim Gehen oder tiefen Fliegen an den Rand kommt, bekommt dort automatisch einen neuen Ausschnitt. Echte Altbauten bleiben in allen besuchten Gebieten sichtbar, rekonstruierte Häuser nur im aktuellen Ausschnitt.</li>
+  <li><b>Kacheln und Detailstufen:</b> Gebaut wird in Kacheln von rund 400 × 400 m rund um den Standort und im Blickfeld bis zum Horizont (beim Gehen bis rund 6 km, beim Fliegen bis rund 8 km). Bis rund 1 km mit allen Details, bis rund 2,3 km mit Gebäuderegister, aber ohne Fenster. Weiter entfernt werden alle Häuser der Karte als einfache Klötze gezeigt, auch solche, die heute noch stehen; erst beim Näherkommen werden sie in belegt und rekonstruiert unterschieden.</li>
 </ul>
 
 <h2 id="statistik">6. Statistik der Bauepochen (CSV)</h2>
-<p>Im Analyse-Modus speichert der Knopf «Statistik als CSV» die angezeigte Zählung. Gezählt werden nur belegte Gebäude: solche, die heute noch stehen und im Gebäuderegister ein Baujahr oder eine Bauperiode haben, im aktuell gebauten Gebiet von rund 1,5 × 1,5 km und bis zum gewählten Jahr. Rekonstruierte Häuser sind nicht enthalten, weil ihr Baujahr unbekannt ist.</p>
+<p>Im Analyse-Modus speichert der Knopf «Statistik als CSV» die angezeigte Zählung. Gezählt werden nur belegte Gebäude: solche, die heute noch stehen und im Gebäuderegister ein Baujahr oder eine Bauperiode haben, in den gerade geladenen Kacheln mit Gebäuderegister (rund 2,3 km um den Standort) und bis zum gewählten Jahr. Rekonstruierte Häuser sind nicht enthalten, weil ihr Baujahr unbekannt ist.</p>
 <div class="tbl"><table>
   <thead><tr><th>Spalte</th><th>Bedeutung</th></tr></thead>
   <tbody>
