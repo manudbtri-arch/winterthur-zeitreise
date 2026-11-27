@@ -36,6 +36,10 @@ Eine Datei pro Ort, z. B. `stories/winterthur.json`, in UTF-8:
 | `quelle` | ja | überprüfbare Quelle in Worten |
 | `url` | empfohlen | Link zur Quelle, nur `https://` |
 
+## Ohne Programmierkenntnisse: Story-Werkstatt
+
+Die [Story-Werkstatt](https://manudbtri-arch.github.io/winterthur-zeitreise/stories/werkstatt.html) erfasst Geschichten im Formular, setzt die Lage per Adresse oder Klick in die Karte, prüft die Pflichtfelder und speichert die Datei in genau diesem Format. Eine bestehende Datei lässt sich dort zum Bearbeiten öffnen. Die Angaben bleiben im eigenen Browser, bis Sie die Datei weitergeben.
+
 ## Regeln für den Inhalt
 
 - **Nur Belegtes.** Jede Aussage muss in der genannten Quelle stehen. Keine Vermutungen, keine Anekdoten ohne Beleg.

@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Neue Story-Werkstatt `stories/werkstatt.html`: Geschichten im Formular erfassen, Lage über Adresssuche oder Klick in die Landeskarte, Prüfung der Pflichtfelder und Quellenregeln, bestehende Datei öffnen, JSON herunterladen oder kopieren; verlinkt aus Partner-Anleitung und Pilotabschnitt.
 - Kompass rechts über dem Zeitregler: zeigt die Blickrichtung, Antippen (oder Taste N) dreht den Blick nach Norden; von oben dreht die Ansicht um die Bildmitte.
 - Analyse-Modus: Knopf «Statistik als CSV» speichert die Zählung nach Bauepoche (bzw. «Neu seit der letzten Kartenausgabe») mit Anzahl, Anteil, Jahr, Ort, Gebietsmitte in LV95 und Quelle.
 - Unterrichtsseite: Auftrag 1 nennt den Wischvergleich in der 2D-Karte als Alternative für Geräte ohne 3D.

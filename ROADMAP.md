@@ -61,4 +61,4 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 ## 7. Weitere Schritte
 - [x] Forschung: Statistik der Bauepochen im Analyse-Modus als CSV herunterladen (Epoche, Anzahl, Anteil, Jahr, Ort, Quelle).
 - [x] Handy: Kompass-Knopf im 3D-Flug zeigt die Blickrichtung; Antippen dreht den Blick nach Norden.
-- [ ] Gemeinden und Museen: «Story-Werkstatt» `stories/werkstatt.html` – Geschichten im Formular erfassen, Lage per Klick in der Karte, Pflichtfelder prüfen, JSON im richtigen Format herunterladen; verlinkt aus der Partner-Anleitung.
+- [x] Gemeinden und Museen: «Story-Werkstatt» `stories/werkstatt.html` – Geschichten im Formular erfassen, Lage per Klick in der Karte, Pflichtfelder prüfen, JSON im richtigen Format herunterladen; verlinkt aus der Partner-Anleitung.

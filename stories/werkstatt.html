@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Story-Werkstatt – Zeitreise Schweiz</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* Werkstatt für Partner: Formular links, Karte rechts (auf dem Handy untereinander) */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#14171a);--ink:light-dark(#151515,#ecebe7);--mute:light-dark(#5b5b5b,#a7a6a1);--line:light-dark(#dcdcd6,#2c3136);--blue:light-dark(#1f5fa8,#6fa8e6);--brown:light-dark(#8a5a2b,#d29a62);--warn:light-dark(#a3321f,#f08a74);--ok:light-dark(#1f7a45,#6fcf97);--panel:light-dark(#f7f6f2,#1b1f23)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 Archivo,system-ui,sans-serif}
+a{color:var(--blue)}
+header{padding:20px 16px 8px;max-width:1280px;margin:0 auto}
+h1{font-size:clamp(26px,4vw,34px);line-height:1.1;margin:0 0 6px;font-weight:800}
+.sub{color:var(--mute);margin:0;max-width:70ch}
+main{max-width:1280px;margin:0 auto;padding:8px 16px 40px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:20px}
+@media(max-width:860px){main{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+h2{font-size:18px;margin:0 0 8px}
+label{display:block;font-size:14px;font-weight:600;margin:12px 0 4px}
+label small{font-weight:400;color:var(--mute)}
+input[type=text],input[type=number],input[type=url],input[type=search],textarea{width:100%;font:16px Archivo,sans-serif;padding:9px 11px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);min-height:44px}
+textarea{min-height:96px;resize:vertical;line-height:1.45}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
+.btn{border:1px solid var(--line);background:var(--bg);color:var(--ink);font:600 15px Archivo,sans-serif;border-radius:7px;padding:10px 14px;min-height:44px;cursor:pointer}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.hint{font-size:13px;color:var(--mute);margin:4px 0 0}
+.err{color:var(--warn);font-size:14px;margin:8px 0 0;white-space:pre-line}
+.okmsg{color:var(--ok);font-size:14px;margin:8px 0 0}
+#map{height:440px;border-radius:10px;border:1px solid var(--line)}
+@media(max-width:860px){#map{height:320px}}
+.leaflet-container{cursor:crosshair;font:14px Archivo,sans-serif}
+.search{position:relative}
+.search ul{position:absolute;z-index:1001;left:0;right:0;top:100%;margin:4px 0 0;padding:4px;list-style:none;background:var(--bg);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-height:240px;overflow:auto}
+.search li{padding:8px 10px;border-radius:6px;cursor:pointer;font-size:15px}
+.search li small{display:block;color:var(--mute);font-size:12px}
+.search li:hover,.search li[aria-selected=true]{background:var(--line)}
+.list{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.list li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:6px 6px 6px 12px;background:var(--bg)}
+.list li b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list li small{display:block;color:var(--mute);font-size:12px}
+.list .btn{min-height:40px;padding:6px 10px;font-size:14px}
+.list li.bad{border-color:var(--warn)}
+pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font:12px/1.45 ui-monospace,Menlo,Consolas,monospace;max-height:260px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+.coord{font:13px ui-monospace,Menlo,Consolas,monospace;color:var(--mute)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <p class="sub"><a href="../">← Übersicht</a> · <a href="https://github.com/manudbtri-arch/winterthur-zeitreise/blob/main/stories/README.md">Anleitung und Quellenregeln</a></p>
+  <h1>Story-Werkstatt</h1>
+  <p class="sub">Geschichten zu Ihrem Ort erfassen, Lage in der Karte setzen und die fertige Datei im richtigen Format herunterladen. Alles bleibt in Ihrem Browser, bis Sie die Datei selbst weitergeben.</p>
+</header>
+<main>
+  <div>
+    <section class="card" aria-labelledby="hFile">
+      <h2 id="hFile">Datei</h2>
+      <div class="two">
+        <div><label for="ort">Ort</label><input type="text" id="ort" placeholder="z. B. Winterthur" autocomplete="off"></div>
+        <div><label for="fname">Dateiname <small>(ohne .json)</small></label><input type="text" id="fname" placeholder="winterthur" autocomplete="off" pattern="[a-z0-9-]{1,40}"></div>
+      </div>
+      <p class="hint">Dateiname nur Kleinbuchstaben, Ziffern und Bindestrich. Eine bestehende Datei können Sie zum Bearbeiten öffnen.</p>
+      <div class="row">
+        <label class="btn" for="importFile" style="margin:0;display:inline-flex;align-items:center">Datei öffnen …</label>
+        <input type="file" id="importFile" accept=".json,application/json" hidden>
+        <button class="btn" id="clearAll" type="button">Alles leeren</button>
+      </div>
+      <p class="err" id="fileErr" role="alert"></p>
+    </section>
+
+    <section class="card" aria-labelledby="hForm" style="margin-top:16px">
+      <h2 id="hForm">Geschichte <span id="editLbl" style="font-weight:400;color:var(--mute)"></span></h2>
+      <label for="titel">Titel <small>(kurz, steht am Marker)</small></label>
+      <input type="text" id="titel" maxlength="80">
+      <label for="text">Text <small>(zwei bis drei Sätze, nur Belegtes) · <span id="textCount">0</span>/600</small></label>
+      <textarea id="text" maxlength="600"></textarea>
+      <div class="two">
+        <div><label for="von">Sichtbar ab Jahr <small>(leer = immer)</small></label><input type="number" id="von" min="1000" max="2100" inputmode="numeric"></div>
+        <div><label for="bis">bis Jahr <small>(leer = offen)</small></label><input type="number" id="bis" min="1000" max="2100" inputmode="numeric"></div>
+      </div>
+      <label for="adresse">Adresse <small>(Strasse Nr, PLZ Ort – oder Punkt in der Karte setzen)</small></label>
+      <div class="search"><input type="search" id="adresse" autocomplete="off" aria-label="Adresse suchen"><ul id="adrRes" hidden role="listbox"></ul></div>
+      <p class="coord" id="coordLbl">Noch keine Lage gesetzt.</p>
+      <label for="quelle">Quelle <small>(überprüfbar, in Worten)</small></label>
+      <input type="text" id="quelle" placeholder="z. B. Historisches Lexikon der Schweiz, Artikel …">
+      <label for="url">Link zur Quelle <small>(nur https://)</small></label>
+      <input type="url" id="url" placeholder="https://…">
+      <p class="err" id="formErr" role="alert"></p>
+      <p class="okmsg" id="formOk" role="status"></p>
+      <div class="row">
+        <button class="btn primary" id="saveBtn" type="button">Geschichte übernehmen</button>
+        <button class="btn" id="newBtn" type="button">Neue Geschichte</button>
+      </div>
+    </section>
+  </div>
+
+  <div>
+    <section class="card" aria-labelledby="hMap">
+      <h2 id="hMap">Lage</h2>
+      <div class="search" style="margin-bottom:8px"><input type="search" id="mapQ" placeholder="Karte zu einem Ort bewegen …" autocomplete="off" aria-label="Ort suchen"><ul id="mapRes" hidden role="listbox"></ul></div>
+      <div id="map" aria-label="Karte: Klick setzt die Lage der Geschichte"></div>
+      <p class="hint">Klick in die Karte setzt die Lage der Geschichte, die Sie gerade bearbeiten. Karte: © swisstopo.</p>
+    </section>
+
+    <section class="card" aria-labelledby="hList" style="margin-top:16px">
+      <h2 id="hList">Geschichten in der Datei (<span id="nStories">0</span>)</h2>
+      <ul class="list" id="list"></ul>
+      <p class="hint" id="emptyHint">Noch keine Geschichten erfasst.</p>
+      <div class="row">
+        <button class="btn primary" id="dlBtn" type="button" disabled>JSON herunterladen</button>
+        <button class="btn" id="copyBtn" type="button" disabled>JSON kopieren</button>
+      </div>
+      <p class="hint" id="testHint"></p>
+      <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">Vorschau der Datei</summary><pre id="preview"></pre></details>
+    </section>
+  </div>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+{
+const $ = id => document.getElementById(id);
+const KEY = 'zeitreise-werkstatt-v1';
+let doc = {ort: '', geschichten: []}, edit = -1, pos = null, marker = null;
+const markers = [];
+
+/* Entwurf im Browser merken (nur dieser Browser; die Datei selbst ist das Ergebnis) */
+function saveDraft(){ try { localStorage.setItem(KEY, JSON.stringify({doc, fname: $('fname').value})); } catch (e) {} }
+function loadDraft(){
+  try { const d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (d && d.doc && Array.isArray(d.doc.geschichten)) { doc = d.doc; $('fname').value = d.fname || ''; } } catch (e) {}
+  $('ort').value = doc.ort || '';
+}
+
+const slug = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+const yearOrNull = v => { const t = String(v).trim(); if (!t) return null; const n = Number(t); return Number.isInteger(n) ? n : NaN; };
+
+/* gleiche Regeln wie beim Laden im 3D-Flug, dazu die Quellenregeln der Anleitung */
+function problems(st){
+  const p = [];
+  if (!st.titel) p.push('Titel fehlt');
+  if (!st.text) p.push('Text fehlt');
+  if (!st.quelle) p.push('Quelle fehlt');
+  if (!(Number.isFinite(st.lon) && Number.isFinite(st.lat)) && !st.adresse) p.push('Lage fehlt (Adresse oder Punkt in der Karte)');
+  if (Number.isFinite(st.lon) && !(st.lon > 5.9 && st.lon < 10.6 && st.lat > 45.8 && st.lat < 47.9)) p.push('Lage liegt nicht in der Schweiz');
+  if (Number.isNaN(st.von) || Number.isNaN(st.bis)) p.push('Jahr muss eine ganze Zahl sein');
+  if (st.von != null && st.bis != null && st.bis < st.von) p.push('«bis» liegt vor «ab»');
+  if (st.url && !/^https:\/\/[^\s]+$/.test(st.url)) p.push('Link muss mit https:// beginnen');
+  if (/<[a-z\/][^>]*>/i.test(st.text || '')) p.push('Text enthält HTML – bitte nur reinen Text');
+  return p;
+}
+function readForm(){
+  const st = {
+    id: '', titel: $('titel').value.trim(), text: $('text').value.trim(),
+    von: yearOrNull($('von').value), bis: yearOrNull($('bis').value),
+    quelle: $('quelle').value.trim()
+  };
+  const adr = $('adresse').value.trim(); if (adr) st.adresse = adr;
+  if (pos) { st.lon = +pos[0].toFixed(6); st.lat = +pos[1].toFixed(6); }
+  const u = $('url').value.trim(); if (u) st.url = u;
+  return st;
+}
+function fillForm(st){
+  $('titel').value = st ? st.titel || '' : ''; $('text').value = st ? st.text || '' : '';
+  $('von').value = st && st.von != null ? st.von : ''; $('bis').value = st && st.bis != null ? st.bis : '';
+  $('adresse').value = st ? st.adresse || '' : ''; $('quelle').value = st ? st.quelle || '' : ''; $('url').value = st ? st.url || '' : '';
+  setPos(st && Number.isFinite(st.lon) && Number.isFinite(st.lat) ? [st.lon, st.lat] : null, !!st);
+  $('textCount').textContent = $('text').value.length;
+  $('formErr').textContent = ''; $('formOk').textContent = '';
+  $('editLbl').textContent = edit >= 0 ? `– bearbeiten (${edit + 1})` : '– neu';
+}
+function setPos(ll, pan){
+  pos = ll;
+  $('coordLbl').textContent = ll ? `Lage: ${ll[1].toFixed(5)} N, ${ll[0].toFixed(5)} O (WGS84)` : 'Noch keine Lage gesetzt.';
+  if (!map) return;
+  if (marker) { map.removeLayer(marker); marker = null; }
+  if (ll) { marker = L.circleMarker([ll[1], ll[0]], {radius: 9, color: '#fff', weight: 2, fillColor: '#c8803f', fillOpacity: 1}).addTo(map); if (pan) map.setView([ll[1], ll[0]], Math.max(map.getZoom(), 16)); }
+}
+
+/* JSON im Format von stories/README.md */
+function output(){
+  const used = new Set();
+  const g = doc.geschichten.map(st => {
+    let id = slug(st.id || st.titel) || 'geschichte', k = id, i = 2;
+    while (used.has(k)) k = `${id}-${i++}`;
+    used.add(k);
+    const o = {id: k, titel: st.titel, text: st.text, von: st.von ?? null, bis: st.bis ?? null};
+    if (st.adresse) o.adresse = st.adresse;
+    if (Number.isFinite(st.lon) && Number.isFinite(st.lat)) { o.lon = st.lon; o.lat = st.lat; }
+    o.quelle = st.quelle;
+    if (st.url) o.url = st.url;
+    return o;
+  });
+  return {ort: doc.ort || '', geschichten: g};
+}
+function render(){
+  const list = $('list'); list.textContent = '';
+  for (const m of markers) map && map.removeLayer(m); markers.length = 0;
+  let nBad = 0;
+  doc.geschichten.forEach((st, i) => {
+    const li = document.createElement('li'), d = document.createElement('div'), b = document.createElement('b'), sm = document.createElement('small');
+    const pr = problems(st); if (pr.length) { li.classList.add('bad'); nBad++; }
+    b.textContent = st.titel || '(ohne Titel)';
+    sm.textContent = pr.length ? 'Fehlt: ' + pr.join(', ') : [st.von != null ? `ab ${st.von}` : '', st.adresse || (Number.isFinite(st.lon) ? 'Punkt in der Karte' : ''), st.quelle].filter(Boolean).join(' · ');
+    d.append(b, sm);
+    const eb = document.createElement('button'); eb.className = 'btn'; eb.type = 'button'; eb.textContent = 'Bearbeiten';
+    eb.addEventListener('click', () => { edit = i; fillForm(st); $('titel').focus(); });
+    const db = document.createElement('button'); db.className = 'btn'; db.type = 'button'; db.textContent = 'Löschen';
+    db.setAttribute('aria-label', `«${st.titel || 'ohne Titel'}» löschen`);
+    db.addEventListener('click', () => { if (!confirm(`«${st.titel || 'ohne Titel'}» löschen?`)) return; doc.geschichten.splice(i, 1); if (edit === i) { edit = -1; fillForm(null); } else if (edit > i) edit--; render(); });
+    li.append(d, eb, db); list.appendChild(li);
+    if (map && Number.isFinite(st.lon) && Number.isFinite(st.lat)) {
+      const m = L.circleMarker([st.lat, st.lon], {radius: 7, color: '#fff', weight: 2, fillColor: '#1f5fa8', fillOpacity: .9}).addTo(map);
+      m.bindTooltip(document.createTextNode(st.titel || ''));   /* Titel als Text, nicht als HTML */
+      m.on('click', () => { edit = i; fillForm(st); });
+      markers.push(m);
+    }
+  });
+  const n = doc.geschichten.length;
+  $('nStories').textContent = n; $('emptyHint').hidden = n > 0;
+  $('dlBtn').disabled = $('copyBtn').disabled = !n;
+  $('preview').textContent = JSON.stringify(output(), null, 2);
+  const fn = $('fname').value.trim();
+  $('testHint').textContent = (nBad ? `${nBad} Geschichte(n) noch unvollständig – sie würden beim Laden übersprungen. ` : '') +
+    (fn && /^[a-z0-9-]{1,40}$/.test(fn) ? `Nach der Freischaltung testen mit: flug-3d.html?stories=${fn}` : 'Dateiname eintragen, um den Testlink zu sehen.');
+  saveDraft();
+}
+
+$('text').addEventListener('input', () => { $('textCount').textContent = $('text').value.length; });
+$('ort').addEventListener('input', () => { doc.ort = $('ort').value.trim(); if (!$('fname').dataset.touched) $('fname').value = slug(doc.ort); render(); });
+$('fname').addEventListener('input', () => { $('fname').dataset.touched = '1'; render(); });
+$('saveBtn').addEventListener('click', () => {
+  const st = readForm(), pr = problems(st);
+  if (edit >= 0 && doc.geschichten[edit]) st.id = doc.geschichten[edit].id || '';
+  if (pr.length) { $('formErr').textContent = pr.join('\n'); $('formOk').textContent = ''; return; }
+  if (edit >= 0) doc.geschichten[edit] = st; else doc.geschichten.push(st);
+  edit = -1; fillForm(null); render();
+  $('formOk').textContent = 'Übernommen. Nächste Geschichte erfassen oder die Datei herunterladen.';
+});
+$('newBtn').addEventListener('click', () => { edit = -1; fillForm(null); $('titel').focus(); });
+$('clearAll').addEventListener('click', () => {
+  if (doc.geschichten.length && !confirm('Alle erfassten Geschichten löschen?')) return;
+  doc = {ort: '', geschichten: []}; edit = -1; $('ort').value = ''; $('fname').value = ''; delete $('fname').dataset.touched; fillForm(null); render();
+});
+$('importFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; $('fileErr').textContent = '';
+  if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!d || !Array.isArray(d.geschichten)) throw new Error('kein Feld «geschichten»');
+    const num = v => typeof v === 'number' && Number.isFinite(v) ? v : undefined, str = v => typeof v === 'string' ? v : '';
+    doc = {ort: str(d.ort), geschichten: d.geschichten.filter(x => x && typeof x === 'object').map(x => ({
+      id: str(x.id), titel: str(x.titel), text: str(x.text), von: Number.isInteger(x.von) ? x.von : null, bis: Number.isInteger(x.bis) ? x.bis : null,
+      ...(str(x.adresse) ? {adresse: str(x.adresse)} : {}), ...(num(x.lon) !== undefined && num(x.lat) !== undefined ? {lon: x.lon, lat: x.lat} : {}),
+      quelle: str(x.quelle), ...(str(x.url) ? {url: str(x.url)} : {})}))};
+    $('ort').value = doc.ort; $('fname').value = f.name.replace(/\.json$/i, '').toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 40); $('fname').dataset.touched = '1';
+    edit = -1; fillForm(null); render();
+    const pts = doc.geschichten.filter(s => Number.isFinite(s.lon)).map(s => [s.lat, s.lon]);
+    if (map && pts.length) map.fitBounds(pts, {padding: [30, 30], maxZoom: 16});
+  } catch (err) { $('fileErr').textContent = 'Datei konnte nicht gelesen werden: ' + (err && err.message ? err.message : 'kein gültiges JSON'); }
+});
+$('dlBtn').addEventListener('click', () => {
+  const name = (/^[a-z0-9-]{1,40}$/.test($('fname').value.trim()) ? $('fname').value.trim() : slug(doc.ort) || 'geschichten') + '.json';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(output(), null, 2) + '\n'], {type: 'application/json'}));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+});
+$('copyBtn').addEventListener('click', async () => {
+  const t = JSON.stringify(output(), null, 2);
+  try { await navigator.clipboard.writeText(t); $('testHint').textContent = 'JSON kopiert.'; }
+  catch (e) { $('preview').parentElement.open = true; getSelection().selectAllChildren($('preview')); }
+});
+
+/* Suche über geo.admin.ch: Ergebnisse als Text einfügen */
+const plain = t => String(t || '').replace(/<[^>]+>/g, '').trim();
+function attachSearch(inp, ul, origins, onPick){
+  let timer, items = [], sel = -1;
+  const draw = () => {
+    ul.textContent = '';
+    items.forEach((it, i) => {
+      const li = document.createElement('li'); li.setAttribute('role', 'option'); li.setAttribute('aria-selected', i === sel);
+      li.textContent = it.name; const sm = document.createElement('small'); sm.textContent = it.kind; li.appendChild(sm);
+      li.addEventListener('mousedown', e => { e.preventDefault(); pick(i); });
+      ul.appendChild(li);
+    });
+    ul.hidden = !items.length;
+  };
+  const pick = i => { const it = items[i]; if (!it) return; ul.hidden = true; onPick(it); };
+  inp.addEventListener('input', () => {
+    clearTimeout(timer); const q = inp.value.trim();
+    if (q.length < 3) { items = []; draw(); return; }
+    timer = setTimeout(async () => {
+      try {
+        const u = `https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(q)}&type=locations&sr=4326&limit=6${origins ? '&origins=' + origins : ''}`;
+        const j = await (await fetch(u)).json();
+        const KIND = {gg25: 'Gemeinde', address: 'Adresse', zipcode: 'Postleitzahl', sn25: 'Ort/Flurname', gazetteer: 'Ort'};
+        items = (j.results || []).map(r => ({name: plain(r.attrs.label), kind: KIND[r.attrs.origin] || 'Ort', lon: +r.attrs.lon, lat: +r.attrs.lat})).filter(it => Number.isFinite(it.lon) && Number.isFinite(it.lat));
+        sel = -1; draw();
+      } catch (e) { items = []; draw(); }
+    }, 250);
+  });
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown') { sel = Math.min(items.length - 1, sel + 1); draw(); e.preventDefault(); }
+    if (e.key === 'ArrowUp') { sel = Math.max(0, sel - 1); draw(); e.preventDefault(); }
+    if (e.key === 'Enter' && items.length) { pick(sel < 0 ? 0 : sel); e.preventDefault(); }
+    if (e.key === 'Escape') ul.hidden = true;
+  });
+  inp.addEventListener('blur', () => setTimeout(() => { ul.hidden = true; }, 150));
+}
+attachSearch($('adresse'), $('adrRes'), 'address', it => { $('adresse').value = it.name; setPos([it.lon, it.lat], true); });
+attachSearch($('mapQ'), $('mapRes'), '', it => { $('mapQ').value = it.name; if (map) map.setView([it.lat, it.lon], it.kind === 'Adresse' ? 17 : 15); });
+
+/* Karte: Landeskarte von swisstopo, Klick setzt die Lage */
+let map = null;
+if (window.L) {
+  map = L.map('map', {minZoom: 8, maxZoom: 19}).setView([47.4997, 8.7290], 15);
+  L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg', {maxNativeZoom: 18, maxZoom: 19, attribution: '© swisstopo'}).addTo(map);
+  map.on('click', e => setPos([e.latlng.lng, e.latlng.lat], false));
+} else {
+  $('map').textContent = 'Die Karte konnte nicht geladen werden. Die Lage lässt sich über die Adresse setzen.';
+}
+loadDraft(); fillForm(null); render();
+const pts0 = doc.geschichten.filter(s => Number.isFinite(s.lon)).map(s => [s.lat, s.lon]);
+if (map && pts0.length) map.fitBounds(pts0, {padding: [30, 30], maxZoom: 16});
+}
+</script>
+</body>
+</html>
