@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Infokarte einer Geschichte nennt neben «Geschichte» den Zeitraum aus der Story-Datei («1869–1900», «ab 1869»).
 - Produktseite: «So setzen Sie es ein» nennt den QR-Code für Exponate im Museum und das QR-Druckblatt der Story-Werkstatt für Tafeln in der Gemeinde.
 - Story-Werkstatt: Knopf «QR-Codes drucken» erstellt ein Druckblatt mit einem QR-Code je vollständiger Geschichte (Titel, Code, Direktlink in den 3D-Flug) für Tafeln am Ort; in der Partner-Anleitung erklärt.
 - Unterrichtsseite: Hinweise für Lehrpersonen nennen den QR-Code als gemeinsamen Start der Klasse und die Tastenübersicht (H); `README.md` nennt sieben Aufträge, QR-Codes und Tastenübersicht.
