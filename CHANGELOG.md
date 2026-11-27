@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Kartenkacheln werden nur noch über der Schweiz abgefragt; die Fehler 400 bei jedem Start (im Bildtest gefunden) entfallen.
 - Bildtest um zwei Orte ergänzt (Themen Luftbild, Arealstatistik, Gewässer; Brücke über die Töss); Befunde des ersten Bildtests in der Roadmap festgehalten.
 - Boden (Pflaster, Gärten, Wasser) jetzt auch in den mittleren Kacheln: keine harte Kante mehr mitten auf Flüssen und Seen und kein dunkler Fleck in der Altstadt, wo der Boden fehlte (gefunden im Bildtest); Bildtest Grindelwald mit höherer Kamera.
 - Gebäudeliste (CSV und GeoJSON) mit neuer Spalte `alter_im_jahr`: Alter belegter Gebäude mit genauem Baujahr im gewählten Jahr; in der Methodik erklärt.

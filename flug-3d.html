@@ -270,11 +270,13 @@ let toastT;
 function toast(t, ms = 1600){ const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, ms); }
 
 /* Unterlage, damit Lücken nicht schwarz bleiben */
+/* nur Kacheln über der Schweiz abfragen: ausserhalb antwortet geo.admin.ch mit Fehler 400 (im Bildtest gefunden) */
+const CH_RECT = C.Rectangle.fromDegrees(5.8, 45.7, 10.6, 47.9);
 const tile = (key, year) => {
   const s = SRC[key], t = s.fixed || s.ts(year);
   return new C.UrlTemplateImageryProvider({
     url:`https://wmts.geo.admin.ch/1.0.0/${s.layer}/default/${t}/3857/{z}/{x}/{y}.${s.fmt}`,
-    tilingScheme:new C.WebMercatorTilingScheme(), maximumLevel:s.nz, credit:'© swisstopo'
+    tilingScheme:new C.WebMercatorTilingScheme(), maximumLevel:s.nz, credit:'© swisstopo', rectangle: CH_RECT
   });
 };
 viewer.imageryLayers.addImageryProvider(tile('karte'));
@@ -1476,7 +1478,7 @@ function setTheme(t, on){
   if (on) for (const id of t.draw) {
     const l = viewer.imageryLayers.addImageryProvider(new C.UrlTemplateImageryProvider({
       url: `https://wmts.geo.admin.ch/1.0.0/${id}/default/${t.time || 'current'}/3857/{z}/{x}/{y}.png`,
-      tilingScheme: new C.WebMercatorTilingScheme(), maximumLevel: 18, credit: t.src}));
+      tilingScheme: new C.WebMercatorTilingScheme(), maximumLevel: 18, credit: t.src, rectangle: CH_RECT}));
     if (t.alpha) l.alpha = t.alpha;
     t.imgs.push(l); themeLayers.push(l);
   }
