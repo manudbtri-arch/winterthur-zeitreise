@@ -115,4 +115,9 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
   - [x] Shader (Fassade, Wand und Fenster, Boden) in `flug-3d-shader.js`.
   - [x] Kartenauswertung (Web Worker) in `flug-3d-worker.js`.
   - [x] CSS in `flug-3d.css`.
-  - [ ] Themen aus Bundesdaten in `flug-3d-themen.js`.
+  - [ ] Themen aus Bundesdaten in `flug-3d-themen.js`. – zurückgestellt: nutzt viele Variablen des Hauptscripts; erst sinnvoll nach Umstellung auf Module.
+
+## 10. Zitierbar, schöner, vergleichbar
+- [ ] Forschung: Blatt und Kartenstand der Siegfriedkarte in Gebäudeliste (CSV, GeoJSON) und Statistik-CSV mitschreiben.
+- [ ] Darstellung: Ziegelmuster auf den Satteldächern der nachgebauten Häuser, passend zu den echten Altbauten.
+- [ ] Gemeinden und Museen: Vorher-Nachher-Bild – gleicher Blick im gewählten Jahr und heute nebeneinander als PNG, mit Jahr, Ort und Quellen.
