@@ -163,3 +163,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] 2D-Karte: Knopf «QR-Code» zur aktuellen Ansicht (Ort, Zoom, Jahr), als PNG speicherbar, wie im 3D-Flug.
 - [x] Schulen: Unterrichtsseite nennt den QR-Code (Startansicht für die Klasse aufs Arbeitsblatt); `README.md` auf sieben Aufträge und die neuen Knöpfe nachführen.
 - [x] Gemeinden: Story-Werkstatt druckt ein Blatt mit den QR-Codes aller erfassten Geschichten (Titel, QR, Link) für Tafeln am Ort.
+
+## 19. Zeigen, wann, zugänglich
+- [x] Produktseite: QR-Codes im Abschnitt «So setzen Sie es ein» (Museum: QR-Code am Exponat; Gemeinde: Druckblatt für Tafeln aus der Story-Werkstatt).
+- [ ] Gemeinden und Schulen: Infokarte einer Geschichte nennt den Zeitraum aus der Story-Datei («1869–1900», «ab 1869»).
+- [ ] Barrierefreiheit: Fenster (Einbetten, QR-Code, Tasten) halten den Tastaturfokus beim Tabben im Fenster und geben ihn beim Schliessen an den auslösenden Knopf zurück.
