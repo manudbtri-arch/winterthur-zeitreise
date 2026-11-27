@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Produktseite: neuer Abschnitt «So setzen Sie es ein» für Museum (Kiosk), Gemeinde-Website (Einbetten), Schule und Forschung.
 - Anleitung für Partner `stories/README.md` (Format, Quellenregeln, Ablauf), verlinkt im Pilotabschnitt der Produktseite.
 - Handy: Seitenleiste als unteres Blatt über dem Zeitregler mit Griff «Mehr/Weniger» und «Schliessen», Menüknopf rechts unten neben dem Joystick.
 - Umschalter «Neu seit der letzten Kartenausgabe»: belegte Gebäude mit genauem Baujahr zwischen vorheriger Ausgabe und gewähltem Jahr leuchten grün, mit Zählung und Hinweis auf die Grenze (abgerissene Neubauten fehlen).
