@@ -126,3 +126,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Museen und Gemeinden: Kiosk-Rundflug um jeden Ort – `?kiosk=1` mit Ort aus dem Link (`lon`, `lat` bzw. `c`), Höhe aus dem Gelände; auf der Produktseite erklärt.
 - [x] Schulen: Unterrichtsseite um einen Auftrag mit dem Vorher-Nachher-Bild ergänzen (Veränderung beschreiben und belegen).
 - [x] Handy: im Querformat Zeitregler und Menü schmaler, damit mehr vom Bild sichtbar bleibt.
+
+## 12. Nächste Runde
+- [ ] Bildtest prüfen: im Bild «3-winterthur-heute» (Stand 5557c5a) sind keine 3D-Gebäude zu sehen – Ladezeit im Test oder Fehler im Heute-Modus? Ursache finden und beheben.
+- [ ] Museen: Kiosk mit eigener Story-Datei und Rundgang statt Rundflug (`?kiosk=1&stories=<name>`), Stationen wechseln im Leerlauf.
+- [ ] Forschung: Gebäudeliste um das Alter im gewählten Jahr ergänzen (nur bei genauem Baujahr), in der Methodik erklärt.
