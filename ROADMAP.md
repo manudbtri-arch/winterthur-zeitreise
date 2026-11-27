@@ -176,5 +176,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 21. Zeitraffer im Alltag
 - [x] Zeitraffer: «Im 3D-Flug» öffnet im Jahr der gerade gezeigten Epoche (Stand 1870–1949 → dieses Jahr, später → «Heute», bei Vorher/Jetzt das linke Bild) statt immer 1900.
-- [ ] Zeitraffer: Link und QR-Code merken sich die gezeigte Epoche (`&e=<jahr>`); auf dem Handy öffnet «Link kopieren» das System-Teilen wie im 3D-Flug.
+- [x] Zeitraffer: Link und QR-Code merken sich die gezeigte Epoche (`&e=<jahr>`); auf dem Handy öffnet «Link kopieren» das System-Teilen wie im 3D-Flug.
 - [ ] Produktseite: «So setzen Sie es ein» nennt den Zeitraffer (Gemeinde: Entwicklung eines Areals als Video oder Bildstreifen für Website und Mitteilungsblatt).
