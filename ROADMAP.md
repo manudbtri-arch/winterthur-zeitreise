@@ -158,3 +158,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Museen und Schulen: Knopf «QR-Code» im Reiter «Export» zeigt den Link zum aktuellen Blick als QR-Code mit Ort und Jahr, als PNG speicherbar (zum Aushängen in der Ausstellung oder auf dem Arbeitsblatt).
 - [x] Bedienung: Taste «H» bzw. Knopf «Tasten und Gesten» öffnet eine Übersicht aller Tasten (Computer) bzw. Gesten (Handy); Esc schliesst sie.
 - [x] Gemeinden: Infokarte einer Geschichte mit Knopf «QR-Code» (Direktlink `?story=<id>`), z. B. für eine Tafel am Ort.
+
+## 18. QR-Codes überall
+- [ ] 2D-Karte: Knopf «QR-Code» zur aktuellen Ansicht (Ort, Zoom, Jahr), als PNG speicherbar, wie im 3D-Flug.
+- [ ] Schulen: Unterrichtsseite nennt den QR-Code (Startansicht für die Klasse aufs Arbeitsblatt); `README.md` auf sieben Aufträge und die neuen Knöpfe nachführen.
+- [ ] Gemeinden: Story-Werkstatt druckt ein Blatt mit den QR-Codes aller erfassten Geschichten (Titel, QR, Link) für Tafeln am Ort.
