@@ -109,7 +109,12 @@ details.more[open] summary::after{content:"▴"}
 @media(max-width:700px){.info{bottom:96px}}
 .intro{position:absolute;z-index:20;inset:0;display:grid;place-items:center;padding:24px;background:linear-gradient(180deg,rgba(20,18,14,.55),rgba(20,18,14,.8));color:#f3eee3;transition:opacity .4s}
 .intro.off{opacity:0;pointer-events:none}
-body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timeline{visibility:hidden}
+body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timeline,body.intro-on .mini{visibility:hidden}
+.mini{position:absolute;z-index:10;left:16px;bottom:16px;width:180px;height:180px;border-radius:10px;overflow:hidden;border:2px solid var(--panel);box-shadow:0 6px 24px rgba(0,0,0,.3);background:#eee;cursor:pointer;display:none}
+.mini #miniMap{position:absolute;inset:0}
+.mini svg{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;z-index:500;pointer-events:none}
+.mini span{position:absolute;z-index:500;left:6px;bottom:4px;font-size:10px;color:#333;background:rgba(255,255,255,.75);padding:0 4px;border-radius:3px;pointer-events:none}
+@media(min-width:1200px){.mini.on{display:block}body:has(.mini.on) .f3{bottom:212px}}
 .intro .card{max-width:560px;text-align:left}
 .intro .kicker{font-size:15px;color:#d9b98f;margin:0 0 10px;font-weight:600}
 .intro h2{font-size:clamp(40px,7vw,64px);line-height:1.02;margin:0 0 14px;font-weight:800;text-wrap:balance}
@@ -174,6 +179,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
     <label class="chk"><input type="checkbox" id="shadowOn"> Schatten (schöner, etwas langsamer)</label>
     <label class="chk"><input type="checkbox" id="bld"> Alle heutigen Gebäude</label>
     <label class="chk"><input type="checkbox" id="veg"> Heutige Bäume</label>
+    <label class="chk"><input type="checkbox" id="miniOn" checked> Minikarte (breiter Bildschirm)</label>
 
     <label>Bewegung</label>
     <div class="seg" role="group" aria-label="Bewegungsart">
@@ -201,6 +207,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
   </div>
   <p class="maphint">Klick auf die Karte: Du wirst dorthin teleportiert und stehst auf der Strasse. Gestrichelt: das gebaute Gebiet.</p>
 </div>
+<div class="mini on" id="mini" title="Minikarte – Klick öffnet die grosse Karte (M)" aria-hidden="true"><div id="miniMap"></div><svg id="miniArrow" viewBox="0 0 30 30"><circle cx="15" cy="15" r="6" fill="#c8803f" stroke="#fff" stroke-width="2"/><path d="M15 1 L20 10 L10 10Z" fill="#c8803f" stroke="#fff" stroke-width="1.5"/></svg><span>© swisstopo</span></div>
 <div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small></div>
 
 <a class="pill openfull" id="openFull" href="flug-3d.html" target="_blank" rel="noopener" hidden>↗ Im Vollbild öffnen</a>
@@ -1034,13 +1041,13 @@ $('nowBtn').addEventListener('click', () => setPresent(!present));
 let omap = null, photoLayer = null, siegLayer = null, meMark = null, areaRect = null;
 const loadCss = href => new Promise(res => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = href; l.onload = res; l.onerror = res; document.head.appendChild(l); });
 const loadJs = src => new Promise((res, rej) => { const t = document.createElement('script'); t.src = src; t.onload = res; t.onerror = rej; document.head.appendChild(t); });
+let leafP = null;
+const needLeaflet = () => leafP || (leafP = window.L ? Promise.resolve()
+  : loadCss('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css').then(() => loadJs('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js')));
 async function openMap(){
   if (document.pointerLockElement) document.exitPointerLock();
   $('mapov').hidden = false;
-  if (!window.L) {
-    await loadCss('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
-    await loadJs('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
-  }
+  await needLeaflet();
   const here = C.Cartographic.fromCartesian(camera.position);
   const lat = C.Math.toDegrees(here.latitude), lon = C.Math.toDegrees(here.longitude);
   const year = Math.min(1949, Math.max(1870, +$('yr').value || 1880));
@@ -1381,6 +1388,37 @@ $('linkBtn').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(url); toast('Link kopiert'); }
   catch (e) { window.prompt('Link zu dieser Ansicht:', url); }
 });
+/* ---------- Minikarte unten links: Standort und Blickrichtung ---------- */
+const mini = {map: null, layer: null, key: '', last: 0, busy: false};
+const miniVisible = () => $('miniOn').checked && matchMedia('(min-width:1200px)').matches && $('intro').classList.contains('off');
+async function miniTick(){
+  if (!miniVisible() || mini.busy) return;
+  if (!mini.map) {
+    mini.busy = true;
+    try { await needLeaflet(); } catch (e) { mini.busy = false; return; }
+    mini.map = L.map('miniMap', {zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false,
+      doubleClickZoom: false, boxZoom: false, keyboard: false, touchZoom: false, zoomSnap: 0});
+    mini.busy = false;
+  }
+  const yr = Math.min(1949, Math.max(1870, +$('yr').value || 1880));
+  const key = present ? 'now' : String(yr);
+  if (key !== mini.key) {
+    mini.key = key;
+    const url = present ? 'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg'
+                        : `https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.hiks-siegfried/default/${yr}/3857/{z}/{x}/{y}.png`;
+    if (mini.layer) mini.layer.setUrl(url); else mini.layer = L.tileLayer(url, {maxNativeZoom: present ? 18 : 16, maxZoom: 19}).addTo(mini.map);
+  }
+  const c = C.Cartographic.fromCartesian(camera.position);
+  const agl = c.height - (globe.getHeight(c) ?? c.height - 300);
+  const z = agl < 60 ? 16 : agl < 600 ? 15 : agl < 2500 ? 14 : 12;
+  mini.map.invalidateSize({pan: false});
+  mini.map.setView([C.Math.toDegrees(c.latitude), C.Math.toDegrees(c.longitude)], z, {animate: false});
+  $('miniArrow').style.transform = `rotate(${(C.Math.toDegrees(camera.heading) + 360) % 360}deg)`;
+}
+setInterval(miniTick, 300);
+$('miniOn').addEventListener('change', e => { $('mini').classList.toggle('on', e.target.checked); });
+$('mini').addEventListener('click', () => openMap());
+
 /* ---------- Bild speichern: PNG mit Jahr, Ort und Quellenangabe ---------- */
 function saveShot(){
   let src;

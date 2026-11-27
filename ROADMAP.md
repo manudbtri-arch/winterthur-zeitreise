@@ -17,7 +17,7 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Screenshot-Export als PNG mit eingeblendetem Jahr, Ort und Quellenangabe.
 - [x] Gebäude-Export des gebauten Gebiets als CSV und GeoJSON (EGID, Adresse, Baujahr, Status belegt/rekonstruiert, Koordinaten).
 - [x] Analyse-Modus: Gebäude nach Bauepoche einfärben (Legende), Statistik der Bauepochen im Gebiet.
-- [ ] Minikarte unten links mit Standort und Blickrichtung.
+- [x] Minikarte unten links mit Standort und Blickrichtung.
 - [x] Einbettung: `?embed=1` ohne Startbildschirm, Menü eingeklappt, Knopf «Im Vollbild öffnen».
 - [ ] Knopf «Einbetten» im Menü liefert den iframe-Code zum Kopieren.
 
