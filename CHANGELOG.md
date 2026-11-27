@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Produktseite nennt die Themen aus Bundesdaten und den Kartenstand pro Blatt.
 - Neuer Bereich «Themen aus Bundesdaten» im 3D-Flug: historische Verkehrswege (IVS), schützenswerte Ortsbilder (ISOS), Kulturgüter (KGS), Aufnahmeorte der swisstopo-Luftbilder, Ortsnamen (swissNAMES3D), heutige Gewässer (swissTLM3D) und Bodennutzung (Arealstatistik) als Kartenebenen; ein Klick ins Bild zeigt den Eintrag an der Stelle mit Quelle und Link ins Kartenportal des Bundes; in der Methodik beschrieben.
 - Unter dem Zeitregler steht das Blatt der Siegfriedkarte am Standort mit seinem tatsächlichen Kartenstand (Blatteinteilung swisstopo); erscheint auch im gespeicherten Bild.
 - Brücken aus swissTLM3D (heutiger Stand) im 3D-Flug, damit Strassen und Bahnen nicht ins Flusstal tauchen; abschaltbar, in der Infokarte und Methodik als heutiger Stand gekennzeichnet; im Heute-Modus auch Seilbahnen und übrige Bauten.
