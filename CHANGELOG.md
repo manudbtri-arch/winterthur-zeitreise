@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Bildtest um zwei Orte ergänzt (Themen Luftbild, Arealstatistik, Gewässer; Brücke über die Töss); Befunde des ersten Bildtests in der Roadmap festgehalten.
 - Boden (Pflaster, Gärten, Wasser) jetzt auch in den mittleren Kacheln: keine harte Kante mehr mitten auf Flüssen und Seen und kein dunkler Fleck in der Altstadt, wo der Boden fehlte (gefunden im Bildtest); Bildtest Grindelwald mit höherer Kamera.
 - Gebäudeliste (CSV und GeoJSON) mit neuer Spalte `alter_im_jahr`: Alter belegter Gebäude mit genauem Baujahr im gewählten Jahr; in der Methodik erklärt.
 - Fehler behoben: ein Link mit `mode=now` (Heute) zeigte nach dem Laden des Geländes keine 3D-Gebäude, weil das Bauen die heutigen Gebäude wieder ausschaltete; gefunden im Bildtest.

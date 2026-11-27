@@ -16,7 +16,9 @@ const ORTE = [
   { name: '4-zuerichsee-rapperswil-1900', q: 'lon=8.8350&lat=47.2050&h=1300&hdg=300&pitch=-25&year=1900' },
   { name: '5-bergdorf-grindelwald-1900', q: 'lon=8.0330&lat=46.6020&h=2400&hdg=10&pitch=-28&year=1900' },
   { name: '6-basel-rheinbruecke-1900', q: 'lon=7.5930&lat=47.5545&h=600&hdg=330&pitch=-30&year=1900' },
-  { name: '7-winterthur-themen-isos-ivs', q: 'lon=8.7290&lat=47.4890&h=800&hdg=15&pitch=-22&year=1880&themen=isos,ivs' }
+  { name: '7-winterthur-themen-isos-ivs', q: 'lon=8.7290&lat=47.4890&h=800&hdg=15&pitch=-22&year=1880&themen=isos,ivs' },
+  { name: '8-winterthur-themen-luftbild-areal-gewaesser', q: 'lon=8.7290&lat=47.4890&h=800&hdg=15&pitch=-22&year=1880&themen=lubis,areal,gew' },
+  { name: '9-toessbruecke-1900', q: 'lon=8.7105&lat=47.4880&h=700&hdg=0&pitch=-35&year=1900' },
 ];
 
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });

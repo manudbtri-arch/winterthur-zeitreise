@@ -95,7 +95,9 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 9. Absichern, Tempo, Optik, Bedienung (Auftrag Manuel)
 - [x] Automatischer Bildtest bei GitHub (Bilder, Tempo, Fehler an festen Orten; Zweig «bildtest»); Themen per Link `?themen=`.
-- [ ] Offene Fragen anhand der Testbilder klären (Kartenstand, Luftbild-Orte, Arealstatistik, Brücken, Seen). – zurückgestellt: der erste Bildtest lief am 27.11. noch, Zweig «bildtest» gab es noch nicht.
+- [x] Offene Fragen anhand der Testbilder klären (Stand 5557c5a): Kartenstand pro Blatt erscheint («Blatt Winterthur, Stand 1880», «Blatt Lachen, Stand 1900»); Seen und Rhein sind blau, endeten aber mit harter Kante, und in der Altstadt fehlte Boden – behoben (Boden auch in mittleren Kacheln).
+  - [ ] Jeder Ort meldet einen Abruf mit HTTP 400; der Bildtest schreibt jetzt die Adresse mit – Ursache prüfen.
+  - [ ] Brücken (Basel, Töss) und Themen Luftbild, Arealstatistik, Gewässer anhand der neuen Testbilder 8 und 9 prüfen.
 - [x] Fenster der nachgebauten Häuser als Wandmuster statt Klötze.
 - [x] Heutige 3D-Gebäude nur einmal laden.
 - [x] Handy: kleinere Sichtweite.
