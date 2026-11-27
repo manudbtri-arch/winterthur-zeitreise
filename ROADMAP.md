@@ -147,4 +147,4 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 ## 15. Rundgang zum Mitmachen, Partner-Dateien in 2D, Quellenkritik
 - [x] Museen: Kiosk-Rundgang zeigt die Rundgang-Leiste (Station x von n); eine Berührung hält den Rundgang an, Besucher blättern selbst weiter.
 - [x] Gemeinden: 2D-Karte lädt mit `?stories=<name>` eine eigene Story-Datei wie der 3D-Flug; «Im 3D-Flug ansehen» in der Geschichte nimmt den Namen mit.
-- [ ] Schulen: Unterrichtsseite um einen Auftrag zum Kartenstand ergänzen (Blatt und Stand unter dem Zeitregler lesen, mit dem gewählten Jahr vergleichen, Abweichung erklären).
+- [x] Schulen: Unterrichtsseite um einen Auftrag zum Kartenstand ergänzen (Blatt und Stand unter dem Zeitregler lesen, mit dem gewählten Jahr vergleichen, Abweichung erklären).
