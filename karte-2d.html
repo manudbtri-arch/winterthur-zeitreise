@@ -105,6 +105,8 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
   <label>Springen zu</label>
   <div class="places" id="places"></div>
   <label class="chk"><input type="checkbox" id="storyOn" checked> Geschichten an Orten (Marker)</label>
+  <button class="btn" id="linkBtn" style="width:100%;margin-top:12px">Link zu dieser Ansicht kopieren</button>
+  <p class="sub" id="linkMsg" aria-live="polite" style="margin:6px 0 0"></p>
 
   <p class="note">Luftbilder gibt es nicht für jedes Jahr: Ist die Karte leer, wurde Winterthur in diesem Jahr nicht beflogen. Die Zeitreihe zeigt jeweils den Kartenstand am 31. Dezember.<br>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a></p>
 </aside>
@@ -286,7 +288,32 @@ async function loadStories(file){
 loadStories('stories/winterthur.json');
 $('storyOn').addEventListener('change', e => { if (e.target.checked) storyLayer.addTo(map); else map.removeLayer(storyLayer); });
 
-showTime();
+/* ---------- Permalink: ?lat=&lon=&z=&mode=(time|cmp)&t=&y=&op=&l=&ly=&r=&ry= ---------- */
+function permalink(){
+  const c = map.getCenter(), cmp = !$('pCmp').hidden;
+  const q = new URLSearchParams({lat: c.lat.toFixed(5), lon: c.lng.toFixed(5), z: map.getZoom(), mode: cmp ? 'cmp' : 'time'});
+  if (cmp) { q.set('l', $('lSrc').value); q.set('ly', $('lYear').value); q.set('r', $('rSrc').value); q.set('ry', $('rYear').value); }
+  else { q.set('t', $('tSrc').value); q.set('y', $('tYear').value); q.set('op', $('tOp').value); }
+  return location.origin + location.pathname + '?' + q.toString();
+}
+$('linkBtn').addEventListener('click', async () => {
+  const url = permalink();
+  try { await navigator.clipboard.writeText(url); $('linkMsg').textContent = 'Link kopiert.'; }
+  catch (e) { window.prompt('Link zu dieser Ansicht:', url); }
+});
+const Q = new URLSearchParams(location.search), qn = k => (Q.get(k) !== null && Q.get(k) !== '' ? Number(Q.get(k)) : NaN);
+{
+  const lat = qn('lat'), lon = qn('lon'), z = qn('z');
+  if (lat > 45.5 && lat < 48 && lon > 5.5 && lon < 11) map.setView([lat, lon], Number.isFinite(z) ? Math.min(19, Math.max(12, Math.round(z))) : 15);
+  if (tKeys.includes(Q.get('t'))) { $('tSrc').value = Q.get('t'); setRange($('tYear'), Q.get('t'), qn('y')); }
+  else if (Number.isFinite(qn('y'))) setRange($('tYear'), $('tSrc').value, qn('y'));
+  if (qn('op') >= 0 && qn('op') <= 100) { $('tOp').value = Math.round(qn('op')); $('opV').textContent = $('tOp').value + ' %'; }
+  for (const sd of ['l', 'r']) {
+    if (cKeys.includes(Q.get(sd))) $(sd + 'Src').value = Q.get(sd);
+    setRange($(sd + 'Year'), $(sd + 'Src').value, Number.isFinite(qn(sd + 'y')) ? qn(sd + 'y') : $(sd + 'Year').value);
+  }
+}
+if (Q.get('mode') === 'cmp') mode(true); else showTime();
 }
 </script>
 </body>
