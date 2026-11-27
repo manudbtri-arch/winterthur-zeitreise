@@ -2094,12 +2094,12 @@ function exportRows(){
   const year = +$('yr').value || 1880, rows = [];
   for (const [egid, r] of gwr.info) if (r.y <= year) {
     const [E, N] = toLV95(r.lon, r.lat);
-    rows.push({status: 'belegt', egid, adresse: r.adr, baujahr: r.exact ? r.y : '', bauperiode: r.exact ? '' : 'vor 1919',
+    rows.push({status: 'belegt', egid, adresse: r.adr, baujahr: r.exact ? r.y : '', bauperiode: r.exact ? '' : 'vor 1919', alter_im_jahr: r.exact ? year - r.y : '',
       kartenstand: '', geschosse_geschaetzt: '', flaeche_m2: '', lon: +r.lon.toFixed(6), lat: +r.lat.toFixed(6), e_lv95: Math.round(E), n_lv95: Math.round(N), quelle: SRC_OLD, gwr_link: gwrLink(r.lon, r.lat), siegfried_blatt: sheetTxt(), abgerufen_am: today()});
   }
   for (const c of world.chunks.values()) { const ed = c.eds.get(c.shown); if (ed && ed.level >= 1) for (const h of ed.recs) {
     const [E, N] = toLV95(h.lon, h.lat);
-    rows.push({status: 'rekonstruiert', egid: '', adresse: '', baujahr: '', bauperiode: '', kartenstand: ed.year,
+    rows.push({status: 'rekonstruiert', egid: '', adresse: '', baujahr: '', bauperiode: '', alter_im_jahr: '', kartenstand: ed.year,
       geschosse_geschaetzt: h.floors, flaeche_m2: h.m2, lon: +h.lon.toFixed(6), lat: +h.lat.toFixed(6), e_lv95: Math.round(E), n_lv95: Math.round(N),
       quelle: `Siegfriedkarte ${ed.year} (swisstopo), Grundriss aus der Karte, Höhe geschätzt`, gwr_link: '', siegfried_blatt: sheetTxt(), abgerufen_am: today()});
   } }

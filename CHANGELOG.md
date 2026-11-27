@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Gebäudeliste (CSV und GeoJSON) mit neuer Spalte `alter_im_jahr`: Alter belegter Gebäude mit genauem Baujahr im gewählten Jahr; in der Methodik erklärt.
 - Fehler behoben: ein Link mit `mode=now` (Heute) zeigte nach dem Laden des Geländes keine 3D-Gebäude, weil das Bauen die heutigen Gebäude wieder ausschaltete; gefunden im Bildtest.
 - Handy im Querformat: Menü schmal links, Zeitregler kompakt rechts unten, Infokarte rechts, Tastenhilfe und Minikarte ausgeblendet, damit mehr vom 3D-Bild sichtbar bleibt.
 - Unterrichtsseite: Auftrag 6 «Vorher und nachher» mit dem Vorher-Nachher-Bild (Veränderungen beschreiben, mit den Infokarten belegen, sichere Aussagen von Vermutungen trennen); druckbar mit Antwortlinien; Produktseite nennt sechs Aufträge.
