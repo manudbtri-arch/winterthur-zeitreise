@@ -473,6 +473,10 @@ $('toTimelapse').addEventListener('click', () => {
   const cmp = !$('pCmp').hidden, src = cmp ? $('lSrc').value : $('tSrc').value;
   const q = new URLSearchParams({lat: c.lat.toFixed(5), lon: c.lng.toFixed(5), z: String(z), mode: cmp ? 'cmp' : (src === 'luft' ? 'luft' : 'karte')});
   const nm = $('q').value.trim(); if (nm) q.set('name', nm);
+  /* gezeigtes Jahr mitnehmen (bei Vergleich das linke Bild); Dufourkarte → frühester, heutige Karte/Luftbild → letzter Stand */
+  const yr = +(cmp ? $('lYear').value : $('tYear').value);
+  q.set('e', src === 'dufour' ? '1800' : (SRC[src] && SRC[src].fixed ? '2100' : String(yr)));
+  if (STORY_NAME) q.set('stories', STORY_NAME);
   location.href = 'zeitraffer.html?' + q.toString();
 });
 
