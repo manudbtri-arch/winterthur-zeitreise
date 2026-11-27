@@ -94,6 +94,7 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
       <input type="text" id="quelle" placeholder="z. B. Historisches Lexikon der Schweiz, Artikel …">
       <label for="url">Link zur Quelle <small>(nur https://)</small></label>
       <input type="url" id="url" placeholder="https://…">
+      <p class="hint" id="timeNote" role="status"></p>
       <p class="err" id="formErr" role="alert"></p>
       <p class="okmsg" id="formOk" role="status"></p>
       <div class="row">
@@ -157,6 +158,16 @@ function problems(st){
   if (/<[a-z\/][^>]*>/i.test(st.text || '')) p.push('Text enthält HTML – bitte nur reinen Text');
   return p;
 }
+/* Hinweis (kein Fehler): Zeitraum ausserhalb des Zeitreglers (1870–1949) oder ohne Kartenausgabe – dann fehlt die Geschichte im Kiosk-Rundgang */
+const EDITIONS = [1880, 1900, 1920, 1940];
+function timeNote(st){
+  if (!Number.isInteger(st.von ?? 0) || !Number.isInteger(st.bis ?? 0)) return '';
+  const fits = y => (st.von == null || st.von <= y) && (st.bis == null || st.bis >= y);
+  if (EDITIONS.some(fits)) return '';
+  if ((st.von == null || st.von <= 1949) && (st.bis == null || st.bis >= 1870)) return 'Zeitraum ohne Kartenausgabe (1880, 1900, 1920, 1940): im Zeitregler sichtbar, im Kiosk-Rundgang übersprungen';
+  if (st.bis == null) return 'Zeitraum nach 1949: nur in der Heute-Ansicht sichtbar, nicht im Kiosk-Rundgang';
+  return 'Zeitraum ausserhalb des Zeitreglers (1870–1949): in keiner Ansicht sichtbar';
+}
 function readForm(){
   const st = {
     id: '', titel: $('titel').value.trim(), text: $('text').value.trim(),
@@ -175,6 +186,7 @@ function fillForm(st){
   setPos(st && Number.isFinite(st.lon) && Number.isFinite(st.lat) ? [st.lon, st.lat] : null, !!st);
   $('textCount').textContent = $('text').value.length;
   $('formErr').textContent = ''; $('formOk').textContent = '';
+  $('timeNote').textContent = st ? timeNote(st) : '';
   $('editLbl').textContent = edit >= 0 ? `– bearbeiten (${edit + 1})` : '– neu';
 }
 function setPos(ll, pan){
@@ -210,7 +222,7 @@ function render(){
     const li = document.createElement('li'), d = document.createElement('div'), b = document.createElement('b'), sm = document.createElement('small');
     const pr = problems(st); if (pr.length) { li.classList.add('bad'); nBad++; }
     b.textContent = st.titel || '(ohne Titel)';
-    sm.textContent = pr.length ? 'Fehlt: ' + pr.join(', ') : [st.von != null ? `ab ${st.von}` : '', st.adresse || (Number.isFinite(st.lon) ? 'Punkt in der Karte' : ''), st.quelle].filter(Boolean).join(' · ');
+    sm.textContent = pr.length ? 'Fehlt: ' + pr.join(', ') : [st.von != null ? `ab ${st.von}` : '', st.adresse || (Number.isFinite(st.lon) ? 'Punkt in der Karte' : ''), st.quelle, timeNote(st)].filter(Boolean).join(' · ');
     d.append(b, sm);
     const eb = document.createElement('button'); eb.className = 'btn'; eb.type = 'button'; eb.textContent = 'Bearbeiten';
     eb.addEventListener('click', () => { edit = i; fillForm(st); $('titel').focus(); });
@@ -236,6 +248,8 @@ function render(){
 }
 
 $('text').addEventListener('input', () => { $('textCount').textContent = $('text').value.length; });
+const showTimeNote = () => { $('timeNote').textContent = timeNote({von: yearOrNull($('von').value), bis: yearOrNull($('bis').value)}); };
+$('von').addEventListener('input', showTimeNote); $('bis').addEventListener('input', showTimeNote);
 $('ort').addEventListener('input', () => { doc.ort = $('ort').value.trim(); if (!$('fname').dataset.touched) $('fname').value = slug(doc.ort); render(); });
 $('fname').addEventListener('input', () => { $('fname').dataset.touched = '1'; render(); });
 $('saveBtn').addEventListener('click', () => {
@@ -244,7 +258,8 @@ $('saveBtn').addEventListener('click', () => {
   if (pr.length) { $('formErr').textContent = pr.join('\n'); $('formOk').textContent = ''; return; }
   if (edit >= 0) doc.geschichten[edit] = st; else doc.geschichten.push(st);
   edit = -1; fillForm(null); render();
-  $('formOk').textContent = 'Übernommen. Nächste Geschichte erfassen oder die Datei herunterladen.';
+  const tn = timeNote(st);
+  $('formOk').textContent = 'Übernommen. Nächste Geschichte erfassen oder die Datei herunterladen.' + (tn ? ` Hinweis: ${tn}.` : '');
 });
 $('newBtn').addEventListener('click', () => { edit = -1; fillForm(null); $('titel').focus(); });
 $('clearAll').addEventListener('click', () => {

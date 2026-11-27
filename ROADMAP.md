@@ -141,5 +141,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 14. Partner, Museen, Handy
 - [x] Museen: Produktseite mit Beispiel-Link «Kiosk-Rundgang ansehen» (`flug-3d.html?kiosk=1&stories=winterthur`).
-- [ ] Gemeinden: Story-Werkstatt warnt, wenn der Zeitraum (von/bis) keine Kartenausgabe (1880, 1900, 1920, 1940) trifft – solche Geschichten erscheinen nur heute und im Kiosk-Rundgang nicht.
+- [x] Gemeinden: Story-Werkstatt warnt, wenn der Zeitraum (von/bis) keine Kartenausgabe (1880, 1900, 1920, 1940) trifft – solche Geschichten erscheinen nur heute und im Kiosk-Rundgang nicht.
 - [ ] Handy: Seitenleiste der 2D-Karte einklappbar (Knopf), damit die Karte ganz sichtbar wird.
