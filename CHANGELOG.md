@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- 2D-Karte: das Infofenster einer Geschichte hat den Link «Im 3D-Flug ansehen» (Direktlink zur Geschichte); der Titel am Marker wird als reiner Text eingefügt.
 - Unterrichtsseite: Auftrag 5 «Zwei Orte im Vergleich» mit der Statistik-CSV (Diagramm in der Tabellenkalkulation, Erklärung prüfen, Grenze der Zählung); Produktseite nennt fünf Aufträge.
 - Direktlink zu einer Geschichte: `flug-3d.html?story=<id>` fliegt hin und öffnet die Infokarte; die Infokarte einer Geschichte hat den Knopf «Link zu dieser Geschichte kopieren»; in der Partner-Anleitung beschrieben.
 - Produktseite nennt Kompass, Statistik-CSV und Story-Werkstatt; Methodik erklärt in einem neuen Abschnitt, was die Statistik der Bauepochen zählt und was ihre Spalten bedeuten.

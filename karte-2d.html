@@ -51,7 +51,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 .story b{display:block;font:800 16px/1.25 Archivo,sans-serif;margin-bottom:4px}
 .story p{margin:0 0 6px;font:14px/1.45 Archivo,sans-serif}
 .story small{display:block;color:#5b5b5b;font-size:12px}
-.story a{font-size:13px}
+.story a{font-size:13px;display:inline-block;margin-right:12px;min-height:28px}
 .search{position:relative;margin:0 0 14px}
 .search input{width:100%;font:16px Archivo,sans-serif;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-height:44px}
 .search ul{position:absolute;z-index:1001;left:0;right:0;top:100%;margin:4px 0 0;padding:4px;list-style:none;background:var(--bg);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-height:280px;overflow:auto}
@@ -289,8 +289,13 @@ async function loadStories(file){
       const a = document.createElement('a'); a.href = st.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Quelle öffnen';
       box.appendChild(a);
     }
+    /* Direktlink in den 3D-Flug: fliegt zur Geschichte und öffnet ihre Infokarte */
+    if (/^[A-Za-z0-9_-]{1,60}$/.test(String(st.id || ''))) {
+      const a3 = document.createElement('a'); a3.href = 'flug-3d.html?story=' + encodeURIComponent(st.id); a3.textContent = 'Im 3D-Flug ansehen';
+      box.appendChild(a3);
+    }
     L.circleMarker(ll, {radius: 8, color: '#fff', weight: 2, fillColor: '#c8803f', fillOpacity: 1})
-      .bindTooltip(st.titel).bindPopup(box, {maxWidth: 300}).addTo(storyLayer);
+      .bindTooltip(document.createTextNode(st.titel)).bindPopup(box, {maxWidth: 300}).addTo(storyLayer);
   }
 }
 loadStories('stories/winterthur.json');
