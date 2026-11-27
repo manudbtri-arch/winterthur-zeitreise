@@ -198,6 +198,10 @@ body.intro-on .joy{visibility:hidden}
 body.intro-on .compass{visibility:hidden}
 body.kiosk .compass{display:none}
 @media(max-width:700px){.compass{right:8px;bottom:calc(var(--tl,130px) + 64px)}.panel:not(.off) ~ .compass{visibility:hidden}}
+.hint{position:absolute;z-index:13;left:50%;top:18%;transform:translateX(-50%);width:min(440px,calc(100% - 32px));background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:12px;padding:14px 18px;box-shadow:0 8px 28px rgba(0,0,0,.35)}
+.hint b{display:block;font-size:17px;margin-bottom:6px}
+.hint ul{margin:0 0 4px;padding-left:18px;font-size:15px}
+.hint .btn{width:auto;margin-top:8px}
 .pill.openfull{left:auto;right:16px;top:58px;bottom:auto;text-decoration:none;font-weight:600}
 @media(max-width:700px){.pill.openfull{right:8px;top:48px;left:auto;bottom:auto}}
 </style>
@@ -280,6 +284,7 @@ body.kiosk .compass{display:none}
 
 <pre class="f3" id="f3" hidden></pre>
 <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+<div class="hint" id="hint" hidden role="dialog" aria-labelledby="hintT"><b id="hintT">So bewegst du dich</b><ul id="hintL"></ul><button class="btn primary" id="hintOk" type="button">Verstanden</button></div>
 <div class="mapov" id="mapov" hidden>
   <div id="omap"></div>
   <div class="mapbar">
@@ -1757,6 +1762,7 @@ async function spawn(at){
   camera.setView({orientation:{heading:C.Math.toRadians(bestH), pitch:C.Math.toRadians(2), roll:0}});
   setPanel(false);
   say('Du stehst in der Gasse. WASD zum Gehen, ins Bild klicken zum Umschauen, Tab für das Menü.');
+  showHint('walk');
 }
 $('spawn').addEventListener('click', () => spawn());
 const closeIntro = () => { $('intro').classList.add('off'); document.body.classList.remove('intro-on'); };
@@ -1774,7 +1780,7 @@ $('introWalk').addEventListener('click', async () => {
   if (!chunkReadyAt(8.7300, 47.4995)) { world.pendingWalk = [8.7300, 47.4995]; say('Gleich geht es los – die ersten Häuser laden …'); return; }
   await spawn(densestStreet(8.7300, 47.4995));
 });
-$('introFly').addEventListener('click', () => { closeIntro(); goHome(1.5); });
+$('introFly').addEventListener('click', () => { closeIntro(); goHome(1.5); showHint('fly'); });
 
 /* Kamera */
 function goHome(dur){
@@ -2037,6 +2043,29 @@ const joy = {on: false, x: 0, y: 0, id: null};
   const swEnd = e => { if (e.pointerId === sw.id) sw.id = null; };
   canvas.addEventListener('pointerup', swEnd); canvas.addEventListener('pointercancel', swEnd);
 }
+
+/* ---------- Hinweis beim ersten Start: wie man sich bewegt (je einmal für Gehen und Fliegen, im Browser gemerkt) ---------- */
+const HINTS = {
+  walk: COARSE ? ['Joystick links unten: gehen', 'Mit einem Finger übers Bild wischen: umschauen', 'Zeitregler unten: Jahr wählen', '☰ Menü: Ort suchen, Karte, Einstellungen']
+               : ['W A S D: gehen, Shift: rennen', 'Ins Bild klicken, dann Maus bewegen: umschauen (Esc gibt die Maus frei)', 'F: fliegen oder gehen · M: Karte', 'Zeitregler unten: Jahr wählen · Tab: Menü'],
+  fly: COARSE ? ['Mit einem Finger ziehen: verschieben', 'Zwei Finger: zoomen und drehen', 'Joystick links unten: in der Gasse losgehen', 'Zeitregler unten: Jahr wählen']
+              : ['Maus ziehen: verschieben · Mausrad: näher oder weiter', 'Strg + Maus ziehen: drehen und neigen', '«Losgehen» oder F: in die Gasse', 'Zeitregler unten: Jahr wählen · Tab: Menü']
+};
+let hintT = 0;
+function hideHint(){ $('hint').hidden = true; clearTimeout(hintT); }
+function showHint(kind){
+  if (KIOSK || new URLSearchParams(location.search).get('embed') === '1') return;
+  const k = 'zr-hint-' + kind;
+  try { if (localStorage.getItem(k)) return; localStorage.setItem(k, '1'); } catch (e) {}
+  const ul = $('hintL'); ul.textContent = '';
+  for (const t of HINTS[kind]) { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); }
+  $('hintT').textContent = kind === 'walk' ? 'So gehst du durch die Gassen' : 'So bewegst du dich von oben';
+  $('hint').hidden = false;
+  clearTimeout(hintT); hintT = setTimeout(hideHint, 15000);
+}
+$('hintOk').addEventListener('click', hideHint);
+document.addEventListener('keydown', e => { if (!$('hint').hidden && /^(Key[WASD]|Arrow|Escape)/.test(e.code)) hideHint(); });
+$('joy').addEventListener('pointerdown', () => { if (!$('hint').hidden) hideHint(); });
 const up = new C.Cartesian3(), fwd = new C.Cartesian3(), prevPos = new C.Cartesian3();
 const vel = new C.Cartesian3();            /* x = rechts, y = vorwärts, z = hoch (m/s) */
 const SPEEDS = [1, 2, 5, 10, 20, 50, 100];
