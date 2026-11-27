@@ -802,8 +802,9 @@ function makeGround(c){
   if (c.ground) { scene.primitives.remove(c.ground); c.ground = null; }
   c.groundFor = c.shown;
   const ed = c.eds.get(c.shown);
-  c.groundFull = !!(ed && ed.full);
-  if (!ed || !ed.full || !$('groundOn').checked) return;   /* ferne Kacheln ohne Pflaster: dort sieht man es nicht, es kostet aber viel */
+  /* Boden auch für mittlere Kacheln (mit Register): sonst endet er mitten im Bild mit einer harten Kante, etwa auf Flüssen und Seen */
+  c.groundFull = groundWanted(ed);
+  if (!c.groundFull || !$('groundOn').checked) return;
   const {cw, ch} = c, m = MARGIN / CELL, n = CHUNK / CELL;
   /* Abstand zum nächsten Haus (über die ganze Kachel mit Rand gerechnet) */
   const dist = new Int16Array(cw * ch).fill(99), q = [];
@@ -850,6 +851,7 @@ function makeGround(c){
     classificationType: C.ClassificationType.TERRAIN
   }));
 }
+const groundWanted = ed => !!ed && (ed.full || (ed.level ?? 0) >= 1);
 function refreshGrounds(){ for (const c of world.chunks.values()) makeGround(c); }
 
 /* Rekonstruierte Häuser hervorheben: Wände und Dächer bläulich, damit sie sich von belegten abheben */
@@ -964,7 +966,7 @@ function showChunk(c){
   const pick = c.eds.has(world.edition) ? world.edition : (avail.filter(e => e <= world.edition).pop() ?? avail[0]);
   for (const [e, ed] of c.eds) if (ed.prim) ed.prim.show = e === pick && $('genOn').checked && !present;
   c.shown = pick;
-  if (c.groundFor !== pick || c.groundFull !== !!c.eds.get(pick).full) makeGround(c);
+  if (c.groundFor !== pick || c.groundFull !== groundWanted(c.eds.get(pick))) makeGround(c);
 }
 function applyYear(y){
   gwr.year = y;
