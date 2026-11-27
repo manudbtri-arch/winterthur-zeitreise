@@ -47,6 +47,14 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 #cross::before,#cross::after{content:"";position:absolute;background:#fff;box-shadow:0 0 2px #000}
 #cross::before{left:6px;top:0;width:2px;height:14px}#cross::after{top:6px;left:0;height:2px;width:14px}
 [hidden]{display:none!important}
+.legend{display:grid;gap:4px;margin:10px 0 0;font-size:13px;color:var(--mute)}
+.legend div{display:flex;gap:8px;align-items:center}
+.legend i{flex:none;width:14px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,.25)}
+.legend a{color:var(--blue)}
+.legend .chk{font-size:13px;min-height:32px;margin:2px 0 0;color:var(--ink)}
+.info small{font-size:12px;color:var(--mute)}
+.info em{font-style:normal;font-size:12px;font-weight:600;letter-spacing:.02em;justify-self:start;padding:1px 8px;border-radius:9px;background:var(--line);color:var(--ink)}
+.info em.rec{background:#c9dcf0;color:#173c63}
 .panel{transition:transform .25s ease,opacity .25s ease}
 .panel.off{transform:translateX(-110%);opacity:0;pointer-events:none}
 .keys.off{display:none}
@@ -131,6 +139,12 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
   <button class="btn" id="build">Hier neu bauen</button>
   <div class="prog" aria-hidden="true"><i id="progBar"></i></div>
   <p class="sub" id="bStat" style="margin:8px 0 0">Baue Winterthur …</p>
+  <div class="legend" aria-label="Legende">
+    <div><i style="background:#e8d6b4"></i><span><b>Belegt:</b> steht heute noch, 3D-Modell swisstopo, Baujahr GWR</span></div>
+    <div><i id="lgRec" style="background:#bfa98a"></i><span><b>Rekonstruiert:</b> aus der Siegfriedkarte, Höhe geschätzt</span></div>
+    <label class="chk"><input type="checkbox" id="recHl"> Rekonstruierte hervorheben</label>
+    <div><a href="methodik.html" target="_blank" rel="noopener">Wie das entsteht</a></div>
+  </div>
 
   <details class="more">
     <summary>Einstellungen</summary>
@@ -171,7 +185,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
   </div>
   <p class="maphint">Klick auf die Karte: Du wirst dorthin teleportiert und stehst auf der Strasse. Gestrichelt: das gebaute Gebiet.</p>
 </div>
-<div class="info" id="info" hidden role="status"><b id="iTitle"></b><span id="iText"></span></div>
+<div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small></div>
 
 <a class="pill openfull" id="openFull" href="flug-3d.html" target="_blank" rel="noopener" hidden>↗ Im Vollbild öffnen</a>
 <button class="pill" id="pill" hidden>☰ Menü <span style="color:var(--mute)">(Tab)</span></button>
@@ -608,7 +622,7 @@ async function buildEdition(area, year, reg, token){
   };
 
   const roof = new Float32Array(cw * ch).fill(NaN);
-  const inst = [];
+  const inst = [], parts = [];   /* parts: [id, Farbe, Dach?] für das Hervorheben */
   const box = (lonC, latC, w, d, z0, hgt, col, meta) => {
     inst.push(new C.GeometryInstance({
       id: meta,
@@ -638,9 +652,11 @@ async function buildEdition(area, year, reg, token){
           const latC = alongX ? cellLat(a) : y2lat(py0 + (b + n / 2) * CELL);
           const w = alongX ? n * cm : cm, d = alongX ? cm : n * cm;
           const shade = 0.94 + hash(a * 7919 + b + year) * 0.1;
-          const meta = {gen: year, floors: c.floors, hall: c.hall};
-          box(lonC, latC, w, d, c.base, c.h, tint(c.wall, shade), meta);
-          box(lonC, latC, w, d, c.base + c.h, rh, tint(c.roof, shade * (1 - 0.06 * ((Math.abs(a - c.mid) | 0) % 2))), meta);
+          const wc = tint(c.wall, shade), rc = tint(c.roof, shade * (1 - 0.06 * ((Math.abs(a - c.mid) | 0) % 2)));
+          const mw = {gen: year, floors: c.floors, hall: c.hall}, mr = {gen: year, floors: c.floors, hall: c.hall};
+          box(lonC, latC, w, d, c.base, c.h, wc, mw);
+          box(lonC, latC, w, d, c.base + c.h, rh, rc, mr);
+          parts.push([mw, wc, 0], [mr, rc, 1]);
         }
         b += n;
       }
@@ -679,7 +695,7 @@ async function buildEdition(area, year, reg, token){
     shadows: C.ShadowMode.ENABLED
   })) : null;
   if (prim) prim.show = false;
-  return {year, prim, roof, nGen, nOld, occ, wat};
+  return {year, prim, roof, nGen, nOld, occ, wat, parts, hl: false};
 }
 
 /* ---------- Boden: Pflaster in Gassen und auf Plätzen, sonst Wiese, Bäche blau ---------- */
@@ -765,6 +781,20 @@ function makeGround(ed){
     classificationType: C.ClassificationType.TERRAIN
   }));
 }
+
+/* Rekonstruierte Häuser hervorheben: Wände und Dächer bläulich, damit sie sich von belegten abheben */
+const HL_WALL = C.Color.fromCssColorString('#9fbfe0'), HL_ROOF = C.Color.fromCssColorString('#4a74a6');
+function recolor(ed, on){
+  ed.hl = on;
+  const tmp = new C.Color();
+  for (const [id, col, isRoof] of ed.parts) {
+    const at = ed.prim.getGeometryInstanceAttributes(id);
+    if (!at) continue;
+    const c = on ? C.Color.lerp(col, isRoof ? HL_ROOF : HL_WALL, 0.7, tmp) : col;
+    at.color = C.ColorGeometryInstanceAttribute.toValue(c, at.color);
+  }
+}
+$('recHl').addEventListener('change', e => { $('lgRec').style.background = e.target.checked ? '#9fbfe0' : '#bfa98a'; });
 
 /* Jahr anwenden: echte Häuser nach Baujahr, nachgebaute aus der passenden Kartenausgabe */
 function applyYear(y){
@@ -1060,7 +1090,7 @@ $('go').addEventListener('click', () => { try { canvas.requestPointerLock(); } c
 /* Klick auf ein Haus: Infokarte. Mit übernommener Maus zählt das Fadenkreuz. */
 let infoTimer;
 function showInfo(p){
-  let title = '', text = '';
+  let title = '', text = '', badge = '', src = '', rec = false;
   if (p instanceof C.Cesium3DTileFeature) {
     const egid = Number(p.getProperty('EGID')), r = gwr.info && gwr.info.get(egid);
     const art = p.getProperty('OBJEKTART'), hgt = Math.round(p.getProperty('GESAMTHOEHE') || 0);
@@ -1068,11 +1098,17 @@ function showInfo(p){
     title = (r && r.adr) ? r.adr : kind;
     const bj = r ? (r.exact ? `Baujahr ${r.y}` : 'Baujahr vor 1919') : 'Baujahr unbekannt';
     text = `${kind} · ${bj} · steht heute noch${hgt ? ` · ${hgt} m hoch` : ''}`;
+    badge = 'Belegt';
+    src = `Quelle: swissBUILDINGS3D (swisstopo), Gebäuderegister GWR (BFS)${egid ? ` · EGID ${egid}` : ''}`;
   } else if (p && p.id && p.id.gen) {
     title = p.id.hall ? 'Abgerissene Fabrikhalle' : 'Abgerissenes Haus';
     text = `Nachgebaut nach der Siegfriedkarte ${p.id.gen}` + (p.id.hall ? '' : ` · ${p.id.floors} Geschosse geschätzt`) + ' · steht heute nicht mehr';
+    badge = 'Rekonstruiert'; rec = true;
+    src = `Quelle: Siegfriedkarte, Kartenstand ${p.id.gen} (swisstopo) · Grundriss aus der Karte, Höhe geschätzt`;
   } else return false;
-  $('iTitle').textContent = title; $('iText').textContent = text; $('info').hidden = false;
+  $('iTitle').textContent = title; $('iText').textContent = text; $('iSrc').textContent = src;
+  $('iBadge').textContent = badge; $('iBadge').classList.toggle('rec', rec);
+  $('info').hidden = false;
   clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, 7000);
   return true;
 }
@@ -1163,6 +1199,10 @@ scene.preRender.addEventListener(() => {
     if (!slowSince) slowSince = now;
     else if (now - slowSince > 3000) { viewer.shadows = false; $('shadowOn').checked = false; toast('Schatten aus, damit es flüssig bleibt'); slowSince = 0; }
   } else slowSince = 0;
+  if (city && city.edition) {
+    const ed = city.eds.get(city.edition), want = $('recHl').checked;
+    if (ed && ed.prim && ed.prim.ready && ed.hl !== want) recolor(ed, want);
+  }
   const carto = C.Cartographic.fromCartesian(camera.position);
   const gnd = globe.getHeight(carto);
   const agl = gnd === undefined ? carto.height : carto.height - gnd;

@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- 3D-Flug: Legende «belegt» und «rekonstruiert» in der Seitenleiste, Infokarte mit Status und Quelle (inkl. EGID), Umschalter «Rekonstruierte hervorheben» färbt nachgebaute Häuser bläulich.
 - Neue Methodik-Seite `methodik.html` mit Datenquellen, Verfahren für belegte und rekonstruierte Häuser, Genauigkeit, bekannten Grenzen und Zitiervorschlag; verlinkt aus Übersicht und 3D-Flug.
 
 ## 2026-11-26
