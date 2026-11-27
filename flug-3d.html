@@ -136,7 +136,10 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
     <button class="btn" id="mapBtn">Karte (M)</button>
     <button class="btn" id="fullBtn">Vollbild</button>
   </div>
-  <button class="btn" id="linkBtn">Link zu dieser Ansicht kopieren</button>
+  <div class="row2">
+    <button class="btn" id="linkBtn">Link kopieren</button>
+    <button class="btn" id="shotBtn">Bild (P)</button>
+  </div>
   <button class="btn" id="build">Hier neu bauen</button>
   <div class="prog" aria-hidden="true"><i id="progBar"></i></div>
   <p class="sub" id="bStat" style="margin:8px 0 0">Baue Winterthur …</p>
@@ -198,6 +201,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
   <div><b>Shift</b> rennen · <b>F</b> Fliegen/Gehen</div>
   <div><b>I</b>/<b>U</b> Flugtempo 1–100× · <b>J</b> Fernsicht</div>
   <div><b>M</b> Karte · <b>F3</b> Koordinaten · <b>B</b> Look</div>
+  <div><b>P</b> Bild mit Quellenangabe speichern</div>
   <div><b>Klick</b> auf ein Haus: Infos</div>
   <div><b>Tab</b> Menü · <b>Esc</b> Maus freigeben</div>
 </div>
@@ -924,6 +928,7 @@ function attachSearch(inp, list, onPick){
   });
   inp.addEventListener('blur', () => setTimeout(() => { list.hidden = true; }, 150));
 }
+let placeName = 'Winterthur';
 function goPlace(it){
   closeIntro && closeIntro();
   setMode(false);
@@ -931,6 +936,7 @@ function goPlace(it){
   camera.flyTo({destination: dest, orientation: {heading: 0, pitch: C.Math.toRadians(-38), roll: 0}, duration: 2.5,
     complete: () => { if (!present) buildHouses([it.lon, it.lat]); }});
   toast(it.name);
+  placeName = it.name;
 }
 attachSearch($('q'), $('qres'), goPlace);
 attachSearch($('q2'), $('qres2'), goPlace);
@@ -1175,6 +1181,7 @@ document.addEventListener('keydown', e => {
   if (e.code === 'KeyJ') { setFarView(!farView); toast(`Fernsicht ${farView ? 'an' : 'aus'}`); }
   if (e.code === 'F3') { e.preventDefault(); $('f3').hidden = !$('f3').hidden; }
   if (e.code === 'KeyM') { e.preventDefault(); $('mapov').hidden ? openMap() : closeMap(); }
+  if (e.code === 'KeyP') { saveShot(); }
   if (e.code === 'KeyB') { setBlocky(!blocky); toast(`Minecraft-Look ${blocky ? 'an' : 'aus'}`); }
   if (locked && e.code === 'Space') e.preventDefault();
 });
@@ -1307,6 +1314,44 @@ $('linkBtn').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(url); toast('Link kopiert'); }
   catch (e) { window.prompt('Link zu dieser Ansicht:', url); }
 });
+/* ---------- Bild speichern: PNG mit Jahr, Ort und Quellenangabe ---------- */
+function saveShot(){
+  let src;
+  try { viewer.render(); src = viewer.canvas.toDataURL('image/png'); } catch (e) { toast('Bild konnte nicht erstellt werden'); return; }
+  const img = new Image();
+  img.onload = () => {
+    const W = img.width, H = img.height, u = Math.max(1, W / 1400);
+    const band = Math.round(78 * u);
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H + band;
+    const g = cv.getContext('2d');
+    g.drawImage(img, 0, 0);
+    g.fillStyle = '#fbfaf7'; g.fillRect(0, H, W, band);
+    g.fillStyle = '#e2e0da'; g.fillRect(0, H, W, Math.max(1, u));
+    const yearTxt = present ? 'Heute' : $('yBig').textContent;
+    const c = C.Cartographic.fromCartesian(camera.position);
+    const [E, N] = toLV95(C.Math.toDegrees(c.longitude), C.Math.toDegrees(c.latitude));
+    const pad = Math.round(22 * u);
+    g.textBaseline = 'alphabetic';
+    g.fillStyle = '#8a5a2b'; g.font = `800 ${Math.round(38 * u)}px Archivo, system-ui, sans-serif`;
+    g.fillText(yearTxt, pad, H + Math.round(50 * u));
+    const yw = g.measureText(yearTxt).width + pad;
+    g.fillStyle = '#16161a'; g.font = `600 ${Math.round(19 * u)}px Archivo, system-ui, sans-serif`;
+    g.fillText(`${placeName} · ${$('yLbl').textContent} · LV95 ${fmt(E)} / ${fmt(N)}`, pad + yw, H + Math.round(34 * u), W - yw - 2 * pad);
+    g.fillStyle = '#5a5a5f'; g.font = `400 ${Math.round(15 * u)}px Archivo, system-ui, sans-serif`;
+    const note = present ? '' : ($('genOn').checked ? ' · Abgerissene Häuser aus der Karte rekonstruiert, Höhe geschätzt' : '');
+    g.fillText(`Daten: © swisstopo (Karten, swissBUILDINGS3D, Gelände), BFS Gebäuderegister${note} · Zeitreise Schweiz`, pad + yw, H + Math.round(60 * u), W - yw - 2 * pad);
+    cv.toBlob(b => {
+      if (!b) { toast('Bild konnte nicht erstellt werden'); return; }
+      const a = document.createElement('a'), slug = placeName.toLowerCase().replace(/[^a-z0-9äöü]+/g, '-').replace(/^-|-$/g, '');
+      a.href = URL.createObjectURL(b); a.download = `zeitreise-${slug || 'ort'}-${String(yearTxt).toLowerCase()}.png`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      toast('Bild gespeichert');
+    }, 'image/png');
+  };
+  img.src = src;
+}
+$('shotBtn').addEventListener('click', saveShot);
 $('openFull').addEventListener('click', () => { $('openFull').href = permalink(); });
 if (LINK) {
   closeIntro();

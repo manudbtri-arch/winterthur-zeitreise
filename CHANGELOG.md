@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Bild speichern (Knopf «Bild» oder Taste P): PNG der aktuellen Ansicht mit Leiste für Jahr, Ort, Kartengrund, LV95-Koordinaten und Quellenangabe.
 - Permalink: Knopf «Link zu dieser Ansicht kopieren» speichert Ort, Jahr, Blick und Modus in der Adresse; beim Öffnen wird die Ansicht wiederhergestellt, auch «Im Vollbild öffnen» aus der Einbettung übernimmt sie.
 - Weniger Fehlklötze: Kartenschrift und Linien werden über Formmerkmale (Breite, Füllgrad, inneres Volumen) verworfen, ausser dort steht ein echtes Haus; Methodik-Seite ergänzt.
 - 3D-Flug: Legende «belegt» und «rekonstruiert» in der Seitenleiste, Infokarte mit Status und Quelle (inkl. EGID), Umschalter «Rekonstruierte hervorheben» färbt nachgebaute Häuser bläulich.
