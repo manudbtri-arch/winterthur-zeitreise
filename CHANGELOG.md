@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Geschichten im richtigen Jahr: Wer zu einer Geschichte springt (Rundgang, bekannte Orte, Direktlink), die im gewählten Jahr noch nicht oder nicht mehr gilt, landet in der ersten passenden Kartenausgabe (oder heute) mit kurzer Meldung; die Knöpfe der bekannten Orte nennen den Zeitraum («ab 1869»).
 - Kiosk mit eigener Story-Datei (`flug-3d.html?kiosk=1&stories=<name>`): im Leerlauf ein Rundgang statt Rundflug, alle 24 Sekunden die nächste Geschichte mit Infokarte im passenden Jahr; im Kiosk erscheint kein Quellen-Link nach aussen mehr; auf Produktseite und in der Partner-Anleitung erklärt.
 - Kartenkacheln werden nur noch über der Schweiz abgefragt; die Fehler 400 bei jedem Start (im Bildtest gefunden) entfallen.
 - Bildtest um zwei Orte ergänzt (Themen Luftbild, Arealstatistik, Gewässer; Brücke über die Töss); Befunde des ersten Bildtests in der Roadmap festgehalten.

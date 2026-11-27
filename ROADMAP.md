@@ -135,6 +135,6 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Forschung: Gebäudeliste um das Alter im gewählten Jahr ergänzen (nur bei genauem Baujahr), in der Methodik erklärt.
 
 ## 13. Geschichten im richtigen Jahr, Kartenstand in 2D, Rundgang auf dem Handy
-- [ ] Gemeinden und Museen: Sprung zu einer Geschichte (Rundgang, bekannte Orte, Direktlink), die im gewählten Jahr noch nicht oder nicht mehr gilt, wechselt zur ersten passenden Kartenausgabe und meldet das; die Knöpfe der bekannten Orte nennen den Zeitraum.
+- [x] Gemeinden und Museen: Sprung zu einer Geschichte (Rundgang, bekannte Orte, Direktlink), die im gewählten Jahr noch nicht oder nicht mehr gilt, wechselt zur ersten passenden Kartenausgabe und meldet das; die Knöpfe der bekannten Orte nennen den Zeitraum.
 - [ ] Forschung: 2D-Karte zeigt wie der 3D-Flug das Blatt der Siegfriedkarte am Kartenmittelpunkt mit seinem tatsächlichen Kartenstand (ch.swisstopo.hiks-siegfried.metadata).
 - [ ] Handy: Rundgang-Leiste auf schmalen Bildschirmen einzeilig mit gekürztem Titel und grossen Tasten, damit sie das Bild nicht verdeckt.

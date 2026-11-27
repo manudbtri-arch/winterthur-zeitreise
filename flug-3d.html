@@ -1915,10 +1915,28 @@ async function loadStories(file, check){
   const pl = $('places'); pl.textContent = '';
   stories.forEach((ent, i) => {
     const b = document.createElement('button');
-    b.textContent = ent.story.titel; b.title = 'Hinfliegen';
+    const rg = storyRange(ent.story);
+    b.textContent = ent.story.titel + (rg ? ` · ${rg}` : ''); b.title = 'Hinfliegen';
     b.addEventListener('click', () => { closeIntro(); tourGo(i, false); });
     pl.appendChild(b);
   });
+}
+/* Zeitraum einer Geschichte (von/bis) als kurzer Text und erste Kartenausgabe, in der sie gilt */
+const storyRange = st => st.von != null && st.bis != null ? `${st.von}–${st.bis}` : st.von != null ? `ab ${st.von}` : st.bis != null ? `bis ${st.bis}` : '';
+const storyFits = (st, y) => (st.von == null || st.von <= y) && (st.bis == null || st.bis >= y);
+const storyYear = st => EDITIONS.find(e => storyFits(st, e));
+/* gilt die Geschichte im gewählten Jahr nicht, zur ersten passenden Kartenausgabe (oder nach heute) wechseln */
+function storyFitYear(st){
+  if (storyFits(st, present ? 9999 : gwr.year)) return;
+  const y = storyYear(st);
+  if (y != null) {
+    if (present) setPresent(false);
+    $('yr').value = y; $('yBig').textContent = y; applyYear(y); showLayer();
+    toast(`Jahr ${y}: «${st.titel}» gilt ${storyRange(st)}`, 4000);
+  } else if (st.bis == null && !present) {
+    setPresent(true);
+    toast(`Heute: «${st.titel}» gilt ${storyRange(st)}`, 4000);
+  }
 }
 /* Geführte Tour: Kamera fliegt die Geschichten der Reihe nach an */
 let tourIdx = -1;
@@ -1926,6 +1944,7 @@ function tourGo(i, bar = true){
   if (!stories.length) return;
   tourIdx = (i + stories.length) % stories.length;
   const ent = stories[tourIdx], st = ent.story;
+  storyFitYear(st);
   if (document.pointerLockElement) document.exitPointerLock();
   setMode(false); setPanel(false);
   if (!$('storyOn').checked) { $('storyOn').checked = true; updateStories(); }
@@ -2177,7 +2196,7 @@ function kioskView(h, pDeg, r){
 /* Kiosk mit eigener Story-Datei (?kiosk=1&stories=<name>): Rundgang statt Rundflug, alle 24 Sekunden die nächste Station.
    Jahr je Station: erste Kartenausgabe, in der die Geschichte gilt (von/bis); passt keine, wird die Station übersprungen. */
 const KIOSK_TOUR = KIOSK && !!STORY_NAME;
-const kioskYear = st => EDITIONS.find(e => (st.von == null || st.von <= e) && (st.bis == null || st.bis >= e));
+const kioskYear = storyYear;
 function kioskStation(){
   const n = stories.length;
   for (let k = 0; k < n; k++) {
