@@ -1443,8 +1443,7 @@ function showInfo(p){
     src = `Quelle: swissBUILDINGS3D (swisstopo), Gebäuderegister GWR (BFS)${egid ? ` · EGID ${egid}` : ''}`;
     /* zum Nachprüfen: Gebäuderegister auf map.geo.admin.ch an der Lage des Gebäudes (nicht im Kiosk) */
     if (r && !KIOSK) {
-      const [E, N] = toLV95(r.lon, r.lat);
-      link = `https://map.geo.admin.ch/?lang=de&topic=ech&bgLayer=ch.swisstopo.pixelkarte-grau&layers=ch.bfs.gebaeude_wohnungs_register&E=${Math.round(E)}&N=${Math.round(N)}&zoom=13&crosshair=marker`;
+      link = gwrLink(r.lon, r.lat);
       linkTxt = 'Im Gebäuderegister prüfen ↗'; hold = 15000;
     }
   } else if (p && p.id && p.id.gen) {
@@ -1619,6 +1618,11 @@ function toLV95(lon, lat){
   const E = 2600072.37 + 211455.93*l - 10938.51*l*p - 0.36*l*p*p - 44.54*l*l*l;
   const N = 1200147.07 + 308807.95*p + 3745.25*l*l + 76.63*p*p - 194.56*l*l*p + 119.79*p*p*p;
   return [E, N];
+}
+/* Link zum Gebäuderegister auf map.geo.admin.ch an der Lage eines Gebäudes (zum Nachprüfen) */
+function gwrLink(lon, lat){
+  const [E, N] = toLV95(lon, lat);
+  return `https://map.geo.admin.ch/?lang=de&topic=ech&bgLayer=ch.swisstopo.pixelkarte-grau&layers=ch.bfs.gebaeude_wohnungs_register&E=${Math.round(E)}&N=${Math.round(N)}&zoom=13&crosshair=marker`;
 }
 const fmt = n => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
 const DIRS = ['N','NO','O','SO','S','SW','W','NW'];
@@ -1930,13 +1934,13 @@ function exportRows(){
   for (const [egid, r] of gwr.info) if (r.y <= year) {
     const [E, N] = toLV95(r.lon, r.lat);
     rows.push({status: 'belegt', egid, adresse: r.adr, baujahr: r.exact ? r.y : '', bauperiode: r.exact ? '' : 'vor 1919',
-      kartenstand: '', geschosse_geschaetzt: '', flaeche_m2: '', lon: +r.lon.toFixed(6), lat: +r.lat.toFixed(6), e_lv95: Math.round(E), n_lv95: Math.round(N), quelle: SRC_OLD});
+      kartenstand: '', geschosse_geschaetzt: '', flaeche_m2: '', lon: +r.lon.toFixed(6), lat: +r.lat.toFixed(6), e_lv95: Math.round(E), n_lv95: Math.round(N), quelle: SRC_OLD, gwr_link: gwrLink(r.lon, r.lat)});
   }
   for (const h of ed.recs) {
     const [E, N] = toLV95(h.lon, h.lat);
     rows.push({status: 'rekonstruiert', egid: '', adresse: '', baujahr: '', bauperiode: '', kartenstand: ed.year,
       geschosse_geschaetzt: h.floors, flaeche_m2: h.m2, lon: +h.lon.toFixed(6), lat: +h.lat.toFixed(6), e_lv95: Math.round(E), n_lv95: Math.round(N),
-      quelle: `Siegfriedkarte ${ed.year} (swisstopo), Grundriss aus der Karte, Höhe geschätzt`});
+      quelle: `Siegfriedkarte ${ed.year} (swisstopo), Grundriss aus der Karte, Höhe geschätzt`, gwr_link: ''});
   }
   return {year, rows};
 }

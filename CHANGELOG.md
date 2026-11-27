@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Gebäudeliste (CSV und GeoJSON) mit neuer Spalte `gwr_link`: belegte Gebäude lassen sich im Gebäuderegister auf map.geo.admin.ch nachprüfen; in der Methodik erklärt.
 - 2D-Karte: auf Touch-Geräten heisst der Knopf «Link zu dieser Ansicht teilen» und öffnet das System-Teilen; sonst wird wie bisher kopiert.
 - Produktseite nennt den Prüflink ins Gebäuderegister, das Teilen auf dem Handy und das druckbare Arbeitsblatt.
 - Unterrichtsseite: Knopf «Arbeitsblatt drucken» druckt die fünf Aufträge mit Antwortlinien und Feldern für Name, Klasse und Datum, ohne Lernziele und Lehrpersonen-Hinweise; beim normalen Drucken erscheinen die Antwortlinien ebenfalls.
