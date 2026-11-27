@@ -203,7 +203,7 @@ body.intro-on .joy{visibility:hidden}
   <div class="grab"><button id="sheetSize" aria-expanded="false">▴ Mehr</button><button id="sheetClose">Schliessen ✕</button></div>
   <h1>Zeitreise Schweiz</h1>
   <div class="search"><input id="q" type="search" placeholder="Ort oder Adresse suchen …" autocomplete="off" aria-label="Ort suchen"><ul id="qres" hidden></ul></div>
-  <p class="sub nokiosk"><a href="./" style="color:var(--blue)">← Übersicht</a> · <a href="karte-2d.html" style="color:var(--blue)">2D-Karte</a></p>
+  <p class="sub nokiosk"><a href="./" style="color:var(--blue)">← Übersicht</a> · <a href="karte-2d.html" id="to2d" style="color:var(--blue)">2D-Karte</a></p>
 
   <button class="btn primary" id="spawn">Losgehen</button>
   <div class="row2">
@@ -1872,6 +1872,12 @@ $('embedClose').addEventListener('click', () => { $('embedDlg').hidden = true; }
 $('embedDlg').addEventListener('click', e => { if (e.target === $('embedDlg')) $('embedDlg').hidden = true; });
 $('embedDlg').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') $('embedDlg').hidden = true; });
 $('openFull').addEventListener('click', () => { $('openFull').href = permalink(); });
+/* 2D-Karte am aktuellen Ort und im gewählten Jahr öffnen */
+$('to2d').addEventListener('click', () => {
+  const [lon, lat] = centerLonLat(), q = new URLSearchParams({lat: lat.toFixed(5), lon: lon.toFixed(5), z: 16, mode: 'time'});
+  if (!present) { q.set('t', 'sieg'); q.set('y', +$('yr').value || 1880); }
+  $('to2d').href = 'karte-2d.html?' + q.toString();
+});
 /* ---------- Kiosk-Modus (?kiosk=1): Rundflug im Leerlauf, Neustart nach 2 Minuten ohne Eingabe ---------- */
 const KIOSK = new URLSearchParams(location.search).get('kiosk') === '1';
 const kiosk = {auto: false, last: performance.now(), hdg: 0, yearT: 0, ei: 0};

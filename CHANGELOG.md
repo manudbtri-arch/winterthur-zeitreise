@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- 3D-Flug: der Link «2D-Karte» öffnet die Karte am aktuellen Ort und im gewählten Jahr der Siegfriedkarte.
 - 2D-Karte: Ortssuche für die ganze Schweiz (Gemeinde, Adresse, Flurname) über geo.admin.ch; Titel heisst jetzt «Zeitreise Schweiz».
 - 2D-Karte: Knopf «Link zu dieser Ansicht kopieren»; Ort, Zoom, Modus, Quellen, Jahre und Durchsicht stehen im Link und werden beim Öffnen übernommen.
 - Produktseite: Funktion «Messen» ergänzt, Geschichten als vorhanden (bisher Winterthur) statt «in Arbeit» aufgeführt, Schulkarte nennt vier Aufträge.
