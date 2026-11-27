@@ -1425,7 +1425,7 @@ $('go').addEventListener('click', () => { try { canvas.requestPointerLock(); } c
 /* Klick auf ein Haus: Infokarte. Mit übernommener Maus zählt das Fadenkreuz. */
 let infoTimer, infoStory = null;
 function showInfo(p){
-  let title = '', text = '', badge = '', src = '', rec = false, link = '', hold = 7000, story = null;
+  let title = '', text = '', badge = '', src = '', rec = false, link = '', linkTxt = 'Quelle öffnen', hold = 7000, story = null;
   if (p && p.id instanceof C.Entity && p.id.story) {
     const st = p.id.story;
     title = st.titel; text = st.text; badge = 'Geschichte'; hold = 20000;
@@ -1441,6 +1441,12 @@ function showInfo(p){
     text = `${kind} · ${bj} · steht heute noch${hgt ? ` · ${hgt} m hoch` : ''}`;
     badge = 'Belegt';
     src = `Quelle: swissBUILDINGS3D (swisstopo), Gebäuderegister GWR (BFS)${egid ? ` · EGID ${egid}` : ''}`;
+    /* zum Nachprüfen: Gebäuderegister auf map.geo.admin.ch an der Lage des Gebäudes (nicht im Kiosk) */
+    if (r && !KIOSK) {
+      const [E, N] = toLV95(r.lon, r.lat);
+      link = `https://map.geo.admin.ch/?lang=de&topic=ech&bgLayer=ch.swisstopo.pixelkarte-grau&layers=ch.bfs.gebaeude_wohnungs_register&E=${Math.round(E)}&N=${Math.round(N)}&zoom=13&crosshair=marker`;
+      linkTxt = 'Im Gebäuderegister prüfen ↗'; hold = 15000;
+    }
   } else if (p && p.id && p.id.gen) {
     title = p.id.hall ? 'Abgerissene Fabrikhalle' : 'Abgerissenes Haus';
     text = `Nachgebaut nach der Siegfriedkarte ${p.id.gen}` + (p.id.hall ? '' : ` · ${p.id.floors} Geschosse geschätzt`) + ' · steht heute nicht mehr';
@@ -1449,7 +1455,7 @@ function showInfo(p){
   } else return false;
   $('iTitle').textContent = title; $('iText').textContent = text; $('iSrc').textContent = src;
   $('iBadge').textContent = badge; $('iBadge').classList.toggle('rec', rec);
-  $('iLink').hidden = !link; if (link) $('iLink').href = link;
+  $('iLink').hidden = !link; if (link) { $('iLink').href = link; $('iLink').textContent = linkTxt; }
   infoStory = story; $('iShare').hidden = !story;
   $('info').hidden = false;
   clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, hold);
