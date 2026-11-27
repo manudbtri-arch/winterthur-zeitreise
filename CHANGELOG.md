@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Die heutigen 3D-Gebäude (swissBUILDINGS3D) werden nur noch einmal geladen statt zweimal: Kirchen, Türme, Kamine und Mauern erhalten ihre Steinfarbe als Stilfarbe im selben Datensatz, der Fassaden-Shader lässt dort das Fensterraster weg; halber Datenverkehr und Speicher für Gebäude.
 - Nachgebaute Häuser: Fenster sind jetzt ein Wandmuster im Shader (Rahmen, Sims, Sprossen, ein Fenster pro Block und Geschoss, Hallen mit Fensterband) statt eigener Klötze; das spart einen Grossteil der Geometrie, auch mittlere Kacheln zeigen Fenster, und in der Ferne verschwimmt das Muster ohne Flimmern; Türen bleiben als Klotz.
 - Automatischer Bildtest bei GitHub (`.github/workflows/bildtest.yml`, `tests/bildtest.mjs`): öffnet den 3D-Flug an sieben festen Orten mit echtem Cesium, speichert Bilder, misst das Tempo und sammelt Fehler im Zweig «bildtest»; Themen lassen sich per Link einschalten (`?themen=isos,ivs`) und stehen im kopierten Link.
 - Produktseite nennt die Themen aus Bundesdaten und den Kartenstand pro Blatt.

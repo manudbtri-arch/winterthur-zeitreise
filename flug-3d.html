@@ -431,7 +431,7 @@ function setFarView(on){
   farView = on;
   globe.maximumScreenSpaceError = on ? 2 : 4;
   scene.fog.density = on ? (walk ? 2e-4 : 1.2e-4) : 6e-4;   /* beim Gehen weniger Gelände am Horizont laden */
-  for (const t of [bldTs, specTs]) if (t) t.maximumScreenSpaceError = on ? 16 : 32;
+  if (bldTs) bldTs.maximumScreenSpaceError = on ? 16 : 32;
 }
 let toastT;
 function toast(t, ms = 1600){ const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, ms); }
@@ -551,6 +551,12 @@ const FACADE_FS = `
     vec3 p = fsInput.attributes.positionMC;
     vec3 upMC = normalize((czm_inverseModel * vec4(u_up, 0.0)).xyz);
     float nu = dot(nWC, u_up);
+    #ifdef HAS_SELECTED_FEATURE_ID
+    /* Stilfarbe nicht weiss: Kirche, Turm, Kamin oder Mauer – Steinfarbe aus dem Stil behalten, keine Fenster */
+    SelectedFeature sf;
+    selectedFeatureIdStage(sf, fsInput.featureIds);
+    if (any(lessThan(sf.color.rgb, vec3(0.99)))) return;
+    #endif
 
     /* ---- Dach: Biberschwanz-Ziegel in versetzten Reihen ---- */
     if (nu > 0.35) {
@@ -623,7 +629,7 @@ const yearOk = f => {
   const y = gwr.years.get(Number(f.getProperty('EGID')));
   return y !== undefined && y <= gwr.year;
 };
-let specTs = null, specColor = null, bldShader = null;
+let specColor = null, bldShader = null;
 async function buildingLayer(){
   flags.bld = $('bld').checked; flags.old = $('oldOn').checked;
   if (!bldTs) {
@@ -635,25 +641,20 @@ async function buildingLayer(){
                   u_blocky: { type: C.UniformType.FLOAT, value: blocky ? 1 : 0 } },
       fragmentShaderText: FACADE_FS
     });
+    /* Kirchen, Türme, Kamine, Mauern: im selben Datensatz (nur einmal geladen) mit Steinfarbe als Stilfarbe;
+       der Shader erkennt die Stilfarbe und zeichnet dort kein Fensterraster, Wohnhäuser bleiben weiss (ungefärbt) */
+    bldTs.colorBlendMode = C.Cesium3DTileColorBlendMode.MIX;
+    bldTs.colorBlendAmount = 0.6;
     bldTs.style = new C.Cesium3DTileStyle();
-    bldTs.style.show = { evaluate: f => !isSpecial(f) && yearOk(f) };
-
-    /* Kirchen, Türme, Kamine, Mauern: gleiche Daten, aber Stein statt Fensterraster */
-    specTs = await C.Cesium3DTileset.fromUrl(BLD_URL);
-    scene.primitives.add(specTs);
-    specTs.colorBlendMode = C.Cesium3DTileColorBlendMode.MIX;
-    specTs.colorBlendAmount = 0.6;
-    specTs.style = new C.Cesium3DTileStyle();
-    specTs.style.show = { evaluate: f => isSpecial(f) && yearOk(f) };
+    bldTs.style.show = { evaluate: f => yearOk(f) };
     const stone = C.Color.fromCssColorString('#d9d2c2'), brick = C.Color.fromCssColorString('#9a5a42');
-    specColor = { evaluateColor: (f, res) => C.Color.clone(f.getProperty('OBJEKTART') === 'Hochkamin' ? brick : stone, res) };
-    specTs.style.color = specColor;
+    specColor = { evaluateColor: (f, res) => C.Color.clone(!isSpecial(f) ? C.Color.WHITE : f.getProperty('OBJEKTART') === 'Hochkamin' ? brick : stone, res) };
+    bldTs.style.color = specColor;
     bldShader = bldTs.customShader;
     if (analysis) setAnalysis(analysis);
   }
-  bldTs.show = specTs.show = $('bld').checked || $('oldOn').checked;
+  bldTs.show = $('bld').checked || $('oldOn').checked;
   bldTs.makeStyleDirty();
-  specTs.makeStyleDirty();
 }
 $('bld').addEventListener('change', () => buildingLayer().catch(() => { $('hud').textContent = '3D-Gebäude nicht erreichbar'; }));
 $('oldOn').addEventListener('change', () => buildingLayer().catch(() => {}));
@@ -1240,16 +1241,12 @@ function setAnalysis(mode){
   const on = !!mode, col = mode === 'new' ? newColor : epochColor;
   $('epochOn').checked = mode === 'epoch'; $('newOn').checked = mode === 'new';
   $('epochBox').hidden = !on;
-  if (bldTs && specTs) {
+  if (bldTs) {
     bldTs.customShader = on ? undefined : bldShader;
-    for (const t of [bldTs, specTs]) {
-      t.colorBlendMode = C.Cesium3DTileColorBlendMode.MIX;
-      t.colorBlendAmount = on ? 0.85 : 0.6;
-    }
-    if (!on) bldTs.colorBlendMode = C.Cesium3DTileColorBlendMode.HIGHLIGHT;
-    bldTs.style.color = on ? col : undefined;
-    specTs.style.color = on ? col : specColor;
-    bldTs.makeStyleDirty(); specTs.makeStyleDirty();
+    bldTs.colorBlendMode = C.Cesium3DTileColorBlendMode.MIX;
+    bldTs.colorBlendAmount = on ? 0.85 : 0.6;
+    bldTs.style.color = on ? col : specColor;
+    bldTs.makeStyleDirty();
   }
   updateStats();
 }
@@ -1308,7 +1305,7 @@ $('epochCsv').addEventListener('click', () => {
 let styleT = 0;
 function styleDirty(ms = 150){
   if (styleT) return;
-  styleT = setTimeout(() => { styleT = 0; if (bldTs) { bldTs.makeStyleDirty(); specTs.makeStyleDirty(); } }, ms);
+  styleT = setTimeout(() => { styleT = 0; if (bldTs) bldTs.makeStyleDirty(); }, ms);
 }
 /* Jahr anwenden: echte Häuser nach Baujahr, nachgebaute aus der passenden Kartenausgabe jeder Kachel */
 /* nur Kacheln mit Gebäuderegister zählen: ferne Klötze sind noch nicht in belegt und rekonstruiert unterschieden */
