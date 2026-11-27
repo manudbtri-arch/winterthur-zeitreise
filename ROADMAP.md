@@ -28,7 +28,7 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 4. Einsatz bei Kunden
 - [x] Kiosk-Modus `?kiosk=1`: automatischer Rundflug, Neustart nach 2 Minuten ohne Eingabe, grosse Touch-Knöpfe.
-- [ ] Handy-Steuerung: virtueller Joystick zum Gehen, Wischen zum Umschauen.
+- [x] Handy-Steuerung: virtueller Joystick zum Gehen, Wischen zum Umschauen.
 - [x] Übersichtsseite als Produktseite mit eingebettetem 3D-Flug, Zielgruppen, Funktionen, Daten, Pilotangebot.
 - [ ] (Manuel) Kontaktadresse für Pilotanfragen in `index.html` (Konstante CONTACT) eintragen.
 - [ ] (Manuel) Impressum und Datenschutzerklärung mit echten Angaben.

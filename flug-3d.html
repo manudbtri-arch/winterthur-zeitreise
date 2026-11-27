@@ -130,6 +130,12 @@ body.kiosk .track input{height:44px}
 body.kiosk .places button{min-height:48px;font-size:16px;padding:8px 16px}
 .attract{position:absolute;z-index:14;left:50%;top:40%;transform:translate(-50%,-50%);background:rgba(20,18,14,.72);color:#f3eee3;font:800 clamp(24px,4vw,40px)/1.2 Archivo,sans-serif;padding:22px 34px;border-radius:18px;text-align:center;pointer-events:none}
 .attract small{display:block;font:600 18px Archivo,sans-serif;color:#d9b98f;margin-top:6px}
+.joy{position:absolute;z-index:11;left:16px;bottom:110px;width:120px;height:120px;border-radius:50%;background:rgba(20,23,26,.28);border:2px solid rgba(255,255,255,.6);touch-action:none;display:none}
+.joy i{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none}
+.joy span{position:absolute;left:0;right:0;top:-24px;text-align:center;font-size:12px;font-weight:600;color:#fff;text-shadow:0 1px 3px #000;pointer-events:none}
+@media(pointer:coarse){.joy{display:block}}
+body.intro-on .joy{visibility:hidden}
+@media(max-width:700px){.joy{left:12px;bottom:100px;width:104px;height:104px}}
 .dlg{position:absolute;inset:0;z-index:35;display:grid;place-items:center;background:rgba(0,0,0,.45);padding:16px}
 .dlg .box{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:18px;width:min(560px,100%);box-shadow:0 10px 40px rgba(0,0,0,.4)}
 .dlg h2{font-size:19px;margin:0 0 6px}
@@ -233,6 +239,7 @@ body.kiosk .places button{min-height:48px;font-size:16px;padding:8px 16px}
   <p class="maphint">Klick auf die Karte: Du wirst dorthin teleportiert und stehst auf der Strasse. Gestrichelt: das gebaute Gebiet.</p>
 </div>
 <div class="mini on" id="mini" title="Minikarte – Klick öffnet die grosse Karte (M)" aria-hidden="true"><div id="miniMap"></div><svg id="miniArrow" viewBox="0 0 30 30"><circle cx="15" cy="15" r="6" fill="#c8803f" stroke="#fff" stroke-width="2"/><path d="M15 1 L20 10 L10 10Z" fill="#c8803f" stroke="#fff" stroke-width="1.5"/></svg><span>© swisstopo</span></div>
+<div class="joy" id="joy" aria-label="Joystick zum Gehen"><span>Gehen</span><i id="joyKnob"></i></div>
 <div class="attract" id="attract" hidden>Berühre den Bildschirm<small>und geh durch die Stadt von damals</small></div>
 <div class="tour" id="tour" hidden role="group" aria-label="Rundgang">
   <button class="btn" id="tourPrev" aria-label="Vorherige Station">‹</button>
@@ -1309,6 +1316,37 @@ document.addEventListener('keydown', e => {
 document.addEventListener('keyup', e => { keys[e.code] = false; });
 window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 
+/* ---------- Handy-Steuerung: Joystick zum Gehen, Wischen zum Umschauen ---------- */
+const COARSE = matchMedia('(pointer:coarse)').matches;
+const joy = {on: false, x: 0, y: 0, id: null};
+{
+  const pad = $('joy'), knob = $('joyKnob');
+  const move = e => {
+    const r = pad.getBoundingClientRect(), R = r.width * 0.38;
+    let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+    const d = Math.hypot(dx, dy); if (d > R) { dx *= R / d; dy *= R / d; }
+    joy.x = dx / R; joy.y = -dy / R;
+    knob.style.transform = `translate(${dx}px,${dy}px)`;
+  };
+  pad.addEventListener('pointerdown', e => {
+    e.preventDefault(); joy.on = true; joy.id = e.pointerId; pad.setPointerCapture(e.pointerId);
+    if (!walk && city) spawn(centerLonLat()); else if (!walk) setMode(true);
+    move(e);
+  });
+  pad.addEventListener('pointermove', e => { if (joy.on && e.pointerId === joy.id) move(e); });
+  const end = e => { if (e.pointerId !== joy.id) return; joy.on = false; joy.x = joy.y = 0; knob.style.transform = ''; };
+  pad.addEventListener('pointerup', end); pad.addEventListener('pointercancel', end);
+  /* ein Finger auf dem Bild: Blick drehen (nur beim Gehen) */
+  const sw = {id: null, x: 0, y: 0};
+  canvas.addEventListener('pointerdown', e => { if (e.pointerType === 'touch' && walk && sw.id === null) { sw.id = e.pointerId; sw.x = e.clientX; sw.y = e.clientY; } });
+  canvas.addEventListener('pointermove', e => {
+    if (e.pointerId !== sw.id || !walk) return;
+    const dx = e.clientX - sw.x, dy = e.clientY - sw.y; sw.x = e.clientX; sw.y = e.clientY;
+    camera.setView({orientation: {heading: camera.heading + dx * 0.006, pitch: C.Math.clamp(camera.pitch - dy * 0.004, -1.4, 1.4), roll: 0}});
+  });
+  const swEnd = e => { if (e.pointerId === sw.id) sw.id = null; };
+  canvas.addEventListener('pointerup', swEnd); canvas.addEventListener('pointercancel', swEnd);
+}
 const up = new C.Cartesian3(), fwd = new C.Cartesian3(), prevPos = new C.Cartesian3();
 const vel = new C.Cartesian3();            /* x = rechts, y = vorwärts, z = hoch (m/s) */
 const SPEEDS = [1, 2, 5, 10, 20, 50, 100];
@@ -1376,6 +1414,9 @@ scene.preRender.addEventListener(() => {
     (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0),
     walk ? 0 : (keys.Space ? 1 : 0) - (keys.KeyC ? 1 : 0));
   if (C.Cartesian3.magnitude(want) > 0) C.Cartesian3.multiplyByScalar(C.Cartesian3.normalize(want, want), top, want);
+  else if (joy.on) { want.x = joy.x * top; want.y = joy.y * top; }   /* Handy: Joystick, stufenlos */
+  /* Handy: beim Gehen dreht Wischen den Blick, Cesium-Gesten nur beim Fliegen */
+  if (COARSE && !locked) ctl.enableInputs = !walk;
   const k = 1 - Math.exp(-dt * (C.Cartesian3.magnitude(want) > 0 ? 9 : 7));
   C.Cartesian3.lerp(vel, want, k, vel);
   const speed = C.Cartesian3.magnitude(vel);
