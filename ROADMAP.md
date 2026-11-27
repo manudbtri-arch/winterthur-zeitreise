@@ -36,4 +36,4 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 5. Technik
 - [x] Kartenausgaben in einem Web Worker berechnen, damit die Seite beim Bauen nicht stockt.
-- [ ] Ladezeit: Kartenausgaben zwischenspeichern (IndexedDB), zweiter Besuch startet sofort.
+- [x] Ladezeit: Kartenausgaben zwischenspeichern (IndexedDB), zweiter Besuch startet sofort.

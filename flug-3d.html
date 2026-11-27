@@ -613,6 +613,27 @@ function centerLonLat(){
 const EDITIONS = [1880, 1900, 1920, 1940];
 let buildToken = 0;
 
+/* ---------- Zwischenspeicher im Browser (IndexedDB): zweiter Besuch baut sofort ---------- */
+let idbP = null;
+function idb(){
+  return idbP || (idbP = new Promise(res => {
+    try {
+      const rq = indexedDB.open('zeitreise-schweiz', 1);
+      rq.onupgradeneeded = () => rq.result.createObjectStore('cache');
+      rq.onsuccess = () => res(rq.result);
+      rq.onerror = () => res(null);
+    } catch (e) { res(null); }
+  }));
+}
+async function idbGet(k){
+  const db = await idb(); if (!db) return null;
+  return new Promise(res => { try { const rq = db.transaction('cache').objectStore('cache').get(k); rq.onsuccess = () => res(rq.result || null); rq.onerror = () => res(null); } catch (e) { res(null); } });
+}
+async function idbPut(k, v){
+  const db = await idb(); if (!db) return;
+  try { db.transaction('cache', 'readwrite').objectStore('cache').put(v, k); } catch (e) {}
+}
+
 /* Kartenbild auswerten (läuft im Web Worker, sonst im Hauptfaden): Hausflächen, Wasser, zusammenhängende Häuser */
 function analyseMap(px, W, H, cw, ch, CELL){
   const dark = new Uint8Array(W * H);
@@ -690,20 +711,28 @@ async function analyseAsync(px, W, H, cw, ch){
 /* Eine Kartenausgabe auswerten: Hausflächen → Blöcke mit Stufendach und Fenstern */
 async function buildEdition(area, year, reg, token){
   const {px0, py0, W, H, cw, ch, lat} = area;
-  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-  const g = cv.getContext('2d', {willReadFrequently:true});
-  g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
-  const jobs = [];
-  for (let ty = Math.floor(py0 / TS); ty <= Math.floor((py0 + H - 1) / TS); ty++)
-    for (let tx = Math.floor(px0 / TS); tx <= Math.floor((px0 + W - 1) / TS); tx++)
-      jobs.push(loadImg(`https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.hiks-siegfried/default/${year}/3857/${Z}/${tx}/${ty}.png`)
-        .then(img => { if (img) g.drawImage(img, tx * TS - px0, ty * TS - py0); }));
-  await Promise.all(jobs);
+  /* Zwischenspeicher: ausgewertete Kartenausgabe (v1 = Stand des Formfilters; bei Änderung hochzählen) */
+  const ckey = `ed:v1:${year}:${px0}:${py0}:${W}:${H}`;
+  let res = await idbGet(ckey);
+  if (!res || !res.occ || res.occ.length !== cw * ch) {
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const g = cv.getContext('2d', {willReadFrequently:true});
+    g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+    const jobs = []; let miss = 0;
+    for (let ty = Math.floor(py0 / TS); ty <= Math.floor((py0 + H - 1) / TS); ty++)
+      for (let tx = Math.floor(px0 / TS); tx <= Math.floor((px0 + W - 1) / TS); tx++)
+        jobs.push(loadImg(`https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.hiks-siegfried/default/${year}/3857/${Z}/${tx}/${ty}.png`)
+          .then(img => { if (img) g.drawImage(img, tx * TS - px0, ty * TS - py0); else miss++; }));
+    await Promise.all(jobs);
+    if (token !== buildToken) return null;
+    /* schwarze Flächen, dünne Linien und Schrift wegfiltern */
+    const px = g.getImageData(0, 0, W, H).data;
+    res = await analyseAsync(px, W, H, cw, ch);
+    if (!miss) idbPut(ckey, res);          /* nur vollständige Auswertungen merken */
+  }
   if (token !== buildToken) return null;
-
-  /* schwarze Flächen, dünne Linien und Schrift wegfiltern */
-  const px = g.getImageData(0, 0, W, H).data;
-  const {occ, wat, comp, comps, keep} = await analyseAsync(px, W, H, cw, ch);
+  /* Kopien: Häuser und Auswahl werden unten verändert, der Zwischenspeicher bleibt unberührt */
+  const {occ, wat, comp} = res, comps = res.comps.map(c => ({...c})), keep = res.keep.slice();
   if (token !== buildToken) return null;
 
   /* heute noch stehende Häuser übernimmt das echte 3D-Modell */
@@ -1008,7 +1037,13 @@ async function buildHouses(center){
     city = {px0, py0, cw: area.cw, ch: area.ch, roof: new Float32Array(area.cw * area.ch).fill(NaN), eds: new Map(), center:[lon, lat]};
 
     say('Frage das Gebäuderegister nach Baujahren ab …');
-    const reg = await loadGwr(lon - dLon, lat - dLat, lon + dLon, lat + dLat, (d, t) => { say(`Gebäuderegister: ${d} von ${t} Teilgebieten …`); setProg(0.3 * d / t); });
+    const gkey = `gwr:v1:${lon.toFixed(4)}:${lat.toFixed(4)}`, gc = await idbGet(gkey);
+    let reg;
+    if (gc && gc.reg instanceof Map && Date.now() - gc.t < 30 * 864e5) { reg = gc.reg; say('Gebäuderegister aus dem Zwischenspeicher …'); setProg(0.3); }
+    else {
+      reg = await loadGwr(lon - dLon, lat - dLat, lon + dLon, lat + dLat, (d, t) => { say(`Gebäuderegister: ${d} von ${t} Teilgebieten …`); setProg(0.3 * d / t); });
+      if (reg.size) idbPut(gkey, {t: Date.now(), reg});
+    }
     if (token !== buildToken) return;
     gwr.years = new Map([...reg].map(([id, r]) => [id, r.y]));
     gwr.info = reg;
