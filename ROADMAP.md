@@ -99,7 +99,10 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Fenster der nachgebauten Häuser als Wandmuster statt Klötze.
 - [x] Heutige 3D-Gebäude nur einmal laden.
 - [x] Handy: kleinere Sichtweite.
-- [ ] Baujahre vorberechnet mitliefern (prüfen, ob machbar).
+- [x] Baujahre vorberechnet mitliefern (prüfen, ob machbar): machbar, siehe `PLAN-baujahre.md`.
+  - [ ] (Manuel) Entscheiden, wo die Daten liegen (`gwr/` in main oder eigener Zweig) und wie GitHub Pages sie ausliefert.
+  - [ ] GitHub Action (monatlich): GWR-Download des BFS in Kacheln der Zoomstufe 13 umrechnen, mit Abrufdatum und Quelle.
+  - [ ] 3D-Flug: vorberechnete Kachel zuerst laden, sonst wie bisher über geo.admin.ch abfragen.
 - [ ] Satteldächer für nachgebaute Häuser (Minecraft-Look als Schalter).
 - [ ] Dunst auf fernen Häusern.
 - [ ] Türme für abgerissene Kirchen.
