@@ -413,7 +413,7 @@ function setFarView(on){
   for (const t of [bldTs, specTs]) if (t) t.maximumScreenSpaceError = on ? 16 : 32;
 }
 let toastT;
-function toast(t){ const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 1600); }
+function toast(t, ms = 1600){ const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, ms); }
 
 /* Unterlage, damit Lücken nicht schwarz bleiben */
 const tile = (key, year) => {
@@ -1653,6 +1653,7 @@ function permalink(){
     hdg: r((C.Math.toDegrees(camera.heading) + 360) % 360, 1), pitch: r(C.Math.toDegrees(camera.pitch), 1),
     year: +$('yr').value || 1880, mode: present ? 'now' : walk ? 'walk' : 'fly'});
   if (city) q.set('c', city.center.map(v => v.toFixed(5)).join(','));
+  if (STORY_NAME) q.set('stories', STORY_NAME);
   return location.origin + location.pathname + '?' + q.toString();
 }
 $('linkBtn').addEventListener('click', async () => {
@@ -1667,14 +1668,17 @@ async function geocodeAddr(adr){
   const r = ((await (await fetch(u)).json()).results || [])[0];
   return r && Number.isFinite(+r.attrs.lon) ? [+r.attrs.lon, +r.attrs.lat] : null;
 }
-async function loadStories(file){
+async function loadStories(file, check){
   let data;
-  try { data = await (await fetch(file)).json(); } catch (e) { return; }
+  try { const r = await fetch(file); if (!r.ok) throw new Error(r.status); data = await r.json(); }
+  catch (e) { if (check) toast(`Story-Datei ${file} nicht gefunden oder kein gültiges JSON`, 8000); return; }
+  const skipped = [];
   for (const st of (data.geschichten || [])) {
-    if (typeof st.titel !== 'string' || typeof st.text !== 'string' || typeof st.quelle !== 'string') continue;
+    const nm = String(st.id || st.titel || '?');
+    if (typeof st.titel !== 'string' || typeof st.text !== 'string' || typeof st.quelle !== 'string') { skipped.push(`${nm}: titel, text oder quelle fehlt`); continue; }
     let ll = Number.isFinite(st.lon) && Number.isFinite(st.lat) ? [st.lon, st.lat] : null;
     if (!ll && typeof st.adresse === 'string') { try { ll = await geocodeAddr(st.adresse); } catch (e) {} }
-    if (!ll) continue;
+    if (!ll) { skipped.push(`${nm}: Lage nicht gefunden (adresse oder lon/lat prüfen)`); continue; }
     st.lon = ll[0]; st.lat = ll[1];
     const ent = viewer.entities.add({
       position: C.Cartesian3.fromDegrees(ll[0], ll[1]),
@@ -1689,6 +1693,11 @@ async function loadStories(file){
     stories.push(ent);
   }
   updateStories();
+  if (check) {
+    /* Prüfmodus für Partner: Ergebnis kurz melden, Details in der Browser-Konsole */
+    toast(`${stories.length} Geschichten geladen` + (skipped.length ? `, ${skipped.length} übersprungen (Details: Konsole)` : ''), 8000);
+    if (skipped.length) console.warn('Übersprungene Geschichten in ' + file + ':\n' + skipped.join('\n'));
+  }
   $('tourBtn').disabled = !stories.length;
   /* bekannte Orte als Sprungziele */
   const pl = $('places'); pl.textContent = '';
@@ -1726,7 +1735,10 @@ function updateStories(){
   for (const e of stories) e.show = on && (e.story.von == null || e.story.von <= y) && (e.story.bis == null || e.story.bis >= y);
 }
 $('storyOn').addEventListener('change', updateStories);
-loadStories('stories/winterthur.json');
+/* ?stories=<name> lädt stories/<name>.json (zum Prüfen einer Partner-Datei), sonst Winterthur */
+const STORY_Q = new URLSearchParams(location.search).get('stories');
+const STORY_NAME = /^[a-z0-9-]{1,40}$/.test(STORY_Q || '') ? STORY_Q : null;
+loadStories(`stories/${STORY_NAME || 'winterthur'}.json`, !!STORY_NAME);
 
 /* ---------- Minikarte unten links: Standort und Blickrichtung ---------- */
 const mini = {map: null, layer: null, key: '', last: 0, busy: false};

@@ -44,6 +44,14 @@ Eine Datei pro Ort, z. B. `stories/winterthur.json`, in UTF-8:
 - **Keine Personendaten** lebender Personen, keine Fotos ohne geklärte Rechte.
 - **Kurz.** Der Text soll in die Infokarte passen; Details gehören in die verlinkte Quelle.
 
+## Datei testen
+
+Liegt die Datei im Ordner `stories/`, zeigt dieser Link sie im 3D-Flug an (Name ohne `.json`, nur Kleinbuchstaben, Ziffern und Bindestrich):
+
+`flug-3d.html?stories=meinort`
+
+Eine kurze Meldung nennt die Zahl der geladenen Geschichten. Übersprungene Einträge (fehlendes Feld, Adresse nicht gefunden) stehen mit Grund in der Browser-Konsole (F12).
+
 ## Ablauf
 
 1. Datei nach diesem Muster erstellen (oder eine Tabelle mit den gleichen Spalten schicken).
