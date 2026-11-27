@@ -20,7 +20,7 @@
   <div class="grab"><button id="sheetSize" aria-expanded="false">▴ Mehr</button><button id="sheetClose">Schliessen ✕</button></div>
   <h1>Zeitreise Schweiz</h1>
   <div class="search"><input id="q" type="search" placeholder="Ort oder Adresse suchen …" autocomplete="off" aria-label="Ort suchen"><ul id="qres" hidden></ul></div>
-  <p class="sub nokiosk"><a href="./" style="color:var(--blue)">← Übersicht</a> · <a href="karte-2d.html" id="to2d" style="color:var(--blue)">2D-Karte</a></p>
+  <p class="sub nokiosk"><a href="./" style="color:var(--blue)">← Übersicht</a> · <a href="karte-2d.html" id="to2d" style="color:var(--blue)">2D-Karte</a> · <a href="zeitraffer.html" id="toTl" style="color:var(--blue)" title="Entwicklung dieses Ausschnitts in Luftbildern und Karten bis heute">Zeitraffer von oben</a></p>
   <div class="prog" aria-hidden="true"><i id="progBar"></i></div>
   <p class="sub" id="bStat" style="margin:8px 0 0" aria-live="polite">Baue Winterthur …</p>
 
@@ -2524,6 +2524,12 @@ $('to2d').addEventListener('click', () => {
   if (!present) { q.set('t', 'sieg'); q.set('y', +$('yr').value || 1880); }
   if (STORY_NAME) q.set('stories', STORY_NAME);
   $('to2d').href = 'karte-2d.html?' + q.toString();
+});
+/* Zeitraffer von oben am aktuellen Ort öffnen (Luftbilder heute, sonst Karten-Epochen) */
+$('toTl').addEventListener('click', () => {
+  const [lon, lat] = centerLonLat(), q = new URLSearchParams({lat: lat.toFixed(5), lon: lon.toFixed(5), z: 15, mode: present ? 'luft' : 'karte'});
+  if (placeName) q.set('name', placeName);
+  $('toTl').href = 'zeitraffer.html?' + q.toString();
 });
 /* ---------- Kiosk-Modus (?kiosk=1): Rundflug oder Story-Rundgang (?kiosk=1&stories=<name>) im Leerlauf, Neustart nach 2 Min. ---------- */
 const kiosk = {auto: false, last: performance.now(), hdg: 0, yearT: 0, ei: 0, si: 0, tour: false, startedAt: performance.now()};

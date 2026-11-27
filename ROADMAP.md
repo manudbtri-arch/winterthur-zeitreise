@@ -170,6 +170,6 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Barrierefreiheit: Fenster (Einbetten, QR-Code, Tasten) halten den Tastaturfokus beim Tabben im Fenster und geben ihn beim Schliessen an den auslösenden Knopf zurück.
 
 ## 20. Zeitraffer verbinden und erklären
-- [ ] 3D-Flug: Knopf «Zeitraffer von oben» im Reiter «Ort» öffnet `zeitraffer.html` am aktuellen Standort (wie in der 2D-Karte).
+- [x] 3D-Flug: Link «Zeitraffer von oben» (neben «2D-Karte») öffnet `zeitraffer.html` am aktuellen Standort (wie in der 2D-Karte).
 - [ ] Methodik: Abschnitt «Zeitraffer von oben» – welche Luftbild-Jahre und Kartenstände gezeigt werden (Quellen, Abfrage), bekannte Grenzen (nicht jedes Jahr beflogen, Kartenstand am 31. Dezember).
 - [ ] Schulen: Unterrichtsseite um einen Auftrag mit dem Zeitraffer ergänzen (Luftbilder eines Ortes über Jahrzehnte vergleichen, Veränderung beschreiben und mit Jahr belegen).
