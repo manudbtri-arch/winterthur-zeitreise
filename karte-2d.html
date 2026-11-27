@@ -113,7 +113,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
     </div>
   </section>
 
-  <label>Winterthur: springen zu</label>
+  <label id="placesLbl">Winterthur: springen zu</label>
   <div class="places" id="places"></div>
   <label class="chk"><input type="checkbox" id="storyOn" checked> Geschichten an Orten (Marker)</label>
   <button class="btn primary" id="to3d" style="width:100%;margin-top:12px">Hier im 3D-Flug ansehen</button>
@@ -279,7 +279,7 @@ async function loadStories(file){
   let data;
   try { const r = await fetch(file); if (!r.ok) throw new Error(r.status); data = await r.json(); }
   catch (e) { if (STORY_NAME) $('linkMsg').textContent = `Story-Datei ${file} nicht gefunden oder kein gültiges JSON.`; return; }
-  let n = 0;
+  let n = 0; const jumps = [];
   for (const st of (data.geschichten || [])) {
     if (typeof st.titel !== 'string' || typeof st.text !== 'string' || typeof st.quelle !== 'string') continue;
     let ll = Number.isFinite(st.lon) && Number.isFinite(st.lat) ? [st.lat, st.lon] : null;
@@ -307,9 +307,19 @@ async function loadStories(file){
     }
     L.circleMarker(ll, {radius: 8, color: '#fff', weight: 2, fillColor: '#c8803f', fillOpacity: 1})
       .bindTooltip(document.createTextNode(st.titel)).bindPopup(box, {maxWidth: 300}).addTo(storyLayer);
-    n++;
+    n++; jumps.push([st.titel, ll]);
   }
   if (STORY_NAME) $('linkMsg').textContent = `${n} Geschichten aus ${file} geladen.`;
+  /* bei eigener Story-Datei: Sprungziele aus der Datei statt der Winterthurer Quartiere; Namen nur als Text */
+  if (STORY_NAME && jumps.length) {
+    const pl = $('places'); pl.textContent = '';
+    for (const [name, ll] of jumps) {
+      const b = document.createElement('button'); b.className = 'btn'; b.type = 'button'; b.textContent = name;
+      b.addEventListener('click', () => map.setView(ll, 17));
+      pl.appendChild(b);
+    }
+    $('placesLbl').textContent = (typeof data.ort === 'string' && data.ort.trim() ? data.ort.trim() + ': ' : '') + 'springen zu';
+  }
 }
 loadStories(`stories/${STORY_NAME || 'winterthur'}.json`);
 $('storyOn').addEventListener('change', e => { if (e.target.checked) storyLayer.addTo(map); else map.removeLayer(storyLayer); });

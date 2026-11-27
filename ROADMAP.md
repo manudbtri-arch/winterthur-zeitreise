@@ -148,3 +148,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Museen: Kiosk-Rundgang zeigt die Rundgang-Leiste (Station x von n); eine Berührung hält den Rundgang an, Besucher blättern selbst weiter.
 - [x] Gemeinden: 2D-Karte lädt mit `?stories=<name>` eine eigene Story-Datei wie der 3D-Flug; «Im 3D-Flug ansehen» in der Geschichte nimmt den Namen mit.
 - [x] Schulen: Unterrichtsseite um einen Auftrag zum Kartenstand ergänzen (Blatt und Stand unter dem Zeitregler lesen, mit dem gewählten Jahr vergleichen, Abweichung erklären).
+
+## 16. Eigene Orte durchgängig
+- [x] Gemeinden: 2D-Karte nimmt bei eigener Story-Datei die Sprungziele aus der Datei (wie der 3D-Flug) statt der festen Winterthurer Liste, mit dem Ortsnamen aus der Datei.
+- [ ] Gemeinden: Story-Werkstatt nennt neben dem Testlink für den 3D-Flug auch die Testlinks für 2D-Karte und Kiosk-Rundgang.
+- [ ] Museen: Im Kiosk-Rundgang bleibt die Infokarte stehen, bis die nächste Station angeflogen wird (keine leere Pause).
