@@ -58,7 +58,10 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 .search li{padding:8px 10px;border-radius:6px;cursor:pointer;font-size:15px;color:var(--ink)}
 .search li small{display:block;color:var(--mute);font-size:12px}
 .search li:hover,.search li[aria-selected=true]{background:var(--line)}
-@media(max-width:600px){.panel{top:auto;left:8px;right:8px;bottom:8px;width:auto;max-height:46vh;padding:14px}.year{margin-top:0}.tag{top:8px}}
+.ptog{display:none}
+@media(max-width:600px){.panel{top:auto;left:8px;right:8px;bottom:8px;width:auto;max-height:46vh;padding:14px}.year{margin-top:0}.tag{top:8px}
+  .ptog{display:block;width:100%;margin:0 0 10px}
+  .panel.min{padding:8px}.panel.min > :not(.ptog){display:none!important}.panel.min .ptog{margin:0}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -67,7 +70,8 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 <div id="divider" hidden><span>⇔</span></div>
 <div id="tagL" class="tag" hidden></div><div id="tagR" class="tag" hidden></div>
 
-<aside class="panel" aria-label="Steuerung">
+<aside class="panel" id="panel" aria-label="Steuerung">
+  <button class="btn ptog" id="pTog" type="button" aria-expanded="true" aria-controls="panel">Karte ganz zeigen ▾</button>
   <h1>Zeitreise Schweiz</h1>
   <p class="sub"><a href="./" style="color:var(--blue)">← Übersicht</a> · <a href="flug-3d.html" style="color:var(--blue)">3D-Flug</a></p>
   <p class="sub">Historische Karten und Luftbilder von swisstopo, 1844 bis heute</p>
@@ -302,6 +306,13 @@ async function loadStories(file){
 }
 loadStories('stories/winterthur.json');
 $('storyOn').addEventListener('change', e => { if (e.target.checked) storyLayer.addTo(map); else map.removeLayer(storyLayer); });
+
+/* ---------- Handy: Seitenleiste einklappen, damit die Karte ganz sichtbar ist ---------- */
+$('pTog').addEventListener('click', () => {
+  const min = $('panel').classList.toggle('min');
+  $('pTog').setAttribute('aria-expanded', !min);
+  $('pTog').textContent = min ? `Steuerung zeigen ▴ · ${$('yBig').textContent}` : 'Karte ganz zeigen ▾';
+});
 
 /* ---------- Ortssuche ganze Schweiz (geo.admin.ch); Ergebnisse nur als Text ---------- */
 {

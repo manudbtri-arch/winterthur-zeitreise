@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- 2D-Karte auf dem Handy: Knopf «Karte ganz zeigen» klappt die Steuerung zu einer schmalen Leiste mit der Jahrzahl ein, «Steuerung zeigen» holt sie zurück.
 - Story-Werkstatt: Hinweis beim Zeitraum (von/bis), wenn eine Geschichte keine Kartenausgabe trifft (im Kiosk-Rundgang übersprungen), nur heute sichtbar wäre oder ausserhalb des Zeitreglers 1870–1949 liegt; auch in der Liste.
 - Produktseite: Beispiel-Link «Kiosk-Rundgang ansehen» (Rundgang zu den Geschichten von Winterthur im Kiosk-Modus).
 - Handy: die Rundgang-Leiste nutzt die ganze Breite, kürzt lange Titel ab, hat Tasten von 44 px und ein ✕ statt «Beenden», damit sie schmal bleibt und gut zu treffen ist.
