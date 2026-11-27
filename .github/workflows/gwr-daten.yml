@@ -1,0 +1,43 @@
+# GWR-Daten: lädt monatlich die öffentlichen Gebäudedaten des Gebäude- und Wohnungsregisters (BFS)
+# und legt sie als Kacheln der Zoomstufe 13 im Zweig «gwr-daten» ab (ohne Verlauf, wie «bildtest»).
+# Der 3D-Flug nutzt sie noch nicht; Plan und offene Fragen in PLAN-baujahre.md.
+name: GWR-Daten
+on:
+  schedule:
+    - cron: '17 3 2 * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: gwr-daten
+  cancel-in-progress: false
+jobs:
+  kacheln:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Download beim Bund (data.geo.admin.ch, Quelle BFS)
+        run: |
+          mkdir -p gwr-roh
+          curl -fsSL --retry 3 -o gwr-roh/data.zip https://data.geo.admin.ch/ch.bfs.gebaeude_wohnungs_register/data.zip
+          unzip -l gwr-roh/data.zip
+          unzip -q -o gwr-roh/data.zip -d gwr-roh
+      - name: Gebäudetabelle finden und in Kacheln umrechnen
+        run: |
+          CSV=$(find gwr-roh -iname '*.csv' -iname '*geb*' | head -1)
+          [ -z "$CSV" ] && CSV=$(find gwr-roh \( -iname '*.csv' -o -iname '*.tsv' -o -iname '*.txt' \) ! -iname 'license*' -printf '%s %p\n' | sort -nr | head -1 | cut -d' ' -f2-)
+          echo "Tabelle: $CSV"; head -2 "$CSV"
+          node tools/gwr-kacheln.mjs "$CSV" gwr-out
+          cp gwr-roh/license* gwr-out/ 2>/dev/null || true
+      - name: Ergebnis in den Zweig «gwr-daten» legen
+        run: |
+          cd gwr-out
+          git init -q
+          git checkout -q -b gwr-daten
+          git add -A
+          git -c user.name="GWR-Daten" -c user.email="actions@users.noreply.github.com" commit -qm "GWR-Kacheln $(date +%F)"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gwr-daten

@@ -41,6 +41,10 @@ Verlauf (wie «bildtest») ablegen.
    60 Tage, wie bisher über geo.admin.ch abfragen.
 3. Methodik: Stand der Daten nennen.
 
+## Umgesetzt
+- `tools/gwr-kacheln.mjs`: liest die Gebäudetabelle (Spalten über ihre Namen, Trennzeichen automatisch) und schreibt `13/<x>/<y>.json` mit Quelle und Abrufdatum sowie `index.json`.
+- `.github/workflows/gwr-daten.yml`: monatlich und von Hand; Download von https://data.geo.admin.ch/ch.bfs.gebaeude_wohnungs_register/data.zip (Inhalt beim ersten Lauf prüfen), Ergebnis im Zweig `gwr-daten`.
+
 ## Offen
 - Erreicht der GitHub-Runner den Download des BFS? (beim ersten Lauf prüfen)
 - GitHub Pages veröffentlicht nur einen Zweig: entweder die Daten in `main` unter

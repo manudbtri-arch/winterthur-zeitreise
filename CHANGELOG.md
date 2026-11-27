@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Neue GitHub Action «GWR-Daten» (`tools/gwr-kacheln.mjs`): lädt monatlich die öffentlichen Gebäudedaten des Gebäuderegisters und legt EGID, Baujahr, Lage und Adresse als Kacheln von rund 3,3 km mit Quelle und Abrufdatum im Zweig «gwr-daten» ab; der 3D-Flug nutzt sie noch nicht.
 - Machbarkeit geprüft, die Baujahre aus dem Gebäuderegister vorberechnet mitzuliefern (`PLAN-baujahre.md`): machbar über den öffentlichen GWR-Download des BFS und eine monatliche GitHub Action; nächste Schritte in der Roadmap.
 - Handy: kürzere Sichtweite (Gehen rund 2,5 km, Fliegen rund 3,5 km statt 6 und 8 km), höchstens 140 Kacheln im Speicher und dichterer Dunst am Rand, damit es auf Telefonen flüssig bleibt; in der Methodik genannt.
 - Die heutigen 3D-Gebäude (swissBUILDINGS3D) werden nur noch einmal geladen statt zweimal: Kirchen, Türme, Kamine und Mauern erhalten ihre Steinfarbe als Stilfarbe im selben Datensatz, der Fassaden-Shader lässt dort das Fensterraster weg; halber Datenverkehr und Speicher für Gebäude.
