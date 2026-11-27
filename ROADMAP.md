@@ -82,3 +82,13 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Schulen: Auftrag 2 der Unterrichtsseite um das Nachprüfen im Gebäuderegister ergänzen (Quellenkritik: stimmt das Baujahr in der Quelle?).
 - [x] Infokarte eines belegten Gebäudes nennt das Alter im gewählten Jahr («1880 war es 34 Jahre alt»), nur bei genauem Baujahr.
 - [x] Forschung: Statistik-CSV und Gebäudeliste (CSV, GeoJSON) mit Abrufdatum `abgerufen_am`, damit Exporte zitierbar sind.
+
+## 8. Bundesdaten nutzen (Auftrag Manuel)
+- [x] Kartenstand pro Blatt der Siegfriedkarte unter dem Zeitregler (ch.swisstopo.hiks-siegfried.metadata).
+- [ ] Historische Verkehrswege IVS (ASTRA) als Thema mit Infokarte.
+- [ ] ISOS, schützenswerte Ortsbilder (BAK) als Thema mit Infokarte.
+- [ ] Kulturgüterschutz-Inventar KGS (BABS) als Thema mit Infokarte.
+- [ ] Luftbilder swisstopo (LUBIS): Aufnahmeorte als Thema mit Infokarte.
+- [ ] Ortsnamen swissNAMES3D als Thema.
+- [ ] Heutige Gewässer swissTLM3D als Thema (Vergleich mit der Karte).
+- [ ] Arealstatistik BFS als Thema mit Infokarte.

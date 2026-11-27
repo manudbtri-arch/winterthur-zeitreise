@@ -469,11 +469,53 @@ function markTicks(){
 function showLayer(){
   const key = $('src').value, s = SRC[key], y = +$('yr').value;
   $('yBig').textContent = s.fixed ? (key==='dufour' ? '1850' : 'heute') : (key==='luft' && y===1928 ? 1927 : y);
-  $('yLbl').textContent = s.name;
+  $('yLbl').textContent = s.name + (key === 'sieg' && sheet.txt ? ' · ' + sheet.txt : '');
   const next = viewer.imageryLayers.addImageryProvider(tile(key, y));
   const old = top; top = next;
   if (old) setTimeout(() => { if (old !== top) viewer.imageryLayers.remove(old, true); }, 1500);
 }
+/* ---------- Abfrage bei geo.admin.ch an einem Punkt (identify); Ergebnisse nur als Text verwenden ---------- */
+async function identifyAt(lon, lat, layers, extra = '', tol = 15){
+  const [E, N] = toLV95(lon, lat), env = [E - 500, N - 500, E + 500, N + 500].map(v => v.toFixed(1)).join(',');
+  const u = `https://api3.geo.admin.ch/rest/services/api/MapServer/identify?geometry=${E.toFixed(1)},${N.toFixed(1)}&geometryType=esriGeometryPoint&sr=2056`
+    + `&layers=all:${layers.join(',')}&tolerance=${tol}&mapExtent=${env}&imageDisplay=1000,1000,96&returnGeometry=false&lang=de${extra}`;
+  const ac = new AbortController(), t = setTimeout(() => ac.abort(), 6000);
+  try { const j = await (await fetch(u, {signal: ac.signal})).json(); return Array.isArray(j.results) ? j.results : []; }
+  catch (e) { return []; } finally { clearTimeout(t); }
+}
+/* Bezeichnung eines Treffers: «label», sonst Name, sonst erster kurzer Text */
+function hitLabel(r){
+  const a = r.attributes || {};
+  for (const k of ['label', 'name', 'bezeichnung', 'objektname', 'title', 'titel']) if (typeof a[k] === 'string' && a[k].trim()) return a[k].trim();
+  if (typeof r.label === 'string' && r.label.trim()) return r.label.trim();
+  for (const v of Object.values(a)) if (typeof v === 'string' && v.trim() && v.length < 80 && !/^https?:/.test(v)) return v.trim();
+  return '';
+}
+/* ---------- Punkt 1: Kartenstand des Blatts der Siegfriedkarte (swisstopo, ch.swisstopo.hiks-siegfried.metadata) ---------- */
+const sheet = {txt: '', key: '', t: 0};
+async function updateSheet(){
+  if ($('src').value !== 'sieg' || present) return;
+  const f = world.focus || [HOME.lon, HOME.lat + 0.01], y = +$('yr').value || 1880;
+  const key = `${Math.round(lon2x(f[0]) / 2048)}:${Math.round(lat2y(f[1]) / 2048)}:${y}`;
+  if (key === sheet.key) return;
+  sheet.key = key;
+  const res = await identifyAt(f[0], f[1], ['ch.swisstopo.hiks-siegfried.metadata'], `&timeInstant=${y}`, 1);
+  if (sheet.key !== key) return;
+  const r = res[0];
+  let txt = '';
+  if (r) {
+    const a = r.attributes || {};
+    /* Jahr: Feld mit «jahr», «year» oder «date» im Namen, sonst die erste Jahreszahl zwischen 1840 und 1960 */
+    let yr = null;
+    for (const [k, v] of Object.entries(a)) if (/jahr|year|date|stand/i.test(k)) { const m = String(v).match(/\b(18[4-9]\d|19[0-6]\d)\b/); if (m) { yr = m[1]; break; } }
+    if (!yr) for (const v of Object.values(a)) { const m = String(v).match(/^(18[4-9]\d|19[0-6]\d)$/); if (m) { yr = m[1]; break; } }
+    const nm = hitLabel(r);
+    txt = (nm ? `Blatt ${nm}` : 'Blatt') + (yr ? `, Stand ${yr}` : '');
+  }
+  sheet.txt = txt;
+  if ($('src').value === 'sieg' && !present) $('yLbl').textContent = SRC.sieg.name + (txt ? ' · ' + txt : '');
+}
+setInterval(updateSheet, 1500);
 let deb;
 $('src').addEventListener('change', () => { setRange(); showLayer(); });
 $('yr').addEventListener('input', () => { $('yBig').textContent = $('yr').value; applyYear(+$('yr').value); clearTimeout(deb); deb = setTimeout(showLayer, 250); });
