@@ -114,6 +114,11 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
 .mini #miniMap{position:absolute;inset:0}
 .mini svg{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;z-index:500;pointer-events:none}
 .mini span{position:absolute;z-index:500;left:6px;bottom:4px;font-size:10px;color:#333;background:rgba(255,255,255,.75);padding:0 4px;border-radius:3px;pointer-events:none}
+.dlg{position:absolute;inset:0;z-index:35;display:grid;place-items:center;background:rgba(0,0,0,.45);padding:16px}
+.dlg .box{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:18px;width:min(560px,100%);box-shadow:0 10px 40px rgba(0,0,0,.4)}
+.dlg h2{font-size:19px;margin:0 0 6px}
+.dlg p{font-size:14px;color:var(--mute);margin:0 0 10px}
+.dlg textarea{width:100%;height:110px;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);resize:vertical}
 @media(min-width:1200px){.mini.on{display:block}body:has(.mini.on) .f3{bottom:212px}}
 .intro .card{max-width:560px;text-align:left}
 .intro .kicker{font-size:15px;color:#d9b98f;margin:0 0 10px;font-weight:600}
@@ -151,6 +156,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
     <button class="btn" id="linkBtn">Link kopieren</button>
     <button class="btn" id="shotBtn">Bild (P)</button>
   </div>
+  <button class="btn" id="embedBtn">Einbetten (Code für Website)</button>
   <div class="row2">
     <button class="btn" id="csvBtn" title="Gebäudeliste des gebauten Gebiets">Liste CSV</button>
     <button class="btn" id="geoBtn" title="Gebäude als GeoJSON für GIS">GeoJSON</button>
@@ -208,6 +214,14 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
   <p class="maphint">Klick auf die Karte: Du wirst dorthin teleportiert und stehst auf der Strasse. Gestrichelt: das gebaute Gebiet.</p>
 </div>
 <div class="mini on" id="mini" title="Minikarte – Klick öffnet die grosse Karte (M)" aria-hidden="true"><div id="miniMap"></div><svg id="miniArrow" viewBox="0 0 30 30"><circle cx="15" cy="15" r="6" fill="#c8803f" stroke="#fff" stroke-width="2"/><path d="M15 1 L20 10 L10 10Z" fill="#c8803f" stroke="#fff" stroke-width="1.5"/></svg><span>© swisstopo</span></div>
+<div class="dlg" id="embedDlg" hidden role="dialog" aria-modal="true" aria-labelledby="embedH">
+  <div class="box">
+    <h2 id="embedH">Auf der eigenen Website einbetten</h2>
+    <p>Diesen Code in die Website einfügen. Er zeigt die aktuelle Ansicht mit Ort, Jahr und Blickrichtung.</p>
+    <textarea id="embedCode" readonly aria-label="Einbettungscode"></textarea>
+    <div class="row2"><button class="btn primary" id="embedCopy">Code kopieren</button><button class="btn" id="embedClose">Schliessen</button></div>
+  </div>
+</div>
 <div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small></div>
 
 <a class="pill openfull" id="openFull" href="flug-3d.html" target="_blank" rel="noopener" hidden>↗ Im Vollbild öffnen</a>
@@ -1499,6 +1513,21 @@ $('geoBtn').addEventListener('click', () => {
   download(`gebaeude-${fileSlug()}-${x.year}.geojson`, JSON.stringify(gj, null, 1), 'application/geo+json');
   toast(`${x.rows.length} Gebäude exportiert`);
 });
+/* ---------- Einbetten: iframe-Code mit der aktuellen Ansicht ---------- */
+$('embedBtn').addEventListener('click', () => {
+  if (document.pointerLockElement) document.exitPointerLock();
+  const url = permalink().replace('?', '?embed=1&').replace(/&/g, '&amp;');
+  $('embedCode').value = `<iframe src="${url}" width="100%" height="560" style="border:0;border-radius:8px" allow="fullscreen" allowfullscreen loading="lazy" title="Zeitreise Schweiz – 3D-Ansicht"></iframe>`;
+  $('embedDlg').hidden = false;
+  $('embedCode').focus(); $('embedCode').select();
+});
+$('embedCopy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText($('embedCode').value); toast('Code kopiert'); }
+  catch (e) { $('embedCode').select(); toast('Markiert – mit Strg+C kopieren'); }
+});
+$('embedClose').addEventListener('click', () => { $('embedDlg').hidden = true; });
+$('embedDlg').addEventListener('click', e => { if (e.target === $('embedDlg')) $('embedDlg').hidden = true; });
+$('embedDlg').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') $('embedDlg').hidden = true; });
 $('openFull').addEventListener('click', () => { $('openFull').href = permalink(); });
 if (LINK) {
   closeIntro();

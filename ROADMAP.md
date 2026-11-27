@@ -19,7 +19,7 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Analyse-Modus: Gebäude nach Bauepoche einfärben (Legende), Statistik der Bauepochen im Gebiet.
 - [x] Minikarte unten links mit Standort und Blickrichtung.
 - [x] Einbettung: `?embed=1` ohne Startbildschirm, Menü eingeklappt, Knopf «Im Vollbild öffnen».
-- [ ] Knopf «Einbetten» im Menü liefert den iframe-Code zum Kopieren.
+- [x] Knopf «Einbetten» im Menü liefert den iframe-Code zum Kopieren.
 
 ## 3. Inhalte
 - [ ] Geschichten an Orten: `stories/winterthur.json` (Titel, Text, Jahr von–bis, Koordinaten, Quelle); Marker im 3D-Bild, Infokarte beim Anklicken. Nur gesicherte, mit Quelle belegte Fakten.
