@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Methodik – Zeitreise Schweiz</title>
+<meta name="description" content="Woher die Daten von Zeitreise Schweiz stammen, wie belegte und rekonstruierte Häuser entstehen, wie genau sie sind und wie man zitiert.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: sachlich, offen, wie ein Methodenkapitel – nichts beschönigen
+   IDEA: Beipackzettel zur Karte: was drin ist, wie es gemacht ist, wo es hinkt
+   PICTURE: kein Bild, nur klare Tabellen und Listen
+   COLOUR and TYPE: wie die Produktseite – Papierweiss, Tusche, Gewässerblau, Ziegelbraun; Archivo
+   LAYOUT: eine Lesespalte, Inhaltsverzeichnis oben */
+:root{color-scheme:light dark;--bg:light-dark(#fbfaf7,#121417);--card:light-dark(#ffffff,#1a1d21);--ink:light-dark(#16161a,#ecebe7);--mute:light-dark(#5a5a5f,#a8a7a2);--line:light-dark(#e2e0da,#2b3036);--blue:light-dark(#1f5fa8,#76aee8);--brick:light-dark(#9a4a2c,#e0956f)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 Archivo,system-ui,sans-serif}
+a{color:var(--blue)}
+a:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.wrap{max-width:760px;margin:0 auto;padding:0 max(5vw,16px)}
+nav{border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:18px;align-items:center;min-height:60px;flex-wrap:wrap}
+nav b{margin-right:auto;font-size:19px}
+nav a{font-weight:600;font-size:15px;text-decoration:none}
+header{padding:clamp(32px,5vw,56px) 0 8px}
+.kicker{color:var(--brick);font-weight:600;font-size:15px;margin:0 0 10px}
+h1{font-size:clamp(32px,5vw,48px);line-height:1.06;margin:0 0 14px;font-weight:800;text-wrap:balance}
+h2{font-size:clamp(23px,3vw,29px);line-height:1.15;margin:44px 0 10px;font-weight:800;scroll-margin-top:16px}
+h3{font-size:18px;margin:22px 0 4px}
+.lead{font-size:19px;color:var(--mute);margin:0 0 20px}
+.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 20px;margin:20px 0 0}
+.toc ol{margin:0;padding-left:20px}
+.toc li{margin:3px 0}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card);margin:14px 0}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--mute);font-size:13px}
+tr:last-child td{border-bottom:0}
+code{font:14px ui-monospace,Menlo,Consolas,monospace;background:var(--line);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.box{border-left:4px solid var(--brick);background:var(--card);padding:12px 18px;border-radius:0 10px 10px 0;margin:14px 0}
+.box.blue{border-left-color:var(--blue)}
+ul,ol{padding-left:22px}
+li{margin:5px 0}
+.cite{font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;white-space:pre-wrap;overflow-wrap:anywhere}
+footer{margin-top:56px;padding:28px 0 44px;border-top:1px solid var(--line);font-size:15px;color:var(--mute)}
+footer a{color:var(--mute)}
+</style>
+</head>
+<body>
+<nav aria-label="Navigation">
+  <div class="wrap">
+    <b>Zeitreise Schweiz</b>
+    <a href="./">Übersicht</a><a href="flug-3d.html">3D-Flug</a><a href="karte-2d.html">2D-Karte</a>
+  </div>
+</nav>
+
+<main class="wrap">
+<header>
+  <p class="kicker">Methodik</p>
+  <h1>Wie Zeitreise Schweiz entsteht – und wo es Grenzen hat</h1>
+  <p class="lead">Diese Seite legt offen, welche Daten verwendet werden, wie daraus die 3D-Szene wird und wie verlässlich die einzelnen Teile sind. Sie richtet sich an alle, die das Werkzeug im Unterricht, in einer Ausstellung oder in der Forschung einsetzen.</p>
+  <div class="toc">
+    <ol>
+      <li><a href="#quellen">Datenquellen</a></li>
+      <li><a href="#belegt">Belegte Häuser: heute noch stehend</a></li>
+      <li><a href="#rekonstruiert">Rekonstruierte Häuser: aus der Siegfriedkarte</a></li>
+      <li><a href="#genauigkeit">Genauigkeit</a></li>
+      <li><a href="#grenzen">Bekannte Grenzen</a></li>
+      <li><a href="#zitieren">Zitiervorschlag</a></li>
+    </ol>
+  </div>
+</header>
+
+<h2 id="quellen">1. Datenquellen</h2>
+<p>Alle Daten sind offene Behördendaten. Sie werden beim Öffnen direkt von den Diensten des Bundes geladen, nicht kopiert.</p>
+<div class="tbl"><table>
+  <thead><tr><th>Daten</th><th>Herausgeber</th><th>Dienst / Ebene</th><th>Verwendung</th></tr></thead>
+  <tbody>
+    <tr><td>Siegfriedkarte (Topographischer Atlas, 1:25 000 / 1:50 000)</td><td>swisstopo</td><td><code>ch.swisstopo.hiks-siegfried</code></td><td>Kartengrund 1870–1949, Grundrisse abgerissener Häuser</td></tr>
+    <tr><td>Landeskarte-Zeitreihe</td><td>swisstopo</td><td><code>ch.swisstopo.zeitreihen</code></td><td>wählbarer Kartengrund</td></tr>
+    <tr><td>Dufourkarte</td><td>swisstopo</td><td><code>ch.swisstopo.hiks-dufour</code></td><td>wählbarer Kartengrund</td></tr>
+    <tr><td>SWISSIMAGE (heute und Archiv)</td><td>swisstopo</td><td><code>ch.swisstopo.swissimage</code>, <code>ch.swisstopo.swissimage-product</code></td><td>Luftbild heute, historische Luftbilder</td></tr>
+    <tr><td>Geländemodell</td><td>swisstopo</td><td><code>ch.swisstopo.terrain.3d</code></td><td>3D-Relief</td></tr>
+    <tr><td>swissBUILDINGS3D</td><td>swisstopo</td><td><code>ch.swisstopo.swissbuildings3d.3d</code></td><td>Form und Höhe heute stehender Gebäude</td></tr>
+    <tr><td>Vegetation 3D</td><td>swisstopo</td><td><code>ch.swisstopo.vegetation.3d</code></td><td>Bäume in der Ansicht «Heute»</td></tr>
+    <tr><td>Eidg. Gebäude- und Wohnungsregister (GWR)</td><td>Bundesamt für Statistik (BFS)</td><td><code>ch.bfs.gebaeude_wohnungs_register</code></td><td>Baujahr, Status und Adresse je Gebäude</td></tr>
+    <tr><td>Ortssuche</td><td>swisstopo</td><td>geo.admin.ch SearchServer</td><td>Gemeinden, Adressen, Flurnamen</td></tr>
+  </tbody>
+</table></div>
+<p>Nutzungsbedingungen: <a href="https://www.geo.admin.ch/de/allgemeine-nutzungsbedingungen-bgdi">Allgemeine Nutzungsbedingungen der BGDI</a> (geo.admin.ch). Zum Gebäuderegister: <a href="https://www.housing-stat.ch/">housing-stat.ch</a> (BFS). Die Karten lassen sich im Original vergleichen auf <a href="https://map.geo.admin.ch/?layers=ch.swisstopo.hiks-siegfried">map.geo.admin.ch</a>.</p>
+
+<h2 id="belegt">2. Belegte Häuser: heute noch stehend</h2>
+<p>Für das gewählte Gebiet (rund 1,3 × 1,3 km um den Suchort) fragt die Seite das Gebäuderegister ab. Berücksichtigt werden nur Gebäude mit Status «bestehend».</p>
+<ol>
+  <li>Jedes Gebäude im Register hat eine eidgenössische Gebäudenummer (EGID). Dieselbe Nummer steht in swissBUILDINGS3D. Darüber werden Register und 3D-Modell verknüpft.</li>
+  <li>Ein 3D-Gebäude erscheint im Jahr X, wenn sein Baujahr im Register kleiner oder gleich X ist.</li>
+  <li>Fehlt das genaue Baujahr, verwendet das Register eine Bauperiode. Für die Periode «vor 1919» wird das Haus ab 1880 gezeigt; die Infokarte sagt dann «Baujahr vor 1919».</li>
+</ol>
+<div class="box blue">Gezeigt wird die <b>heutige</b> Form des Gebäudes. Aufstockungen, Anbauten und Dachumbauten nach dem gewählten Jahr sind also enthalten. Fassaden und Dachziegel sind keine Fotos, sondern ein einheitliches Muster.</div>
+
+<h2 id="rekonstruiert">3. Rekonstruierte Häuser: aus der Siegfriedkarte</h2>
+<p>Häuser, die auf der historischen Karte stehen, heute aber nicht mehr, werden aus dem Kartenbild nachgebaut. Das geschieht im Browser, für die Kartenstände 1880, 1900, 1920 und 1940.</p>
+<ol>
+  <li><b>Hausflächen finden:</b> Auf der Siegfriedkarte sind Gebäude schwarz gefüllt. Dunkle Bildpunkte werden ausgewählt; ein morphologisches Öffnen (Erosion, dann Dilatation) entfernt dünne Linien und einen Teil der Schrift.</li>
+  <li><b>Raster:</b> Je 2 × 2 Bildpunkte der Kartenkacheln (Zoomstufe 16) bilden einen Block von etwa 3 m Kantenlänge. Zusammenhängende Blöcke ergeben ein Haus. Sehr kleine Flecken und dünn gefüllte, grosse Gitter (Gleisfelder, Strassennetze) werden verworfen.</li>
+  <li><b>Abgleich mit dem Register:</b> Liegt ein heute noch stehendes Gebäude mit passendem Baujahr in oder dicht neben einem Kartenhaus (etwa 6 m), übernimmt das echte 3D-Modell. Nur die übrigen Kartenhäuser werden nachgebaut.</li>
+  <li><b>Höhe:</b> Die Siegfriedkarte enthält keine Gebäudehöhen. Die Zahl der Geschosse wird aus der Grundfläche geschätzt (2 bis 4 Geschosse à 3,3 m); sehr grosse Flächen gelten als eingeschossige Halle. Das Dach ist ein vereinfachtes Stufendach.</li>
+  <li><b>Boden:</b> Bis rund 19 m um Häuser wird Pflaster gezeichnet, sonst Wiese; blaue Kartenflächen werden als Wasser gezeigt.</li>
+</ol>
+<div class="box">Rekonstruierte Häuser zeigen <b>Lage und ungefähren Grundriss</b> nach der Karte. Höhe, Dachform, Farbe und Fenster sind geschätzt bzw. schematisch und dürfen nicht als Befund gelesen werden.</div>
+
+<h2 id="genauigkeit">4. Genauigkeit</h2>
+<div class="tbl"><table>
+  <thead><tr><th>Teil</th><th>Einschätzung</th></tr></thead>
+  <tbody>
+    <tr><td>Lage und Form belegter Häuser</td><td>so genau wie swissBUILDINGS3D (heutiger Zustand)</td></tr>
+    <tr><td>Baujahr belegter Häuser</td><td>so genau wie der Registereintrag; teils nur Bauperiode</td></tr>
+    <tr><td>Grundriss rekonstruierter Häuser</td><td>Blockraster etwa 3 m; dazu die Lageungenauigkeit der historischen Karte und ihrer Georeferenzierung</td></tr>
+    <tr><td>Höhe rekonstruierter Häuser</td><td>Schätzung, keine Messung</td></tr>
+    <tr><td>Koordinatenanzeige (F3)</td><td>Umrechnung WGS84 ↔ LV95 mit der Näherungsformel von swisstopo, Abweichung im Meterbereich</td></tr>
+    <tr><td>Gelände</td><td>heutiges Geländemodell</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="grenzen">5. Bekannte Grenzen</h2>
+<ul>
+  <li><b>Kartenstand:</b> Die Blätter der Siegfriedkarte wurden zu verschiedenen Zeiten nachgeführt. Der Kartenstand eines Orts kann darum einige Jahre vom gewählten Jahr abweichen.</li>
+  <li><b>Fehlklötze:</b> Schrift, Signaturen und dicke Linien der Karte können als Klötze erscheinen, die keine Häuser sind.</li>
+  <li><b>Verschmolzene Häuser:</b> Eng aneinander gebaute Häuser erscheinen oft als ein langer Block.</li>
+  <li><b>Ersetzte Häuser:</b> Wurde ein altes Haus abgerissen und an gleicher Stelle neu gebaut, erscheint vor dem neuen Baujahr das rekonstruierte Haus aus der Karte – mit geschätzter Höhe.</li>
+  <li><b>Bauperiode «vor 1919»:</b> Solche Häuser erscheinen ab 1880, auch wenn sie erst kurz vor 1919 gebaut wurden.</li>
+  <li><b>Fehlende Registerdaten:</b> Gebäude ohne Baujahr und ohne Bauperiode im Register werden nicht als Altbau gezeigt.</li>
+  <li><b>Heutiges Gelände:</b> Aufschüttungen, Bahndämme oder verlegte Bäche späterer Zeit sind im Relief bereits enthalten.</li>
+  <li><b>Gebietsgrösse:</b> Gebaut wird ein Ausschnitt von rund 1,3 × 1,3 km; ausserhalb liegt nur die Karte auf dem Gelände.</li>
+</ul>
+
+<h2 id="zitieren">6. Zitiervorschlag</h2>
+<p>Bitte immer die zugrunde liegenden Daten mitnennen:</p>
+<div class="cite" id="cite">Zeitreise Schweiz: 3D-Ansicht [Ort], Kartenstand [Jahr].
+https://manudbtri-arch.github.io/winterthur-zeitreise/ (abgerufen am [Datum]).
+Daten: © swisstopo (Siegfriedkarte, swissBUILDINGS3D, Geländemodell, SWISSIMAGE);
+Bundesamt für Statistik, Eidg. Gebäude- und Wohnungsregister (GWR).</div>
+<p>Änderungen am Verfahren stehen im <a href="https://github.com/manudbtri-arch/winterthur-zeitreise/blob/main/CHANGELOG.md">Änderungsprotokoll</a>; der Quelltext ist auf <a href="https://github.com/manudbtri-arch/winterthur-zeitreise">GitHub</a> einsehbar.</p>
+</main>
+
+<footer>
+  <div class="wrap">Zeitreise Schweiz · Daten © swisstopo, BFS Gebäuderegister · <a href="./">Übersicht</a> · <a href="flug-3d.html">3D-Flug</a></div>
+</footer>
+</body>
+</html>
