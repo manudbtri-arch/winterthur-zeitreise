@@ -122,6 +122,14 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
 .places{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .places button{border:1px solid var(--line);background:var(--bg);color:var(--ink);font:600 13px Archivo,sans-serif;border-radius:16px;padding:6px 12px;min-height:36px;cursor:pointer}
 .places button:hover{border-color:var(--brown)}
+body.kiosk .nokiosk,body.kiosk .keys,body.kiosk .legend a,body.kiosk .note a{display:none!important}
+body.kiosk .btn,body.kiosk .seg button{min-height:58px;font-size:18px}
+body.kiosk .pill{font-size:20px;padding:14px 22px;border-radius:30px}
+body.kiosk .timeline{padding:14px 24px 16px}
+body.kiosk .track input{height:44px}
+body.kiosk .places button{min-height:48px;font-size:16px;padding:8px 16px}
+.attract{position:absolute;z-index:14;left:50%;top:40%;transform:translate(-50%,-50%);background:rgba(20,18,14,.72);color:#f3eee3;font:800 clamp(24px,4vw,40px)/1.2 Archivo,sans-serif;padding:22px 34px;border-radius:18px;text-align:center;pointer-events:none}
+.attract small{display:block;font:600 18px Archivo,sans-serif;color:#d9b98f;margin-top:6px}
 .dlg{position:absolute;inset:0;z-index:35;display:grid;place-items:center;background:rgba(0,0,0,.45);padding:16px}
 .dlg .box{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:18px;width:min(560px,100%);box-shadow:0 10px 40px rgba(0,0,0,.4)}
 .dlg h2{font-size:19px;margin:0 0 6px}
@@ -153,21 +161,21 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
 <aside class="panel" id="panel" aria-label="Steuerung">
   <h1>Zeitreise Schweiz</h1>
   <div class="search"><input id="q" type="search" placeholder="Ort oder Adresse suchen …" autocomplete="off" aria-label="Ort suchen"><ul id="qres" hidden></ul></div>
-  <p class="sub"><a href="./" style="color:var(--blue)">← Übersicht</a> · <a href="karte-2d.html" style="color:var(--blue)">2D-Karte</a></p>
+  <p class="sub nokiosk"><a href="./" style="color:var(--blue)">← Übersicht</a> · <a href="karte-2d.html" style="color:var(--blue)">2D-Karte</a></p>
 
   <button class="btn primary" id="spawn">Losgehen</button>
   <div class="row2">
     <button class="btn" id="mapBtn">Karte (M)</button>
     <button class="btn" id="fullBtn">Vollbild</button>
   </div>
-  <div class="row2">
+  <div class="row2 nokiosk">
     <button class="btn" id="linkBtn">Link kopieren</button>
     <button class="btn" id="shotBtn">Bild (P)</button>
   </div>
   <button class="btn" id="tourBtn" disabled>Rundgang zu den Geschichten</button>
   <div class="places" id="places" aria-label="Bekannte Orte"></div>
-  <button class="btn" id="embedBtn">Einbetten (Code für Website)</button>
-  <div class="row2">
+  <button class="btn nokiosk" id="embedBtn">Einbetten (Code für Website)</button>
+  <div class="row2 nokiosk">
     <button class="btn" id="csvBtn" title="Gebäudeliste des gebauten Gebiets">Liste CSV</button>
     <button class="btn" id="geoBtn" title="Gebäude als GeoJSON für GIS">GeoJSON</button>
   </div>
@@ -225,6 +233,7 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
   <p class="maphint">Klick auf die Karte: Du wirst dorthin teleportiert und stehst auf der Strasse. Gestrichelt: das gebaute Gebiet.</p>
 </div>
 <div class="mini on" id="mini" title="Minikarte – Klick öffnet die grosse Karte (M)" aria-hidden="true"><div id="miniMap"></div><svg id="miniArrow" viewBox="0 0 30 30"><circle cx="15" cy="15" r="6" fill="#c8803f" stroke="#fff" stroke-width="2"/><path d="M15 1 L20 10 L10 10Z" fill="#c8803f" stroke="#fff" stroke-width="1.5"/></svg><span>© swisstopo</span></div>
+<div class="attract" id="attract" hidden>Berühre den Bildschirm<small>und geh durch die Stadt von damals</small></div>
 <div class="tour" id="tour" hidden role="group" aria-label="Rundgang">
   <button class="btn" id="tourPrev" aria-label="Vorherige Station">‹</button>
   <span id="tourLbl"></span>
@@ -1621,6 +1630,50 @@ $('embedClose').addEventListener('click', () => { $('embedDlg').hidden = true; }
 $('embedDlg').addEventListener('click', e => { if (e.target === $('embedDlg')) $('embedDlg').hidden = true; });
 $('embedDlg').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') $('embedDlg').hidden = true; });
 $('openFull').addEventListener('click', () => { $('openFull').href = permalink(); });
+/* ---------- Kiosk-Modus (?kiosk=1): Rundflug im Leerlauf, Neustart nach 2 Minuten ohne Eingabe ---------- */
+const KIOSK = new URLSearchParams(location.search).get('kiosk') === '1';
+const kiosk = {auto: false, last: performance.now(), hdg: 0, yearT: 0, ei: 0};
+const KIOSK_CENTER = C.Cartesian3.fromDegrees(8.7290, 47.4997, 450), KIOSK_ENU = C.Transforms.eastNorthUpToFixedFrame(KIOSK_CENTER);
+/* Kamera im Kreis um die Altstadt: Blickrichtung aus Kurs und Neigung, Abstand r */
+function kioskView(h, pDeg, r){
+  const p = C.Math.toRadians(pDeg);
+  const local = new C.Cartesian3(-Math.sin(h) * Math.cos(p) * r, -Math.cos(h) * Math.cos(p) * r, -Math.sin(p) * r);
+  const pos = C.Matrix4.multiplyByPoint(KIOSK_ENU, local, new C.Cartesian3());
+  camera.setView({destination: pos, orientation: {heading: h, pitch: p, roll: 0}});
+}
+function kioskStart(){
+  kiosk.auto = true; kiosk.hdg = 0; kiosk.yearT = performance.now(); kiosk.ei = 0;
+  if (document.pointerLockElement) document.exitPointerLock();
+  tourEnd(); closeMap(); $('embedDlg').hidden = true; $('info').hidden = true;
+  if (present) setPresent(false);
+  setMode(false); setPanel(false);
+  $('yr').value = EDITIONS[0]; $('yBig').textContent = EDITIONS[0]; applyYear(EDITIONS[0]); showLayer();
+  $('attract').hidden = false;
+}
+function kioskStop(){
+  if (!kiosk.auto) return;
+  kiosk.auto = false;
+  $('attract').hidden = true;
+}
+if (KIOSK) {
+  document.body.classList.add('kiosk');
+  closeIntro();
+  for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchstart'])
+    window.addEventListener(ev, () => { kiosk.last = performance.now(); kioskStop(); }, {capture: true, passive: true});
+  setInterval(() => { if (!kiosk.auto && performance.now() - kiosk.last > 120000) kioskStart(); }, 2000);
+  scene.preRender.addEventListener((sc, time) => {
+    if (!kiosk.auto) return;
+    kiosk.hdg += 0.0012;
+    kioskView(kiosk.hdg, -28, 1100);
+    /* alle 20 Sekunden die nächste Kartenausgabe zeigen */
+    if (performance.now() - kiosk.yearT > 20000) {
+      kiosk.yearT = performance.now(); kiosk.ei = (kiosk.ei + 1) % EDITIONS.length;
+      const y = EDITIONS[kiosk.ei];
+      $('yr').value = y; $('yBig').textContent = y; applyYear(y); showLayer();
+    }
+  });
+  kioskStart();
+}
 if (LINK) {
   closeIntro();
   camera.setView({destination: C.Cartesian3.fromDegrees(LINK.lon, LINK.lat, LINK.h),
