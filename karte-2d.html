@@ -116,7 +116,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
   <button class="btn" id="linkBtn" style="width:100%;margin-top:8px">Link zu dieser Ansicht kopieren</button>
   <p class="sub" id="linkMsg" aria-live="polite" style="margin:6px 0 0"></p>
 
-  <p class="note">Luftbilder gibt es nicht für jedes Jahr: Ist die Karte leer, wurde der Ort in diesem Jahr nicht beflogen. Die Zeitreihe zeigt jeweils den Kartenstand am 31. Dezember.<br>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a></p>
+  <p class="note">Luftbilder gibt es nicht für jedes Jahr: Ist die Karte leer, wurde der Ort in diesem Jahr nicht beflogen. Die Zeitreihe zeigt jeweils den Kartenstand am 31. Dezember. Bei der Siegfriedkarte steht das Blatt am Kartenmittelpunkt mit seinem tatsächlichen Kartenstand dabei.<br>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a></p>
 </aside>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -176,6 +176,7 @@ function showTime(after){
   $('yLbl').textContent = s.name;
   const l = mk(key,y); l.setOpacity(1 - $('tOp').value/100);
   swap(hist, l, after);
+  updateSheetD();
 }
 const showTimeD = debounce(()=>showTime(),180);
 $('tSrc').addEventListener('change', () => { setRange($('tYear'),$('tSrc').value,$('tYear').value); showTime(); });
@@ -217,6 +218,7 @@ function label(side){
 function showSide(side){
   label(side);
   swap(side==='l'?L_:R_, mk($(side+'Src').value, +$(side+'Year').value, side==='l'?'left':'right'));
+  updateSheetD();
 }
 function clip(){
   if ($('pCmp').hidden) return;
@@ -345,6 +347,55 @@ $('storyOn').addEventListener('change', e => { if (e.target.checked) storyLayer.
   });
   inp.addEventListener('blur', () => setTimeout(() => { list.hidden = true; }, 150));
 }
+
+/* ---------- Kartenstand des Blatts der Siegfriedkarte am Kartenmittelpunkt (swisstopo, ch.swisstopo.hiks-siegfried.metadata), wie im 3D-Flug ---------- */
+const sheetCache = new Map();
+function sheetAt(lon, lat, y){
+  const [E, N] = toLV95(lon, lat), k = `${Math.round(E / 2000)}:${Math.round(N / 2000)}:${y}`;
+  if (sheetCache.has(k)) return sheetCache.get(k);
+  const env = [E - 500, N - 500, E + 500, N + 500].map(v => v.toFixed(1)).join(',');
+  const u = `https://api3.geo.admin.ch/rest/services/api/MapServer/identify?geometry=${E.toFixed(1)},${N.toFixed(1)}&geometryType=esriGeometryPoint&sr=2056`
+    + `&layers=all:ch.swisstopo.hiks-siegfried.metadata&tolerance=1&mapExtent=${env}&imageDisplay=1000,1000,96&returnGeometry=false&lang=de&timeInstant=${y}`;
+  const p = (async () => {
+    const ac = new AbortController(), t = setTimeout(() => ac.abort(), 6000);
+    try {
+      const r = ((await (await fetch(u, {signal: ac.signal})).json()).results || [])[0];
+      if (!r) return '';
+      const a = r.attributes || {};
+      /* Jahr: Feld mit «jahr», «year», «date» oder «stand» im Namen, sonst die erste Jahreszahl zwischen 1840 und 1960 */
+      let yr = null;
+      for (const [k2, v] of Object.entries(a)) if (/jahr|year|date|stand/i.test(k2)) { const m = String(v).match(/\b(18[4-9]\d|19[0-6]\d)\b/); if (m) { yr = m[1]; break; } }
+      if (!yr) for (const v of Object.values(a)) { const m = String(v).match(/^(18[4-9]\d|19[0-6]\d)$/); if (m) { yr = m[1]; break; } }
+      let nm = '';
+      for (const f of ['label', 'name', 'bezeichnung', 'title', 'titel']) if (typeof a[f] === 'string' && a[f].trim()) { nm = a[f].trim(); break; }
+      if (!nm && typeof r.label === 'string') nm = r.label.trim();
+      return (nm ? `Blatt ${nm}` : 'Blatt') + (yr ? `, Stand ${yr}` : '');
+    } catch (e) { sheetCache.delete(k); return ''; } finally { clearTimeout(t); }
+  })();
+  sheetCache.set(k, p);
+  return p;
+}
+let sheetSeq = 0;
+async function updateSheet(){
+  const n = ++sheetSeq, c = map.getCenter(), cmp = !$('pCmp').hidden;
+  if (!cmp) {
+    if ($('tSrc').value !== 'sieg') return;
+    const y = +$('tYear').value, txt = await sheetAt(c.lng, c.lat, y);
+    if (n !== sheetSeq || cmp !== !$('pCmp').hidden || $('tSrc').value !== 'sieg' || +$('tYear').value !== y) return;
+    $('yLbl').textContent = SRC.sieg.name + (txt ? ' · ' + txt : '');
+  } else {
+    for (const sd of ['l', 'r']) {
+      if ($(sd + 'Src').value !== 'sieg') continue;
+      const y = +$(sd + 'Year').value, txt = await sheetAt(c.lng, c.lat, y);
+      if (n !== sheetSeq || $('pCmp').hidden || $(sd + 'Src').value !== 'sieg' || +$(sd + 'Year').value !== y) return;
+      label(sd);
+      if (txt) $(sd === 'l' ? 'tagL' : 'tagR').textContent += ' · ' + txt;
+      clip();
+    }
+  }
+}
+const updateSheetD = debounce(updateSheet, 400);
+map.on('moveend', updateSheetD);
 
 /* ---------- Im 3D-Flug ansehen: Blick von Süden auf den Kartenmittelpunkt, Häuser werden dort gebaut ---------- */
 function toLV95(lon, lat){
