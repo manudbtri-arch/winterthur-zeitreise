@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Zeitraffer: «Im 3D-Flug» öffnet den 3D-Flug im Jahr der gerade gezeigten Epoche (Stand 1870–1949), bei späteren Ständen in der Ansicht «Heute», bei Vorher/Jetzt im Jahr des linken Bilds, und nimmt den Ortsnamen mit.
 - Unterrichtsseite: Auftrag 8 «Der Ort aus der Luft» – mit dem Zeitraffer die Luftbilder des eigenen Orts abspielen, die grösste Veränderung zwischen zwei Flugjahren beschreiben, mit den Kartenständen vergleichen und die Grenzen von Flugjahren als Beleg bedenken; Produktseite und README nennen acht Aufträge.
 - Methodik: neuer Abschnitt «Zeitraffer von oben» erklärt, woher Luftbild-Jahre und Kartenstände kommen (Abfragen bei swisstopo), was «Schlüsselepochen» heisst und wo die Grenzen liegen (nicht jedes Jahr beflogen, Stand an der Rahmenmitte, Ersatzliste ohne Dienst).
 - 3D-Flug: neuer Link «Zeitraffer von oben» neben «2D-Karte» öffnet den Zeitraffer am aktuellen Standort mit Ortsnamen – im Heute-Modus mit Luftbildern, sonst mit den Karten-Epochen.

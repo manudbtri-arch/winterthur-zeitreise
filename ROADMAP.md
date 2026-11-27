@@ -173,3 +173,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] 3D-Flug: Link «Zeitraffer von oben» (neben «2D-Karte») öffnet `zeitraffer.html` am aktuellen Standort (wie in der 2D-Karte).
 - [x] Methodik: Abschnitt «Zeitraffer von oben» – welche Luftbild-Jahre und Kartenstände gezeigt werden (Quellen, Abfrage), bekannte Grenzen (nicht jedes Jahr beflogen, Kartenstand am 31. Dezember).
 - [x] Schulen: Unterrichtsseite um einen Auftrag mit dem Zeitraffer ergänzen (Luftbilder eines Ortes über Jahrzehnte vergleichen, Veränderung beschreiben und mit Jahr belegen).
+
+## 21. Zeitraffer im Alltag
+- [x] Zeitraffer: «Im 3D-Flug» öffnet im Jahr der gerade gezeigten Epoche (Stand 1870–1949 → dieses Jahr, später → «Heute», bei Vorher/Jetzt das linke Bild) statt immer 1900.
+- [ ] Zeitraffer: Link und QR-Code merken sich die gezeigte Epoche (`&e=<jahr>`); auf dem Handy öffnet «Link kopieren» das System-Teilen wie im 3D-Flug.
+- [ ] Produktseite: «So setzen Sie es ein» nennt den Zeitraffer (Gemeinde: Entwicklung eines Areals als Video oder Bildstreifen für Website und Mitteilungsblatt).

@@ -1370,6 +1370,12 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
       lon: st.lon.toFixed(6), lat: (st.lat - 0.0055).toFixed(6), h: Math.round(ground + 650), hdg: '0', pitch: '-38',
       c: st.lon.toFixed(5) + ',' + st.lat.toFixed(5), mode: 'fly', year: '1900'
     });
+    /* Jahr der gezeigten Epoche mitnehmen: Stand 1870–1949 → dieses Jahr, später → Heute (bei Vorher/Jetzt das linke Bild) */
+    const fr = st.mode === 'cmp' ? st.frames[st.cmpL] : st.frames[Math.max(0, Math.min(st.frames.length - 1, Math.round(st.pos)))];
+    const fy = fr ? Number(fr.year) : NaN;
+    if (Number.isFinite(fy) && fy >= 1870 && fy <= 1949) q3.set('year', String(fy));
+    else if (Number.isFinite(fy) && fy > 1949) { q3.set('mode', 'now'); q3.delete('year'); }
+    if (st.title && st.title !== 'Gewählter Ausschnitt') q3.set('ort', st.title);
     location.href = 'flug-3d.html?' + q3.toString();
   });
   window.addEventListener('pageshow', () => { $('to3d').disabled = false; });
