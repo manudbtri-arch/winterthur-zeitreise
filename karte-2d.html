@@ -46,6 +46,12 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 #divider span{position:absolute;top:50%;left:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:#fff;border:2px solid #151515;display:grid;place-items:center;font:800 16px Archivo,sans-serif;color:#151515}
 .tag{position:absolute;z-index:901;top:16px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:14px;font-weight:600;pointer-events:none;white-space:nowrap}
 #tagL{border-left:4px solid var(--blue)}#tagR{border-right:4px solid var(--brown)}
+.chk{display:flex;gap:10px;align-items:center;font-weight:400;min-height:40px;margin:10px 0 0}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+.story b{display:block;font:800 16px/1.25 Archivo,sans-serif;margin-bottom:4px}
+.story p{margin:0 0 6px;font:14px/1.45 Archivo,sans-serif}
+.story small{display:block;color:#5b5b5b;font-size:12px}
+.story a{font-size:13px}
 @media(max-width:600px){.panel{top:auto;left:8px;right:8px;bottom:8px;width:auto;max-height:46vh;padding:14px}.year{margin-top:0}.tag{top:8px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -98,6 +104,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 
   <label>Springen zu</label>
   <div class="places" id="places"></div>
+  <label class="chk"><input type="checkbox" id="storyOn" checked> Geschichten an Orten (Marker)</label>
 
   <p class="note">Luftbilder gibt es nicht für jedes Jahr: Ist die Karte leer, wurde Winterthur in diesem Jahr nicht beflogen. Die Zeitreihe zeigt jeweils den Kartenstand am 31. Dezember.<br>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a></p>
 </aside>
@@ -246,6 +253,38 @@ $('mCmp').addEventListener('click', () => mode(true));
 
 $('places').innerHTML = PLACES.map((p,i)=>`<button class="btn" data-i="${i}">${p[0]}</button>`).join('');
 $('places').addEventListener('click', e => { const b = e.target.closest('button'); if (b) map.setView(PLACES[+b.dataset.i][1], 16); });
+
+/* ---------- Geschichten an Orten: gleiche Datei wie im 3D-Flug, Inhalte nur als Text ---------- */
+const storyLayer = L.layerGroup().addTo(map);
+async function loadStories(file){
+  let data;
+  try { data = await (await fetch(file)).json(); } catch (e) { return; }
+  for (const st of (data.geschichten || [])) {
+    if (typeof st.titel !== 'string' || typeof st.text !== 'string' || typeof st.quelle !== 'string') continue;
+    let ll = Number.isFinite(st.lon) && Number.isFinite(st.lat) ? [st.lat, st.lon] : null;
+    if (!ll && typeof st.adresse === 'string') {
+      try {
+        const u = `https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(st.adresse)}&type=locations&origins=address&sr=4326&limit=1`;
+        const r = ((await (await fetch(u)).json()).results || [])[0];
+        if (r && Number.isFinite(+r.attrs.lat)) ll = [+r.attrs.lat, +r.attrs.lon];
+      } catch (e) {}
+    }
+    if (!ll) continue;
+    const box = document.createElement('div'); box.className = 'story';
+    const t = document.createElement('b'); t.textContent = st.titel;
+    const p = document.createElement('p'); p.textContent = st.text;
+    const q = document.createElement('small'); q.textContent = 'Quelle: ' + st.quelle;
+    box.append(t, p, q);
+    if (/^https:\/\//.test(st.url || '')) {
+      const a = document.createElement('a'); a.href = st.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Quelle öffnen';
+      box.appendChild(a);
+    }
+    L.circleMarker(ll, {radius: 8, color: '#fff', weight: 2, fillColor: '#c8803f', fillOpacity: 1})
+      .bindTooltip(st.titel).bindPopup(box, {maxWidth: 300}).addTo(storyLayer);
+  }
+}
+loadStories('stories/winterthur.json');
+$('storyOn').addEventListener('change', e => { if (e.target.checked) storyLayer.addTo(map); else map.removeLayer(storyLayer); });
 
 showTime();
 }

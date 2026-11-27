@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- 2D-Karte: die Geschichten aus `stories/winterthur.json` erscheinen als Marker mit Titel, Text, Quelle und Link, in beiden Modi; abschaltbar.
 - Unterrichtsseite: Auftrag 4 «Wie breit, wie steil?» mit dem Messwerkzeug; Methodik nennt die Genauigkeit der Messung.
 - Infokarte mit Knopf «✕» zum Schliessen, auf Touch-Geräten in Fingergrösse.
 - Story-Dateien testen: `flug-3d.html?stories=<name>` lädt `stories/<name>.json`, meldet die Zahl der geladenen Geschichten und listet übersprungene Einträge mit Grund in der Konsole; in der Partner-Anleitung beschrieben.
