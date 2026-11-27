@@ -250,7 +250,7 @@ body.kiosk .compass{display:none}
 
     <label class="chk"><input type="checkbox" id="oldOn" checked> Echte Altbauten nach Baujahr</label>
     <label class="chk"><input type="checkbox" id="genOn" checked> Nachgebaute, abgerissene Häuser</label>
-    <label class="chk"><input type="checkbox" id="groundOn" checked> Boden mit Pflaster und Wiese</label>
+    <label class="chk"><input type="checkbox" id="groundOn" checked> Boden bei Häusern: Pflaster, Gärten, Wasser</label>
     <label class="chk"><input type="checkbox" id="blockOn"> Minecraft-Look (Pixeltexturen)</label>
     <label class="chk"><input type="checkbox" id="shadowOn"> Schatten (schöner, etwas langsamer)</label>
     <label class="chk"><input type="checkbox" id="bld"> Alle heutigen Gebäude</label>
@@ -994,11 +994,13 @@ czm_material czm_getMaterial(czm_materialInput mi) {
   float far = max(smoothstep(25.0, 120.0, length(mi.positionToEyeEC)), smoothstep(0.2, 0.6, max(fwidth(g.x), fwidth(g.y))));
   cob = mix(cob, vec3(0.50, 0.48, 0.44), far);
   grass = mix(grass, vec3(0.36, 0.50, 0.26), far * 0.8);
+  /* r = Gasse/Platz, g = Wasser, b = Garten bei Häusern; überall sonst bleibt die Karte sichtbar (Wald, Fels, Seen, Felder) */
   vec3 col = mix(grass, cob, cls.r);
   col = mix(col, water, cls.g);
+  float cover = max(max(cls.r, cls.g * 0.92), cls.b * 0.65);
   m.diffuse = col;
   /* ab rund 300 m weich in die Karte übergehen: keine eckigen Kachelränder, dahinter liegt die Siegfriedkarte */
-  m.alpha = 1.0 - smoothstep(300.0, 800.0, length(mi.positionToEyeEC));
+  m.alpha = cover * (1.0 - smoothstep(300.0, 800.0, length(mi.positionToEyeEC)));
   return m;
 }`;
 function makeGround(c){
@@ -1008,21 +1010,37 @@ function makeGround(c){
   c.groundFull = !!(ed && ed.full);
   if (!ed || !ed.full || !$('groundOn').checked) return;   /* ferne Kacheln ohne Pflaster: dort sieht man es nicht, es kostet aber viel */
   const {cw, ch} = c, m = MARGIN / CELL, n = CHUNK / CELL;
-  /* Abstand zum nächsten Haus: bis rund 19 m ist es Gasse oder Platz (über die ganze Kachel mit Rand gerechnet) */
+  /* Abstand zum nächsten Haus (über die ganze Kachel mit Rand gerechnet) */
   const dist = new Int16Array(cw * ch).fill(99), q = [];
   for (let i = 0; i < cw * ch; i++) if (ed.occ[i]) { dist[i] = 0; q.push(i); }
   for (let h = 0; h < q.length; h++) {
     const i = q[h], x = i % cw, y = (i - x) / cw, dd = dist[i] + 1;
-    if (dd > 6) continue;
+    if (dd > 8) continue;
     for (const [nx, ny] of [[x+1,y],[x-1,y],[x,y+1],[x,y-1]])
       if (nx >= 0 && ny >= 0 && nx < cw && ny < ch && dist[ny * cw + nx] > dd) { dist[ny * cw + nx] = dd; q.push(ny * cw + nx); }
   }
+  /* Bebauungsdichte (Summenbild, Fenster rund 45 m): in der Stadt sind Gassen und Plätze gepflastert, auf dem Land nur der Hof */
+  const S = new Int32Array((cw + 1) * (ch + 1));
+  for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) S[(y + 1) * (cw + 1) + x + 1] = ed.occ[y * cw + x] + S[y * (cw + 1) + x + 1] + S[(y + 1) * (cw + 1) + x] - S[y * (cw + 1) + x];
+  const dens = (x, y) => { const a = Math.max(0, x - 7), b = Math.max(0, y - 7), e = Math.min(cw, x + 8), f = Math.min(ch, y + 8);
+    return (S[f * (cw + 1) + e] - S[b * (cw + 1) + e] - S[f * (cw + 1) + a] + S[b * (cw + 1) + a]) / ((e - a) * (f - b)); };
+  /* Wasser: Seen sind auf der Karte schraffiert; Lücken zwischen den blauen Linien schliessen (2 Zellen dehnen, dann 2 schrumpfen) */
+  const grow = (src, r, any) => { const out = new Uint8Array(cw * ch);
+    for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) { let hit = any ? 0 : 1;
+      for (let k = -r; k <= r && (any ? !hit : hit); k++) for (let j = -r; j <= r; j++) {
+        const xx = x + j, yy = y + k, v = xx < 0 || yy < 0 || xx >= cw || yy >= ch ? (any ? 0 : 1) : src[yy * cw + xx];
+        if (any && v) { hit = 1; break; } if (!any && !v) { hit = 0; break; } }
+      out[y * cw + x] = hit; }
+    return out; };
+  const wat = grow(grow(ed.wat, 2, true), 2, false);
   const cv = document.createElement('canvas'); cv.width = n; cv.height = n;
   const g = cv.getContext('2d'), img = g.createImageData(n, n);
   for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
     const i = (y + m) * cw + x + m, o = (y * n + x) * 4;
-    img.data[o] = dist[i] <= 6 ? 255 : 0;
-    img.data[o + 1] = ed.wat[i] ? 255 : 0;
+    const town = dens(x + m, y + m) > 0.22;
+    img.data[o] = dist[i] <= (town ? 6 : 2) ? 255 : 0;          /* Pflaster */
+    img.data[o + 1] = wat[i] ? 255 : 0;                          /* Wasser */
+    img.data[o + 2] = dist[i] <= 8 ? 255 : 0;                    /* Garten: Wiese, die Karte scheint leicht durch */
     img.data[o + 3] = 255;
   }
   g.putImageData(img, 0, 0);

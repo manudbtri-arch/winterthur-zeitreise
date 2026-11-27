@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Boden nicht mehr überall grün: Pflaster nur in Gassen und Höfen (in der Stadt breiter als auf dem Land), Wiese nur in Gärten bei Häusern, Seen als geschlossene Wasserfläche; überall sonst zeigt sich die Siegfriedkarte mit Wald, Fels, Seen und Feldern; in der Methodik beschrieben.
 - Boden mit Pflaster und Wiese geht ab rund 300 m weich in die Siegfriedkarte über, statt in eckigen Flecken zu enden; die Anzeige oben rechts zeigt beim Laden den Fortschritt in Prozent.
 - Ferne Klötze (noch ohne Gebäuderegister) heissen in der Infokarte «Haus aus der Karte» statt «abgerissen» und zählen nicht in Statistik und Export.
 - Die Kachel-Welt ist jetzt der normale 3D-Flug (`flug-3d.html`, die Testadresse leitet weiter). Gefüllt wird das ganze Bild bis zum Horizont (Gehen bis 6 km, Fliegen bis 8 km) in drei Detailstufen: nah mit Fenstern und Pflaster, mittel mit Gebäuderegister, fern als einfache Klötze aus der Karte.
