@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Umschalter «Neu seit der letzten Kartenausgabe»: belegte Gebäude mit genauem Baujahr zwischen vorheriger Ausgabe und gewähltem Jahr leuchten grün, mit Zählung und Hinweis auf die Grenze (abgerissene Neubauten fehlen).
 - Neue Unterrichtsseite `unterricht.html` mit Lernzielen, drei Aufträgen (Veränderung, Baualter, Quellenkritik) und Hinweisen für Lehrpersonen, druckbar; verlinkt aus der Übersicht.
 - Zwischenspeicher im Browser (IndexedDB): ausgewertete Kartenausgaben und Gebäuderegister-Abfragen (30 Tage) werden gemerkt, ein zweiter Besuch am gleichen Ort baut ohne erneutes Laden.
 - Die Auswertung der Kartenbilder (Hausflächen, Wasser, Formfilter) läuft jetzt in einem Web Worker, damit die Seite beim Bauen nicht stockt; ohne Worker-Unterstützung wie bisher im Hauptfaden.

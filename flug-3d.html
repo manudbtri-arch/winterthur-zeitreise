@@ -193,6 +193,7 @@ body.intro-on .joy{visibility:hidden}
     <div><i id="lgRec" style="background:#bfa98a"></i><span><b>Rekonstruiert:</b> aus der Siegfriedkarte, Höhe geschätzt</span></div>
     <label class="chk"><input type="checkbox" id="recHl"> Rekonstruierte hervorheben</label>
     <label class="chk"><input type="checkbox" id="epochOn"> Analyse: nach Bauepoche einfärben</label>
+    <label class="chk"><input type="checkbox" id="newOn"> Neu seit der letzten Kartenausgabe</label>
     <div id="epochBox" hidden><div class="epochs" id="epochList"></div><span id="epochSum"></span></div>
     <div><a href="methodik.html" target="_blank" rel="noopener">Wie das entsteht</a></div>
   </div>
@@ -529,7 +530,7 @@ async function buildingLayer(){
     specColor = { evaluateColor: (f, res) => C.Color.clone(f.getProperty('OBJEKTART') === 'Hochkamin' ? brick : stone, res) };
     specTs.style.color = specColor;
     bldShader = bldTs.customShader;
-    if (analysis) setAnalysis(true);
+    if (analysis) setAnalysis(analysis);
   }
   bldTs.show = specTs.show = $('bld').checked || $('oldOn').checked;
   bldTs.makeStyleDirty();
@@ -963,9 +964,18 @@ const EP_OLD = {label: 'vor 1919, Jahr unbekannt', col: '#b67f95'}, EP_NONE = {l
 EPOCHS.forEach(e => { e.c = C.Color.fromCssColorString(e.col); }); EP_OLD.c = C.Color.fromCssColorString(EP_OLD.col); EP_NONE.c = C.Color.fromCssColorString(EP_NONE.col);
 const epochOf = r => !r ? EP_NONE : (!r.exact && r.y === PERIOD[8011]) ? EP_OLD : EPOCHS.find(e => r.y <= e.max);
 const epochColor = { evaluateColor: (f, res) => C.Color.clone(epochOf(gwr.info && gwr.info.get(Number(f.getProperty('EGID')))).c, res) };
-let analysis = false;
-function setAnalysis(on){
-  analysis = on;
+/* «Neu seit der letzten Kartenausgabe»: belegte Häuser mit genauem Baujahr zwischen vorheriger Ausgabe und gewähltem Jahr */
+let newFrom = null;
+const NEW_C = C.Color.fromCssColorString('#22a35a'), OLD_C = C.Color.fromCssColorString('#d6d1c6');
+const newColor = { evaluateColor: (f, res) => {
+  const r = gwr.info && gwr.info.get(Number(f.getProperty('EGID')));
+  return C.Color.clone(newFrom !== null && r && r.exact && r.y > newFrom && r.y <= gwr.year ? NEW_C : OLD_C, res);
+} };
+let analysis = false;   /* false, 'epoch' oder 'new' */
+function setAnalysis(mode){
+  analysis = mode;
+  const on = !!mode, col = mode === 'new' ? newColor : epochColor;
+  $('epochOn').checked = mode === 'epoch'; $('newOn').checked = mode === 'new';
   $('epochBox').hidden = !on;
   if (bldTs && specTs) {
     bldTs.customShader = on ? undefined : bldShader;
@@ -974,8 +984,8 @@ function setAnalysis(on){
       t.colorBlendAmount = on ? 0.85 : 0.6;
     }
     if (!on) bldTs.colorBlendMode = C.Cesium3DTileColorBlendMode.HIGHLIGHT;
-    bldTs.style.color = on ? epochColor : undefined;
-    specTs.style.color = on ? epochColor : specColor;
+    bldTs.style.color = on ? col : undefined;
+    specTs.style.color = on ? col : specColor;
     bldTs.makeStyleDirty(); specTs.makeStyleDirty();
   }
   updateStats();
@@ -983,6 +993,17 @@ function setAnalysis(on){
 function updateStats(){
   if (!analysis) return;
   const list = $('epochList'); list.textContent = '';
+  if (analysis === 'new') {
+    const cur = present ? Infinity : gwr.year;
+    newFrom = present ? EDITIONS[EDITIONS.length - 1] : (EDITIONS.filter(e => e < (EDITIONS.filter(x => x <= cur).pop() ?? EDITIONS[0])).pop() ?? null);
+    if (newFrom === null) { $('epochSum').textContent = `Für ${gwr.year} gibt es keine frühere Kartenausgabe zum Vergleich. Zieh den Regler auf 1900 oder später.`; return; }
+    let k = 0; if (gwr.info) for (const r of gwr.info.values()) if (r.exact && r.y > newFrom && r.y <= gwr.year) k++;
+    const row = document.createElement('div'), sw = document.createElement('i'), lab = document.createElement('span'), num = document.createElement('b');
+    sw.style.background = '#22a35a'; lab.textContent = `neu ${newFrom + 1}–${present ? 'heute' : gwr.year}`; num.textContent = k;
+    row.append(sw, lab, num); list.appendChild(row);
+    $('epochSum').textContent = `Grün: belegte Gebäude mit genauem Baujahr nach der Kartenausgabe ${newFrom}, die heute noch stehen. Abgerissene Neubauten dieser Zeit fehlen. Quelle: GWR (BFS).`;
+    return;
+  }
   const all = [...EPOCHS, EP_OLD], n = new Map(all.map(e => [e, 0]));
   let total = 0;
   if (gwr.info) for (const r of gwr.info.values()) if (r.y <= gwr.year) { n.set(epochOf(r), n.get(epochOf(r)) + 1); total++; }
@@ -999,7 +1020,8 @@ function updateStats(){
   const ed = city && city.edition ? city.eds.get(city.edition) : null;
   $('epochSum').textContent = `${total} belegte Gebäude bis ${present ? 'heute' : gwr.year}` + (ed && !present ? ` · dazu ${ed.nGen} rekonstruierte (Karte ${ed.year}), nicht eingefärbt` : '') + '. Quelle: GWR (BFS).';
 }
-$('epochOn').addEventListener('change', e => setAnalysis(e.target.checked));
+$('epochOn').addEventListener('change', e => setAnalysis(e.target.checked ? 'epoch' : false));
+$('newOn').addEventListener('change', e => setAnalysis(e.target.checked ? 'new' : false));
 
 /* Jahr anwenden: echte Häuser nach Baujahr, nachgebaute aus der passenden Kartenausgabe */
 function applyYear(y){
