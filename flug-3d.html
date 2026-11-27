@@ -157,7 +157,7 @@
     <div class="row2"><button class="btn primary" id="helpClose">Schliessen</button></div>
   </div>
 </div>
-<div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small><a id="iLink" hidden target="_blank" rel="noopener">Quelle öffnen</a><button class="ishare nokiosk" id="iShare" type="button" hidden>Link zu dieser Geschichte kopieren</button><button class="iclose" id="iClose" type="button" aria-label="Infokarte schliessen" title="Schliessen (Esc)">✕</button></div>
+<div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small><a id="iLink" hidden target="_blank" rel="noopener">Quelle öffnen</a><button class="ishare nokiosk" id="iShare" type="button" hidden>Link zu dieser Geschichte kopieren</button><button class="ishare nokiosk" id="iQr" type="button" hidden title="Für eine Tafel am Ort">QR-Code zu dieser Geschichte</button><button class="iclose" id="iClose" type="button" aria-label="Infokarte schliessen" title="Schliessen (Esc)">✕</button></div>
 
 <a class="pill openfull" id="openFull" href="flug-3d.html" target="_blank" rel="noopener" hidden>↗ Im Vollbild öffnen</a>
 <button class="pill" id="pill" hidden>☰ Menü <span style="color:var(--mute)">(Tab)</span></button>
@@ -1537,7 +1537,7 @@ function showInfo(p){
   $('iTitle').textContent = title; $('iText').textContent = text; $('iSrc').textContent = src;
   $('iBadge').textContent = badge; $('iBadge').classList.toggle('rec', rec);
   $('iLink').hidden = !link; if (link) $('iLink').href = link; $('iLink').textContent = linkTxt;
-  infoStory = story; $('iShare').hidden = !story;
+  infoStory = story; $('iShare').hidden = $('iQr').hidden = !story;
   $('info').hidden = false;
   clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, hold);
   return true;
@@ -1606,7 +1606,7 @@ async function themeInfo(lon, lat){
   const on = THEMES.filter(t => t.on);
   $('iTitle').textContent = 'Abfrage läuft …'; $('iText').textContent = on.map(t => t.name).join(' · ');
   $('iSrc').textContent = ''; $('iBadge').textContent = 'Bundesdaten'; $('iBadge').classList.remove('rec');
-  $('iLink').hidden = true; $('iShare').hidden = true; infoStory = null; $('info').hidden = false;
+  $('iLink').hidden = true; $('iShare').hidden = $('iQr').hidden = true; infoStory = null; $('info').hidden = false;
   clearTimeout(infoTimer);
   const res = await Promise.all(on.map(t => identifyAt(lon, lat, t.ask, t.identTime ? `&timeInstant=${t.identTime}` : '', 12).then(r => r.map(x => ({t, x})))));
   const hits = res.flat();
@@ -1662,7 +1662,7 @@ function measureAt(pos){
   $('iText').textContent = `waagrecht ${m(flat)} · Höhenunterschied ${dz >= 0 ? '+' : '−'}${Math.round(Math.abs(dz))} m${slope}`;
   $('iSrc').textContent = 'Gemessen im 3D-Bild (Gelände und Gebäude von swisstopo). Richtwert, keine amtliche Vermessung.';
   $('iBadge').textContent = 'Messung'; $('iBadge').classList.remove('rec');
-  $('iLink').hidden = true; $('iShare').hidden = true; infoStory = null; $('info').hidden = false;
+  $('iLink').hidden = true; $('iShare').hidden = $('iQr').hidden = true; infoStory = null; $('info').hidden = false;
   clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, 30000);
 }
 $('measBtn').addEventListener('click', () => setMeasure(!meas.on));
@@ -2142,12 +2142,18 @@ const STORY_NAME = /^[a-z0-9-]{1,40}$/.test(STORY_Q || '') ? STORY_Q : null;
 const STORY_ID_RE = /^[A-Za-z0-9_-]{1,60}$/;
 const STORY_ID = STORY_ID_RE.test(new URLSearchParams(location.search).get('story') || '') ? new URLSearchParams(location.search).get('story') : null;
 /* Link zu einer Geschichte: öffnet den 3D-Flug direkt dort, mit Infokarte */
+const storyUrl = id => { const q = new URLSearchParams({story: id}); if (STORY_NAME) q.set('stories', STORY_NAME); return location.origin + location.pathname + '?' + q.toString(); };
 $('iShare').addEventListener('click', async () => {
   if (!infoStory) return;
-  const q = new URLSearchParams({story: infoStory}); if (STORY_NAME) q.set('stories', STORY_NAME);
-  const url = location.origin + location.pathname + '?' + q.toString();
   clearTimeout(infoTimer);
-  shareLink(url, `Zeitreise Schweiz – ${$('iTitle').textContent}`, 'Link zur Geschichte');
+  shareLink(storyUrl(infoStory), `Zeitreise Schweiz – ${$('iTitle').textContent}`, 'Link zur Geschichte');
+});
+/* QR-Code zur Geschichte, z. B. für eine Tafel am Ort: öffnet den 3D-Flug dort mit Infokarte */
+$('iQr').addEventListener('click', () => {
+  if (!infoStory) return;
+  clearTimeout(infoTimer);
+  const t = $('iTitle').textContent, slug = infoStory.toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+  showQr(storyUrl(infoStory), t, `qr-geschichte-${slug}.png`, `Öffnet den 3D-Flug bei der Geschichte «${t}» mit Infokarte. Geeignet für eine Tafel am Ort oder einen Ausstellungstext.`);
 });
 loadStories(`stories/${STORY_NAME || 'winterthur'}.json`, !!STORY_NAME);
 

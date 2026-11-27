@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Infokarte einer Geschichte mit Knopf «QR-Code zu dieser Geschichte»: speichert den Direktlink (`?story=<id>`) als QR-Code, z. B. für eine Tafel am Ort; in der Partner-Anleitung erklärt.
 - Übersicht «Tasten und Gesten»: Taste H oder Knopf in den Einstellungen zeigt alle Tasten (Computer) bzw. Gesten (Handy) in einem Fenster; Esc oder H schliesst es.
 - Neuer Knopf «QR-Code» im Reiter «Export»: zeigt den Link zum aktuellen Blick als QR-Code mit Ort und Jahr und speichert ihn als PNG zum Aushängen in Ausstellung, Schulzimmer oder auf dem Arbeitsblatt; auf der Produktseite genannt.
 - Boden-Shader und Landschaft: exakte Distanzberechnung über Tiefenpuffer (`GROUND_FS`, behebt harte Kachelkanten auf Seen und Feldern), ruhige Wellen ohne Moiré-Ringe auf Seen, weiche organische Ränder für Pflaster, Gärten und Ufer über 8-Nachbar-Chamfer-Abstand statt eckiger Treppen, und gefilterte Hausmaske ohne Text/Felszeichnungen.

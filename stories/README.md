@@ -58,7 +58,7 @@ In der 2D-Karte geht es gleich: `karte-2d.html?stories=meinort`. Eine kurze Meld
 
 ## Direktlink zu einer Geschichte
 
-`flug-3d.html?story=<id>` fliegt direkt zur Geschichte mit dieser `id` und öffnet ihre Infokarte, z. B. `flug-3d.html?story=rathaus`. Für eine eigene Datei kommt `&stories=meinort` dazu. Den Link liefert auch der Knopf «Link zu dieser Geschichte kopieren» in der Infokarte.
+`flug-3d.html?story=<id>` fliegt direkt zur Geschichte mit dieser `id` und öffnet ihre Infokarte, z. B. `flug-3d.html?story=rathaus`. Für eine eigene Datei kommt `&stories=meinort` dazu. Den Link liefert auch der Knopf «Link zu dieser Geschichte kopieren» in der Infokarte. Der Knopf «QR-Code zu dieser Geschichte» daneben speichert denselben Link als QR-Code (PNG), etwa für eine Tafel am Ort.
 
 ## Kiosk mit Rundgang
 
