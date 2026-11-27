@@ -60,6 +60,10 @@ Eine kurze Meldung nennt die Zahl der geladenen Geschichten. Übersprungene Eint
 
 `flug-3d.html?story=<id>` fliegt direkt zur Geschichte mit dieser `id` und öffnet ihre Infokarte, z. B. `flug-3d.html?story=rathaus`. Für eine eigene Datei kommt `&stories=meinort` dazu. Den Link liefert auch der Knopf «Link zu dieser Geschichte kopieren» in der Infokarte.
 
+## Kiosk mit Rundgang
+
+`flug-3d.html?kiosk=1&stories=meinort` zeigt auf einem Touchscreen im Leerlauf einen Rundgang statt des Rundflugs: alle 24 Sekunden fliegt die Kamera zur nächsten Geschichte und öffnet ihre Infokarte. Das Jahr ist jeweils die erste Kartenausgabe (1880, 1900, 1920, 1940), in der die Geschichte gilt (`von`/`bis`); Geschichten ausserhalb dieser Jahre werden im Rundgang übersprungen. Eine Berührung beendet den Rundgang, nach zwei Minuten ohne Eingabe beginnt er von vorn.
+
 ## Ablauf
 
 1. Datei nach diesem Muster erstellen (oder eine Tabelle mit den gleichen Spalten schicken).

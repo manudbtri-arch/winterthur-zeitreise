@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Kiosk mit eigener Story-Datei (`flug-3d.html?kiosk=1&stories=<name>`): im Leerlauf ein Rundgang statt Rundflug, alle 24 Sekunden die nächste Geschichte mit Infokarte im passenden Jahr; im Kiosk erscheint kein Quellen-Link nach aussen mehr; auf Produktseite und in der Partner-Anleitung erklärt.
 - Kartenkacheln werden nur noch über der Schweiz abgefragt; die Fehler 400 bei jedem Start (im Bildtest gefunden) entfallen.
 - Bildtest um zwei Orte ergänzt (Themen Luftbild, Arealstatistik, Gewässer; Brücke über die Töss); Befunde des ersten Bildtests in der Roadmap festgehalten.
 - Boden (Pflaster, Gärten, Wasser) jetzt auch in den mittleren Kacheln: keine harte Kante mehr mitten auf Flüssen und Seen und kein dunkler Fleck in der Altstadt, wo der Boden fehlte (gefunden im Bildtest); Bildtest Grindelwald mit höherer Kamera.

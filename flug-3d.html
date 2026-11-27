@@ -2156,7 +2156,7 @@ $('to2d').addEventListener('click', () => {
 });
 /* ---------- Kiosk-Modus (?kiosk=1): Rundflug im Leerlauf, Neustart nach 2 Minuten ohne Eingabe ---------- */
 const KIOSK = new URLSearchParams(location.search).get('kiosk') === '1';
-const kiosk = {auto: false, last: performance.now(), hdg: 0, yearT: 0, ei: 0};
+const kiosk = {auto: false, last: performance.now(), hdg: 0, yearT: 0, ei: 0, si: 0, tour: false};
 /* Mittelpunkt des Rundflugs: Altstadt Winterthur, oder mit Link (?kiosk=1&lon=&lat=, bzw. c=) der Ort aus dem Link; Höhe aus dem Gelände */
 const KIOSK_LL = LINK ? LINK.c : [8.7290, 47.4997];
 let KIOSK_ENU = C.Transforms.eastNorthUpToFixedFrame(C.Cartesian3.fromDegrees(KIOSK_LL[0], KIOSK_LL[1], 450));
@@ -2174,8 +2174,24 @@ function kioskView(h, pDeg, r){
   const pos = C.Matrix4.multiplyByPoint(KIOSK_ENU, local, new C.Cartesian3());
   camera.setView({destination: pos, orientation: {heading: h, pitch: p, roll: 0}});
 }
+/* Kiosk mit eigener Story-Datei (?kiosk=1&stories=<name>): Rundgang statt Rundflug, alle 24 Sekunden die nächste Station.
+   Jahr je Station: erste Kartenausgabe, in der die Geschichte gilt (von/bis); passt keine, wird die Station übersprungen. */
+const KIOSK_TOUR = KIOSK && !!STORY_NAME;
+const kioskYear = st => EDITIONS.find(e => (st.von == null || st.von <= e) && (st.bis == null || st.bis >= e));
+function kioskStation(){
+  const n = stories.length;
+  for (let k = 0; k < n; k++) {
+    const i = (kiosk.si + k) % n, y = kioskYear(stories[i].story);
+    if (y == null) continue;
+    kiosk.si = (i + 1) % n;
+    $('yr').value = y; $('yBig').textContent = y; applyYear(y); showLayer();
+    tourGo(i, false);
+    return true;
+  }
+  return false;
+}
 function kioskStart(){
-  kiosk.auto = true; kiosk.hdg = 0; kiosk.yearT = performance.now(); kiosk.ei = 0;
+  kiosk.auto = true; kiosk.hdg = 0; kiosk.yearT = performance.now(); kiosk.ei = 0; kiosk.si = 0; kiosk.tour = false;
   if (document.pointerLockElement) document.exitPointerLock();
   tourEnd(); closeMap(); $('embedDlg').hidden = true; $('info').hidden = true;
   if (meas.on) setMeasure(false);
@@ -2187,6 +2203,7 @@ function kioskStart(){
 function kioskStop(){
   if (!kiosk.auto) return;
   kiosk.auto = false;
+  if (kiosk.tour) { camera.cancelFlight(); tourEnd(); kiosk.tour = false; }
   $('attract').hidden = true;
 }
 if (KIOSK) {
@@ -2197,6 +2214,11 @@ if (KIOSK) {
   setInterval(() => { if (!kiosk.auto && performance.now() - kiosk.last > 120000) kioskStart(); }, 2000);
   scene.preRender.addEventListener((sc, time) => {
     if (!kiosk.auto) return;
+    /* Rundgang: sobald die Geschichten geladen sind, Station um Station; sonst Rundflug */
+    if (KIOSK_TOUR && stories.some(e => kioskYear(e.story) != null)) {
+      if (!kiosk.tour || performance.now() - kiosk.yearT > 24000) { kiosk.yearT = performance.now(); kiosk.tour = kioskStation(); }
+      return;
+    }
     kiosk.hdg += REDUCE ? 0.0004 : 0.0012;
     kioskView(kiosk.hdg, -28, 1100);
     /* alle 20 Sekunden die nächste Kartenausgabe zeigen */
