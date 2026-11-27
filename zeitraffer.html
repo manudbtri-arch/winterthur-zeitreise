@@ -78,13 +78,20 @@ h1{font-size:clamp(26px,4vw,38px);line-height:1.08;margin:0;font-weight:800;lett
 .spacer{flex:1}
 
 /* Zeitachse mit Epochen-Punkten */
-.timeline{padding:6px 4px 2px}
-.timeline input[type=range]{width:100%;accent-color:var(--brick);height:28px;margin:0;cursor:pointer}
-.ticks{display:flex;justify-content:space-between;gap:4px;margin-top:2px;font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
-.ticks button{border:0;background:transparent;color:inherit;font:inherit;padding:2px 4px;border-radius:4px;cursor:pointer}
+.timeline{padding:4px 2px 2px}
+.dot-track{position:relative;height:16px;margin:0 8px 2px}
+.dot-track::before{content:"";position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:var(--line);border-radius:2px}
+.dot-track button{position:absolute;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;padding:0;border:2px solid var(--card);border-radius:50%;background:var(--mute);cursor:pointer;transition:transform .12s,background .12s}
+.dot-track button:hover{transform:scale(1.45);background:var(--blue);z-index:2}
+.dot-track button.on{transform:scale(1.5);background:var(--brick);z-index:3}
+.timeline input[type=range]{width:100%;accent-color:var(--brick);height:24px;margin:0;cursor:pointer;display:block}
+.ticks{position:relative;height:22px;margin:2px 8px 0;font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
+.ticks button{position:absolute;top:0;transform:translateX(-50%);border:0;background:transparent;color:inherit;font:inherit;padding:2px 4px;border-radius:4px;cursor:pointer;white-space:nowrap}
+.ticks button.first{transform:none}
+.ticks button.last{transform:translateX(-100%)}
 .ticks button:hover{color:var(--ink);background:var(--tint)}
 .ticks button.on{color:var(--brick);font-weight:800}
-.status{font-size:13px;color:var(--mute);margin:2px 0 0;min-height:1.3em}
+.status{font-size:13px;color:var(--mute);margin:4px 0 0;min-height:1.3em}
 
 /* Rechte Steuerleiste */
 .rail{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:16px}
@@ -196,7 +203,8 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
           </div>
         </div>
         <div class="timeline">
-          <input type="range" id="scrubber" min="0" max="1" step="0.001" value="0" aria-label="Zeitpunkt im Zeitraffer">
+          <div class="dot-track" id="dotTrack" aria-label="Alle vorhandenen Aufnahmejahre"></div>
+          <input type="range" id="scrubber" min="0" max="1" step="0.0005" value="0" aria-label="Zeitpunkt im Zeitraffer">
           <div class="ticks" id="ticks"></div>
         </div>
       </div>
@@ -250,6 +258,9 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
         </label>
         <label class="chk" id="todayWrap" hidden>
           <input type="checkbox" id="endAerial" checked> Am Schluss auf heutiges Luftbild blenden
+        </label>
+        <label class="chk" title="Spielt die Abstände proportional zu den echten Kalenderjahren ab (z. B. dauert ein 10-Jahres-Sprung länger als ein 2-Jahres-Sprung)">
+          <input type="checkbox" id="realTimeChk" checked> Echte Zeitachse (Abstände nach Jahren)
         </label>
         <label class="chk">
           <input type="checkbox" id="fadeChk" checked> Weiches Überblenden zwischen Epochen
@@ -761,6 +772,37 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
     g.arcTo(x, y, x + w, y, r); g.closePath();
   }
 
+  /* Zeitachsen-Mathematik: st.pos liegt immer in [0..1] (echte Kalenderjahre oder gleichmässig pro Aufnahme) */
+  function frameToPos(idx){
+    const n = st.frames.length;
+    if (n <= 1) return 0;
+    const i = Math.max(0, Math.min(n - 1, idx));
+    if (!$('realTimeChk').checked) return i / (n - 1);
+    const t0 = st.frames[0].t, t1 = st.frames[n - 1].t;
+    return t1 > t0 ? (st.frames[i].t - t0) / (t1 - t0) : i / (n - 1);
+  }
+  function posToState(p){
+    const n = st.frames.length;
+    if (n <= 1) return {i0: 0, i1: 0, alpha: 0, active: 0};
+    const clamped = Math.max(0, Math.min(1, p));
+    if (clamped >= 0.9999) return {i0: n - 1, i1: n - 1, alpha: 0, active: n - 1};
+    let i0 = 0;
+    for (let i = 0; i < n - 1; i++) {
+      if (clamped >= frameToPos(i)) i0 = i; else break;
+    }
+    const i1 = Math.min(n - 1, i0 + 1);
+    const p0 = frameToPos(i0), p1 = frameToPos(i1);
+    const u = p1 > p0 ? Math.max(0, Math.min(1, (clamped - p0) / (p1 - p0))) : 0;
+    if (!$('fadeChk').checked) return {i0, i1, alpha: 0, active: i0};
+    const gapY = st.frames[i1].t - st.frames[i0].t;
+    const hold = ($('realTimeChk').checked && gapY > 3) ? 0.5 : 0.15;
+    const alpha = Math.max(0, Math.min(1, (u - hold) / (1 - hold)));
+    return {i0, i1, alpha, active: alpha >= 0.5 ? i1 : i0};
+  }
+  function totalPlayMs(){
+    return Math.max(2000, (st.frames.length - 1) * st.speedMs);
+  }
+
   function drawStage(){
     ctx.fillStyle = '#dcd6c8';
     ctx.fillRect(0, 0, W, H);
@@ -783,50 +825,75 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
       return;
     }
 
-    const maxI = st.frames.length - 1;
-    const clamped = Math.max(0, Math.min(maxI, st.pos));
-    const i0 = Math.floor(clamped);
-    const i1 = Math.min(maxI, i0 + 1);
-    const frac = $('fadeChk').checked ? (clamped - i0) : 0;
+    const {i0, i1, alpha, active} = posToState(st.pos);
     const f0 = st.frames[i0], f1 = st.frames[i1];
 
     if (f0 && f0.ready) {
       ctx.drawImage(f0.cv, st.dragDx, st.dragDy);
     }
-    if (frac > 0.005 && f1 && f1.ready && i1 !== i0) {
+    if (alpha > 0.005 && f1 && f1.ready && i1 !== i0) {
       ctx.save();
-      ctx.globalAlpha = frac;
+      ctx.globalAlpha = alpha;
       ctx.drawImage(f1.cv, st.dragDx, st.dragDy);
       ctx.restore();
     }
-    const active = (frac >= 0.5 && f1) ? f1 : f0;
-    drawOverlay(ctx, active, frac);
-    highlightActive(Math.round(clamped));
+    st.activeIdx = active;
+    drawOverlay(ctx, st.frames[active] || f0, alpha);
+    highlightActive(active);
   }
 
   function highlightActive(idx){
+    $('dotTrack').querySelectorAll('button').forEach(b => b.classList.toggle('on', Number(b.dataset.i) === idx));
     $('ticks').querySelectorAll('button').forEach(b => b.classList.toggle('on', Number(b.dataset.i) === idx));
     $('strip').querySelectorAll('.thumb').forEach(t => t.classList.toggle('active', Number(t.dataset.i) === idx));
   }
 
-  /* Epochen-Zeitachse & Filmstreifen (5 Schlüsselepochen) aufbauen */
+  /* Epochen-Zeitachse (Markierungspunkt je echte Aufnahme + überlappungsfreie Jahresmarken) */
   function buildTimeline(){
     const n = st.frames.length;
     const scr = $('scrubber');
-    scr.min = 0; scr.max = Math.max(0, n - 1); scr.value = st.pos;
+    scr.min = 0; scr.max = 1; scr.value = st.pos;
 
+    const dt = $('dotTrack'); dt.textContent = '';
     const tk = $('ticks'); tk.textContent = '';
     if (!n) return;
-    const maxTicks = Math.min(n, 7);
-    const shown = new Set();
-    for (let k = 0; k < maxTicks; k++) {
-      const idx = maxTicks === 1 ? 0 : Math.round(k * (n - 1) / (maxTicks - 1));
-      if (shown.has(idx)) continue;
-      shown.add(idx);
+
+    /* Jeder echte Bildflug / Kartenstand als anklickbarer Punkt auf der Zeitachse */
+    for (let i = 0; i < n; i++) {
+      const fr = st.frames[i];
+      const pct = frameToPos(i) * 100;
+      const d = document.createElement('button');
+      d.type = 'button'; d.dataset.i = i;
+      d.style.left = pct.toFixed(3) + '%';
+      d.title = `${fr.label} · ${fr.sub}`;
+      d.setAttribute('aria-label', `${fr.label} (${fr.sub})`);
+      d.addEventListener('click', () => { pause(); st.pos = frameToPos(i); scr.value = st.pos; drawStage(); });
+      dt.appendChild(d);
+    }
+
+    /* Jahresmarken darunter: Start, Ende und dazwischen nur Marken mit genug Abstand (kein Überlappen) */
+    const placed = [];
+    const addTick = (idx, cls = '') => {
+      const pct = frameToPos(idx) * 100;
+      if (placed.some(p => Math.abs(p - pct) < 11)) return false;
+      placed.push(pct);
       const b = document.createElement('button');
       b.type = 'button'; b.dataset.i = idx; b.textContent = st.frames[idx].label;
-      b.addEventListener('click', () => { pause(); st.pos = idx; scr.value = idx; drawStage(); });
+      if (cls) b.className = cls;
+      b.style.left = pct.toFixed(3) + '%';
+      b.addEventListener('click', () => { pause(); st.pos = frameToPos(idx); scr.value = st.pos; drawStage(); });
       tk.appendChild(b);
+      return true;
+    };
+    addTick(0, 'first');
+    if (n > 1) addTick(n - 1, 'last');
+    for (const target of [0.18, 0.34, 0.50, 0.66, 0.82]) {
+      let best = -1, bestD = Infinity;
+      for (let i = 1; i < n - 1; i++) {
+        const d = Math.abs(frameToPos(i) - target);
+        if (d < bestD) { bestD = d; best = i; }
+      }
+      if (best > 0) addTick(best);
     }
 
     /* Vergleichs-Dropdowns füllen */
@@ -868,8 +935,8 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
       btn.addEventListener('click', () => {
         if (st.mode === 'cmp') setMode(st.cmpBase, false);
         pause();
-        st.pos = idx;
-        $('scrubber').value = idx;
+        st.pos = frameToPos(idx);
+        $('scrubber').value = st.pos;
         drawStage();
       });
       box.appendChild(btn);
@@ -881,7 +948,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
   /* Epoche aus dem Link (?e=<jahr>): wird einmal nach dem ersten Laden angesprungen */
   let wantYear = NaN;
   function frameYear(){
-    const fr = st.mode === 'cmp' ? st.frames[st.cmpL] : st.frames[Math.max(0, Math.min(st.frames.length - 1, Math.round(st.pos)))];
+    const fr = st.mode === 'cmp' ? st.frames[st.cmpL] : st.frames[posToState(st.pos).active];
     return fr ? Number(fr.year) : NaN;
   }
   function jumpToYear(y){
@@ -889,7 +956,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
     st.frames.forEach((fr, i) => { const d = Math.abs(Number(fr.year) - y); if (d < bd) { bd = d; bi = i; } });
     if (bi < 0) return false;
     if (st.mode === 'cmp') { st.cmpL = Math.min(bi, Math.max(0, st.cmpR - 1)); $('cmpLeft').value = st.cmpL; }
-    else { st.pos = bi; $('scrubber').value = bi; }
+    else { st.pos = frameToPos(bi); $('scrubber').value = st.pos; }
     return true;
   }
 
@@ -917,27 +984,37 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
       st.frames = [];
       ctx.fillStyle = '#dcd6c8'; ctx.fillRect(0, 0, W, H);
       $('strip').textContent = '';
+      $('dotTrack').textContent = '';
       $('ticks').textContent = '';
       $('loadFill').style.width = '0%';
       $('status').textContent = 'Für diesen Ausschnitt liegen bei swisstopo keine Luftbilder vor – wählen Sie einen Ort in der Schweiz oder wechseln Sie auf «Karten».';
       return;
     }
 
-    st.frames = list.map(it => ({...it, cv: null, ready: false, thumbCv: null}));
+    st.frames = list.map((it, i) => ({...it, t: it.year, cv: null, ready: false, thumbCv: null}));
+    for (let i = 1; i < st.frames.length; i++) {
+      const fr = st.frames[i], prev = st.frames[i - 1].t;
+      if (fr.epoch === 'Gegenwart · Luftbild') fr.t = Math.max(fr.t, prev + 4);
+      else if (fr.t <= prev) fr.t = prev + 1;
+    }
     st.pos = 0;
     buildTimeline();
     buildStrip();
     updatePlaceMeta();
     if (Number.isFinite(wantYear)) { if (jumpToYear(wantYear)) autoPlay = false; wantYear = NaN; }
 
-    /* Zuerst ersten und letzten Stand laden (sofortiges Bild + sofortiger Vorher/Jetzt-Vergleich) */
+    /* Zuerst angefragten Stand (falls ?e=), dann ersten und letzten Stand laden */
     const order = [];
-    if (st.frames.length > 0) order.push(0);
-    if (st.frames.length > 1) order.push(st.frames.length - 1);
-    for (let i = 1; i < st.frames.length - 1; i++) order.push(i);
+    const wantIdx = st.mode === 'cmp' ? st.cmpL : posToState(st.pos).active;
+    if (st.frames.length > 0 && wantIdx >= 0 && wantIdx < st.frames.length) order.push(wantIdx);
+    if (st.frames.length > 0 && !order.includes(0)) order.push(0);
+    if (st.frames.length > 1 && !order.includes(st.frames.length - 1)) order.push(st.frames.length - 1);
+    for (let i = 1; i < st.frames.length - 1; i++) if (!order.includes(i)) order.push(i);
 
     let done = 0;
     const total = order.length;
+    const kindLbl = kind === 'luft' ? 'echte Bildflüge' : 'echte Kartenstände';
+    const gapHint = kind === 'luft' ? 'dazwischen keine Aufnahme' : 'dazwischen keine Neuausgabe';
     /* Parallel in 3er-Gruppen laden: schnell und schonend für swisstopo */
     let cursor = 0;
     async function worker(){
@@ -952,8 +1029,8 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
         $('loadFill').style.width = Math.round((done / total) * 100) + '%';
         $('status').textContent = done < total
           ? `Lade Epochen … ${done} / ${total} (${fr.label})`
-          : `${total} Epochen bereit (${st.frames[0].label} bis ${st.frames[total - 1].label}). ${st.mode === 'cmp' ? 'Trennlinie nach links oder rechts ziehen.' : 'Leertaste startet/pausiert, Ziehen im Bild verschiebt den Bereich.'}`;
-        if (idx === 0 || idx === st.frames.length - 1 || Math.floor(st.pos) === idx || (st.mode === 'cmp' && idx === st.cmpL)) drawStage();
+          : `${total} ${kindLbl} bereit (${st.frames[0].label} bis ${st.frames[total - 1].label}; ${gapHint}). ${st.mode === 'cmp' ? 'Trennlinie nach links oder rechts ziehen.' : 'Leertaste startet/pausiert, Punkte auf der Achse wählen einzelne Jahre.'}`;
+        if (idx === 0 || idx === st.frames.length - 1 || posToState(st.pos).i0 === idx || (st.mode === 'cmp' && idx === st.cmpL)) drawStage();
       }
     }
     await Promise.all([worker(), worker(), worker()]);
@@ -980,15 +1057,12 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
     if (!st.playing) return;
     const dt = st.lastTick ? Math.min(120, now - st.lastTick) : 16;
     st.lastTick = now;
-    const maxI = st.frames.length - 1;
-    if (maxI <= 0) { pause(); return; }
+    if (st.frames.length <= 1) { pause(); return; }
 
-    /* Bei jeder Epoche kurz verweilen und im letzten Drittel weich überblenden */
-    const step = dt / st.speedMs;
-    const nextPos = st.pos + step;
-    if (nextPos >= maxI) {
-      st.pos = maxI;
-      $('scrubber').value = maxI;
+    const nextPos = st.pos + dt / totalPlayMs();
+    if (nextPos >= 1) {
+      st.pos = 1;
+      $('scrubber').value = 1;
       drawStage();
       if (st.recording) { pause(); return; }
       /* Am Schluss kurz auf «Heute» stehen bleiben, dann von vorn */
@@ -1009,7 +1083,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
   function play(){
     if (st.frames.length < 2) return;
     if (st.mode === 'cmp') setMode(st.cmpBase, false);
-    if (st.pos >= st.frames.length - 1.05) st.pos = 0;
+    if (st.pos >= 0.995) st.pos = 0;
     st.playing = true;
     st.lastTick = 0;
     $('playBtn').textContent = '❚❚ Pause';
@@ -1243,8 +1317,18 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
 
   /* Steuerungs-Events */
   $('playBtn').addEventListener('click', () => { if (st.playing || $('playBtn').dataset.want === '1') pause(); else play(); });
-  $('prevBtn').addEventListener('click', () => { pause(); st.pos = Math.max(0, Math.round(st.pos) - 1); $('scrubber').value = st.pos; drawStage(); });
-  $('nextBtn').addEventListener('click', () => { pause(); st.pos = Math.min(st.frames.length - 1, Math.round(st.pos) + 1); $('scrubber').value = st.pos; drawStage(); });
+  $('prevBtn').addEventListener('click', () => {
+    pause();
+    const cur = posToState(st.pos).active;
+    st.pos = frameToPos(Math.max(0, cur - 1));
+    $('scrubber').value = st.pos; drawStage();
+  });
+  $('nextBtn').addEventListener('click', () => {
+    pause();
+    const cur = posToState(st.pos).active;
+    st.pos = frameToPos(Math.min(st.frames.length - 1, cur + 1));
+    $('scrubber').value = st.pos; drawStage();
+  });
   $('scrubber').addEventListener('input', e => { pause(); st.pos = Number(e.target.value); drawStage(); });
 
   const setSpeed = (id, ms) => {
@@ -1275,6 +1359,13 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
   $('zoomOut').addEventListener('click', () => changeZoom(st.z - 1));
   $('densSel').addEventListener('change', e => { st.density = e.target.value; loadArea(false); });
   $('endAerial').addEventListener('change', () => { if (st.mode === 'karte' || (st.mode === 'cmp' && st.cmpBase === 'karte')) loadArea(false); });
+  $('realTimeChk').addEventListener('change', () => {
+    /* Beim Umschalten der Zeitachse die aktuell gezeigte Epoche beibehalten */
+    st.pos = frameToPos(st.activeIdx || 0);
+    buildTimeline();
+    $('scrubber').value = st.pos;
+    drawStage();
+  });
   $('fadeChk').addEventListener('change', () => drawStage());
   $('focusChk').addEventListener('change', () => drawStage());
 
@@ -1405,18 +1496,18 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
     drawStage();
     rec.start();
     const startMs = performance.now();
-    const durPerFrame = Math.max(450, Math.min(1200, st.speedMs));
-    const totalMs = (st.frames.length - 1) * durPerFrame;
+    const totalMs = Math.max(3000, Math.min(24000, totalPlayMs()));
     const holdEnd = 900;
     function recTick(now){
       const el = now - startMs;
       if (el <= totalMs) {
-        st.pos = (el / totalMs) * (st.frames.length - 1);
+        st.pos = el / totalMs;
         $('scrubber').value = st.pos;
         drawStage();
         requestAnimationFrame(recTick);
       } else if (el <= totalMs + holdEnd) {
-        st.pos = st.frames.length - 1;
+        st.pos = 1;
+        $('scrubber').value = 1;
         drawStage();
         requestAnimationFrame(recTick);
       } else {
@@ -1462,7 +1553,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
       c: st.lon.toFixed(5) + ',' + st.lat.toFixed(5), mode: 'fly', year: '1900'
     });
     /* Jahr der gezeigten Epoche mitnehmen: Stand 1870–1949 → dieses Jahr, später → Heute (bei Vorher/Jetzt das linke Bild) */
-    const fr = st.mode === 'cmp' ? st.frames[st.cmpL] : st.frames[Math.max(0, Math.min(st.frames.length - 1, Math.round(st.pos)))];
+    const fr = st.mode === 'cmp' ? st.frames[st.cmpL] : st.frames[posToState(st.pos).active];
     const fy = fr ? Number(fr.year) : NaN;
     if (Number.isFinite(fy) && fy >= 1870 && fy <= 1949) q3.set('year', String(fy));
     else if (Number.isFinite(fy) && fy > 1949) { q3.set('mode', 'now'); q3.delete('year'); }

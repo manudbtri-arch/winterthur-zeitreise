@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Zeitraffer von oben: zuschaltbare echte Zeitachse (`#realTimeChk`, Abstände proportional zu den Kalenderjahren, inkl. WebM-Video-Export), anklickbarer Markierungspunkt je echtem Bildflug bzw. Kartenstand über dem Regler (`#dotTrack`), überlappungsfreie Jahresmarken und klarer Statushinweis («echte Bildflüge/Kartenstände; dazwischen keine Aufnahme»).
 - 2D-Karte: «Ausschnitt als Zeitraffer von oben» öffnet den Zeitraffer beim gezeigten Jahr (im Vergleich beim linken Bild; heutige Karte bzw. Luftbild beim letzten, Dufourkarte beim frühesten Stand) und nimmt die eigene Story-Datei mit.
 - 3D-Flug: Infokarte einer Geschichte mit Link «Zeitraffer von oben» – zeigt die Entwicklung rund um die Geschichte in Luftbildern bis heute (nicht im Kiosk).
 - Zeitraffer mit eigener Story-Datei (`zeitraffer.html?stories=<name>`): die Geschichten der Datei erscheinen als Ausschnitte zum Anklicken (Text und Quelle in der Beschreibung), der erste wird gleich geladen; Link und «Im 3D-Flug» nehmen den Namen mit; in der Partner-Anleitung erklärt.
