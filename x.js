@@ -49,7 +49,7 @@ if (location.protocol === 'file:') {
   $('hud').textContent = 'Als Datei geöffnet – Gelände braucht eine Webadresse';
 }
 C.CesiumTerrainProvider.fromUrl('https://3d.geo.admin.ch/ch.swisstopo.terrain.3d/v1/', {requestVertexNormals:true})
-  .then(tp => { viewer.terrainProvider = tp; terrainOk = true; globe.enableLighting = false; setTimeout(() => buildHouses(LINK ? LINK.c : [8.7290, 47.4997]), 500); })
+  .then(tp => { viewer.terrainProvider = tp; terrainOk = true; globe.enableLighting = false; buildHouses(LINK ? LINK.c : [8.7290, 47.4997]); })
   .catch(err => {
     console.error(err);
     $('hud').textContent = 'Gelände nicht erreichbar – flache Ansicht';
@@ -280,10 +280,15 @@ async function loadGwr(w, s, e, n, onProgress, N = 4){
   const out = new Map(); let done = 0;
   const one = async b => {
     const env = b.join(',');
-    for (let off = 0; off < 6000; off += 200) {
+    const page = async off => {
       const u = `https://api3.geo.admin.ch/rest/services/ech/MapServer/identify?layers=all:ch.bfs.gebaeude_wohnungs_register&geometryType=esriGeometryEnvelope&geometry=${env}&sr=4326&tolerance=0&returnGeometry=false&limit=200&offset=${off}&mapExtent=${env}&imageDisplay=100,100,96`;
-      let res = [];
-      try { res = (await (await fetch(u)).json()).results || []; } catch (err) { break; }
+      try { return (await (await fetch(u)).json()).results || []; } catch (err) { return null; }
+    };
+    /* zwei Seiten gleichzeitig: dichte Altstädte sind so doppelt so schnell da */
+    for (let off = 0; off < 6000; off += 400) {
+      const [p1, p2] = await Promise.all([page(off), page(off + 200)]);
+      if (!p1) break;
+      const res = p2 ? p1.concat(p2) : p1;
       for (const r of res) {
         const a = r.attributes, id = Number(a.egid);
         if (!id || out.has(id) || (a.gstat && a.gstat !== 1004)) continue;
@@ -292,7 +297,7 @@ async function loadGwr(w, s, e, n, onProgress, N = 4){
         const [lo, la] = lv95(a.gkode, a.gkodn);
         out.set(id, {y, lon:lo, lat:la, exact: !!a.gbauj, adr: (a.strname_deinr || `${a.strname || ''} ${a.deinr || ''}`).trim()});
       }
-      if (res.length < 200) break;
+      if (p1.length < 200 || !p2 || p2.length < 200) break;
     }
     onProgress(++done, boxes.length);
   };
@@ -446,7 +451,7 @@ async function analyseAsync(px, W, H, cw, ch){
 }
 
 /* Eine Kartenausgabe auswerten: Hausflächen → Blöcke mit Stufendach und Fenstern */
-async function buildEdition(area, year, reg, token, emit){
+async function buildEdition(area, year, reg, token, emit, lite){
   const {px0, py0, W, H, cw, ch, lat} = area;
   /* Zwischenspeicher: ausgewertete Kartenausgabe (v1 = Stand des Formfilters; bei Änderung hochzählen) */
   const ckey = `ed:v1:${year}:${px0}:${py0}:${W}:${H}`;
@@ -563,7 +568,8 @@ async function buildEdition(area, year, reg, token, emit){
   const glass = C.Color.fromCssColorString('#2a3038'), door = C.Color.fromCssColorString('#4a3326');
   let nGen = 0;
   const doorDone = new Uint8Array(comps.length);
-  for (let cy = 0; cy < ch; cy++) for (let cx = 0; cx < cw; cx++) {
+  /* ferne Kacheln (lite): ohne Fenster und Türen, das spart den Grossteil der Klötze */
+  if (!lite) for (let cy = 0; cy < ch; cy++) for (let cx = 0; cx < cw; cx++) {
     const id = comp[cy * cw + cx];
     if (id < 0 || !keep[id] || real[id]) continue;
     const c = comps[id];
@@ -593,7 +599,7 @@ async function buildEdition(area, year, reg, token, emit){
     shadows: C.ShadowMode.ENABLED
   })) : null;
   if (prim) prim.show = false;
-  return {year, prim, roof, nGen, nOld, occ, wat, parts, hl: false, nDrop, recs};
+  return {year, prim, roof, nGen, nOld, occ, wat, parts, hl: false, nDrop, recs, full: !lite};
 }
 
 /* ---------- Boden: Pflaster in Gassen und auf Plätzen, sonst Wiese, Bäche blau ---------- */
@@ -650,7 +656,8 @@ function makeGround(c){
   if (c.ground) { scene.primitives.remove(c.ground); c.ground = null; }
   c.groundFor = c.shown;
   const ed = c.eds.get(c.shown);
-  if (!ed || !$('groundOn').checked) return;
+  c.groundFull = !!(ed && ed.full);
+  if (!ed || !ed.full || !$('groundOn').checked) return;   /* ferne Kacheln ohne Pflaster: dort sieht man es nicht, es kostet aber viel */
   const {cw, ch} = c, m = MARGIN / CELL, n = CHUNK / CELL;
   /* Abstand zum nächsten Haus: bis rund 19 m ist es Gasse oder Platz (über die ganze Kachel mit Rand gerechnet) */
   const dist = new Int16Array(cw * ch).fill(99), q = [];
@@ -786,9 +793,9 @@ $('epochCsv').addEventListener('click', () => {
 
 /* Alle Gebäude neu auswerten ist teuer: beim Ziehen am Regler höchstens alle 150 ms */
 let styleT = 0;
-function styleDirty(){
+function styleDirty(ms = 150){
   if (styleT) return;
-  styleT = setTimeout(() => { styleT = 0; if (bldTs) { bldTs.makeStyleDirty(); specTs.makeStyleDirty(); } }, 150);
+  styleT = setTimeout(() => { styleT = 0; if (bldTs) { bldTs.makeStyleDirty(); specTs.makeStyleDirty(); } }, ms);
 }
 /* Jahr anwenden: echte Häuser nach Baujahr, nachgebaute aus der passenden Kartenausgabe jeder Kachel */
 function genCount(){ let n = 0; for (const c of world.chunks.values()) { const ed = c.eds.get(c.shown); if (ed) n += ed.nGen; } return n; }
@@ -798,7 +805,7 @@ function showChunk(c){
   const pick = c.eds.has(world.edition) ? world.edition : (avail.filter(e => e <= world.edition).pop() ?? avail[0]);
   for (const [e, ed] of c.eds) if (ed.prim) ed.prim.show = e === pick && $('genOn').checked && !present;
   c.shown = pick;
-  if (c.groundFor !== pick) makeGround(c);
+  if (c.groundFor !== pick || c.groundFull !== !!c.eds.get(pick).full) makeGround(c);
 }
 function applyYear(y){
   gwr.year = y;
@@ -809,25 +816,34 @@ function applyYear(y){
   updateStories();
   if (present) { say('Heute: Luftbild, alle 3D-Gebäude und Bäume von swisstopo.'); updateStats(); return; }
   if (!world.chunks.size) return;
-  let nOldNow = 0; if (gwr.info) for (const r of gwr.info.values()) if (r.y <= y) nOldNow++;
-  say(`${y}: ${nOldNow} echte Altbauten und ${genCount()} nachgebaute Häuser (Karte ${world.edition}) in der Umgebung.` + (world.done ? ' Zieh am Jahr-Regler für den Zeitsprung.' : ' Weitere Kacheln laden …'));
+  sayStatus();
   updateStats();
 }
 
 /* Gebäuderegister einer Kachel (mit Rand), 30 Tage zwischengespeichert */
-async function chunkGwr(c){
-  const key = `gwrc:v1:${c.tx}:${c.ty}`, gc = await idbGet(key);
-  if (gc && gc.reg instanceof Map && Date.now() - gc.t < 30 * 864e5) return gc.reg;
-  const reg = await loadGwr(x2lon(c.px0), y2lat(c.py0 + c.H), x2lon(c.px0 + c.W), y2lat(c.py0), () => {}, 1);
-  if (reg.size) idbPut(key, {t: Date.now(), reg});
-  return reg;
+const gwrP = new Map();   /* laufende oder fertige Abfragen je Kachel, damit nichts doppelt geladen wird */
+function chunkGwr(c){ return gwrFor(c.tx, c.ty); }
+function gwrFor(tx, ty){
+  const k = chunkKey(tx, ty);
+  if (!gwrP.has(k)) {
+    if (gwrP.size > 300) gwrP.clear();
+    gwrP.set(k, (async () => {
+      const key = `gwrc:v1:${tx}:${ty}`, gc = await idbGet(key);
+      if (gc && gc.reg instanceof Map && Date.now() - gc.t < 30 * 864e5) return gc.reg;
+      const px0 = tx * CHUNK - MARGIN, W = CHUNK + 2 * MARGIN;
+      const reg = await loadGwr(x2lon(px0), y2lat(ty * CHUNK - MARGIN + W), x2lon(px0 + W), y2lat(ty * CHUNK - MARGIN), () => {}, 2);
+      if (reg.size) idbPut(key, {t: Date.now(), reg}); else gwrP.delete(k);
+      return reg;
+    })());
+  }
+  return gwrP.get(k);
 }
 let infoT = 0;
 function scheduleInfo(){
   clearTimeout(infoT);
   infoT = setTimeout(() => { gwr.info = new Map(); for (const c of world.chunks.values()) if (c.reg) for (const [id, r] of c.reg) gwr.info.set(id, r); updateStats(); }, 300);
 }
-async function loadChunk(tx, ty, e){
+async function loadChunk(tx, ty, e, full){
   const k = chunkKey(tx, ty);
   let c = world.chunks.get(k);
   if (!c) {
@@ -844,15 +860,21 @@ async function loadChunk(tx, ty, e){
       if (token !== buildToken || world.chunks.get(k) !== c) return;
       c.reg = reg;
       for (const [id, r] of reg) { gwr.years.set(id, r.y); gwr.all.set(id, r); }
-      styleDirty(); scheduleInfo();
+      styleDirty(600); scheduleInfo();   /* beim Laden seltener neu auswerten, sonst ruckelt es */
     }
     const m0 = MARGIN / CELL, m1 = (MARGIN + CHUNK) / CELL;
     const ed = await buildEdition({px0: c.px0, py0: c.py0, W: c.W, H: c.H, cw: c.cw, ch: c.ch, lat: c.lat}, e, c.reg, token,
-      cc => cc.cx + 0.5 >= m0 && cc.cx + 0.5 < m1 && cc.cy + 0.5 >= m0 && cc.cy + 0.5 < m1);
+      cc => cc.cx + 0.5 >= m0 && cc.cx + 0.5 < m1 && cc.cy + 0.5 >= m0 && cc.cy + 0.5 < m1, !full);
     if (!ed) return;
     if (token !== buildToken || world.chunks.get(k) !== c) { if (ed.prim) scene.primitives.remove(ed.prim); return; }
+    const prev = c.eds.get(e);
     c.eds.set(e, ed);
     showChunk(c);
+    /* die vereinfachte Fassung erst entfernen, wenn die neue gezeichnet ist: kein Aufblitzen */
+    if (prev && prev.prim) { const pp = prev.prim; setTimeout(() => scene.primitives.remove(pp), 400); }
+    if (world.pendingWalk && chunkReadyAt(world.pendingWalk[0], world.pendingWalk[1])) {
+      const pt = world.pendingWalk; world.pendingWalk = null; spawn(densestStreet(pt[0], pt[1]));
+    }
     $('introWalk').disabled = false;
   } catch (err) { console.error(err); c.fail++; }
   finally { c.pending.delete(e); }
@@ -874,45 +896,72 @@ function currentFocus(){
   if (walk) return [C.Math.toDegrees(c.longitude), C.Math.toDegrees(c.latitude)];
   return centerLonLat();
 }
-const SIGHT = () => walk ? 2 : 3;   /* Sichtweite in Kacheln, wie die Render-Distanz in Minecraft */
+const NEAR = 2;           /* rundherum volle Details (Fenster, Türen) */
+const MAX_CHUNKS = 140;   /* Obergrenze, damit der Speicher nicht vollläuft */
+/* Sichtweite in Kacheln: so weit, dass das ganze Bild bis zum Horizont gefüllt ist (wie die Render-Distanz in Minecraft) */
+const sight = agl => walk ? 6 : Math.min(10, Math.max(4, Math.round(agl / 150)));
+function sayStatus(){
+  if (present) return;
+  if (!world.done) { say(`Lade die Umgebung: ${world.ready} von ${world.want} Kacheln …`); return; }
+  let nOldNow = 0; if (gwr.info) for (const r of gwr.info.values()) if (r.y <= gwr.year) nOldNow++;
+  say(`${gwr.year}: ${nOldNow} echte Altbauten und ${genCount()} nachgebaute Häuser (Karte ${world.edition}) in der Umgebung. Zieh am Jahr-Regler für den Zeitsprung.`);
+}
 function schedTick(){
   if (!terrainOk || present) { building = false; return; }
   const f = currentFocus(); if (!f) return;
   world.focus = f;
-  const fx = lon2x(f[0]) / CHUNK, fy = lat2y(f[1]) / CHUNK, R = SIGHT();
+  const cc = C.Cartographic.fromCartesian(camera.position), gh = globe.getHeight(cc);
+  const agl = gh === undefined ? 300 : Math.max(2, cc.height - gh), R = sight(agl);
+  const fx = lon2x(f[0]) / CHUNK, fy = lat2y(f[1]) / CHUNK;
   const dOf = (tx, ty) => Math.hypot(tx + 0.5 - fx, ty + 0.5 - fy);
+  /* im Bild? Kachel als Kugel auf Bodenhöhe gegen den Sichtkegel der Kamera prüfen */
+  let cull = null;
+  try { cull = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up); } catch (e) {}
+  const visible = (tx, ty) => {
+    if (!cull) return true;
+    const sph = new C.BoundingSphere(C.Cartesian3.fromDegrees(x2lon((tx + .5) * CHUNK), y2lat((ty + .5) * CHUNK), gh ?? 450), 320);
+    return cull.computeVisibility(sph) !== C.Intersect.OUTSIDE;
+  };
   /* weit entfernte Kacheln entladen, mittlere nur mit der aktuellen Kartenausgabe behalten */
   for (const [k, c] of world.chunks) {
     const d = dOf(c.tx, c.ty);
     if (d > R + 1.5 && !c.pending.size) unloadChunk(k, c);
     else if (d > 2.2) for (const [e, ed] of c.eds) if (e !== c.shown && !c.pending.has(e)) { if (ed.prim) scene.primitives.remove(ed.prim); c.eds.delete(e); }
   }
-  /* nächste fehlende Kachel suchen, die nächste zuerst */
-  let best = null, bestD = 1e9, want = 0, ready = 0;
+  if (world.chunks.size > MAX_CHUNKS) {
+    const far = [...world.chunks].filter(([, c]) => !c.pending.size && dOf(c.tx, c.ty) > NEAR + 1 && !visible(c.tx, c.ty))
+      .sort((a, b) => dOf(b[1].tx, b[1].ty) - dOf(a[1].tx, a[1].ty));
+    for (const [k, c] of far.slice(0, world.chunks.size - MAX_CHUNKS)) unloadChunk(k, c);
+  }
+  /* nächste fehlende Kachel: zuerst rundherum, dann was im Bild liegt, die nächste zuerst */
+  let best = null, bestS = 1e9, want = 0, ready = 0;
   for (let j = -R - 1; j <= R + 1; j++) for (let i = -R - 1; i <= R + 1; i++) {
     const tx = Math.floor(fx) + i, ty = Math.floor(fy) + j, d = dOf(tx, ty);
     if (d > R + 0.5) continue;
+    const near = d <= NEAR + 0.5;
+    if (!near && !visible(tx, ty)) continue;
     want++;
-    const c = world.chunks.get(chunkKey(tx, ty));
-    if (c && c.eds.has(world.edition)) { ready++; continue; }
+    const c = world.chunks.get(chunkKey(tx, ty)), ed = c && c.eds.get(world.edition);
+    if (ed && (ed.full || !near)) { ready++; continue; }
     if (c && (c.pending.has(world.edition) || c.fail >= 2)) continue;
-    if (d < bestD) { bestD = d; best = [tx, ty, world.edition]; }
+    const sc = d + (ed ? 2 : 0);   /* fehlende Kacheln vor dem Nachrüsten der Fenster */
+    if (sc < bestS) { bestS = sc; best = [tx, ty, world.edition, near]; }
   }
   /* alles da: für die nahen Kacheln die übrigen Kartenausgaben vorbereiten, damit der Zeitregler sofort umschaltet */
   if (!best) for (const c of world.chunks.values()) {
     const d = dOf(c.tx, c.ty);
-    if (d > 1.6 || c.fail >= 2 || d >= bestD) continue;
+    if (d > 1.6 || c.fail >= 2 || d >= bestS) continue;
     const e = EDITIONS.find(x => !c.eds.has(x) && !c.pending.has(x));
-    if (e !== undefined) { bestD = d; best = [c.tx, c.ty, e]; }
+    if (e !== undefined) { bestS = d; best = [c.tx, c.ty, e, true]; }
   }
   world.want = want; world.ready = ready;
   const wasDone = world.done; world.done = ready >= want;
   building = !world.done;
-  if (!world.done) { setProg(ready / Math.max(1, want)); if (world.busy) say(`Lade die Umgebung: ${ready} von ${want} Kacheln …`); }
-  else if (!wasDone) { setProg(1); applyYear(gwr.year); }
-  if (!best || world.busy >= 2) return;
+  if (!world.done) setProg(ready / Math.max(1, want));
+  if (!world.done || !wasDone) { if (world.done) setProg(1); sayStatus(); }
+  if (!best || world.busy >= 3) return;
   world.busy++;
-  loadChunk(best[0], best[1], best[2]).finally(() => { world.busy--; schedTick(); });
+  loadChunk(best[0], best[1], best[2], best[3]).finally(() => { world.busy--; schedTick(); });
 }
 setInterval(schedTick, 250);
 /* An einem Ort sofort mit dem Laden beginnen (Suche, Start, Teleport) */
@@ -924,6 +973,9 @@ function buildHouses(center){
   buildingLayer().catch(() => {});
   schedTick();
 }
+/* Gebäuderegister rund um den Startort schon abfragen, während Cesium noch das Gelände lädt */
+{ const st = LINK ? LINK.c : [8.7290, 47.4997], tx = Math.floor(lon2x(st[0]) / CHUNK), ty = Math.floor(lat2y(st[1]) / CHUNK);
+  for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) gwrFor(tx + i, ty + j); }
 /* «Hier neu bauen»: alle Kacheln verwerfen und um die Bildmitte neu laden */
 $('build').addEventListener('click', () => { buildToken++; for (const [k, c] of [...world.chunks]) unloadChunk(k, c); world.done = false; buildHouses(); });
 
@@ -1140,7 +1192,12 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
   $('openFull').hidden = false;
   goHome(0);
 }
-$('introWalk').addEventListener('click', async () => { closeIntro(); await spawn(densestStreet(8.7300, 47.4995)); });
+$('introWalk').addEventListener('click', async () => {
+  closeIntro();
+  /* noch nicht geladen: losgehen, sobald die ersten Häuser stehen */
+  if (!chunkReadyAt(8.7300, 47.4995)) { world.pendingWalk = [8.7300, 47.4995]; say('Gleich geht es los – die ersten Häuser laden …'); return; }
+  await spawn(densestStreet(8.7300, 47.4995));
+});
 $('introFly').addEventListener('click', () => { closeIntro(); goHome(1.5); });
 
 /* Kamera */

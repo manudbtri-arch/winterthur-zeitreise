@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Testseite `flug-3d-welt.html`: das ganze Bild bis zum Horizont wird gefüllt (beim Gehen bis rund 2,4 km, beim Fliegen je nach Höhe bis rund 4 km); nahe Kacheln mit allen Details, ferne vereinfacht ohne Fenster und Pflaster; Startbild erscheint sofort, das Gebäuderegister wird schon während des Ladens abgefragt (je zwei Seiten gleichzeitig), «Durch die Gassen gehen» lässt sich sofort drücken; die Übersicht lädt die 3D-Bibliothek im Hintergrund vor.
 - Testseite `flug-3d-welt.html`: die Welt lädt in Kacheln von rund 400 m wie in Minecraft – rund um den Standort (beim Gehen 2, beim Fliegen 3 Kacheln weit), die nächsten zuerst, ferne werden entladen; die übrigen Kartenausgaben werden für die nahen Kacheln vorbereitet, damit der Zeitregler sofort umschaltet; Häuser sehen in jeder Kachel und Kartenausgabe gleich aus.
 - 3D-Flug flüssiger und grösser: Gebiet 1,5 × 1,5 km; am Rand wird automatisch nachgebaut, ohne dass die alten Häuser vorher verschwinden; echte Altbauten bleiben in allen besuchten Gebieten sichtbar; der Gebäudestil wird beim Ziehen am Zeitregler gebündelt und ohne HTML-Abfragen pro Gebäude ausgewertet; beim Gehen weniger Gelände am Horizont; Anzeige nur bei Änderung; bei anhaltendem Ruckeln werden Schatten, Kantenglättung und Fernsicht schrittweise reduziert.
 - Story-Werkstatt: Knopf «Lage im 3D-Flug ansehen» öffnet den 3D-Flug in einem neuen Fenster mit Blick von Süden auf den gesetzten Punkt (im Jahr «ab», falls zwischen 1870 und 1949) und baut dort die Häuser.
