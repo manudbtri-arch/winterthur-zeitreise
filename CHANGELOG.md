@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Produktseite nennt den Prüflink ins Gebäuderegister, das Teilen auf dem Handy und das druckbare Arbeitsblatt.
 - Unterrichtsseite: Knopf «Arbeitsblatt drucken» druckt die fünf Aufträge mit Antwortlinien und Feldern für Name, Klasse und Datum, ohne Lernziele und Lehrpersonen-Hinweise; beim normalen Drucken erscheinen die Antwortlinien ebenfalls.
 - Handy: «Link teilen» und «Link zu dieser Geschichte teilen» öffnen auf Touch-Geräten das System-Teilen (Nachricht, Mail); ohne Teilen-Funktion wird wie bisher kopiert.
 - Infokarte eines belegten Gebäudes: Link «Im Gebäuderegister prüfen» öffnet map.geo.admin.ch mit der Ebene des Gebäuderegisters an der Lage des Gebäudes (nicht im Kiosk); in der Methodik beschrieben.
