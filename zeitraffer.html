@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zeitraffer von oben – Zeitreise Schweiz</title>
+<meta name="description" content="Verfolgen Sie an einem gewählten Ausschnitt von oben, wie sich Schweizer Orte, Quartiere, Infrastruktur und Gletscher über die Epochen verändern – von der ersten historischen Aufnahme bis heute.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Crect width='30' height='30' rx='6' fill='%239a4a2c'/%3E%3Cpath d='M7 20h16v3H7zM9 13l4-4 4 4v7H9zM17 15l3-3 3 3v5h-6z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="fonts/archivo.css">
+<style>
+/* VOICE: ruhig, dokumentarisch, wie ein Luftbild-Atlas im Museum
+   IDEA: ein fest gerahmter Ausschnitt von oben, durch den die Jahrzehnte ziehen
+   PICTURE: das 3:2-Luftbild- oder Kartenfenster mit Epochen-Zeitachse und Filmstreifen darunter
+   COLOUR and TYPE: Papierweiss, Tusche, Gewässerblau als Akzent, Ziegelbraun für historische Jahre; Archivo
+   LAYOUT: Navigation oben, Ortswahl-Leiste, links die Bühne mit Zeitachse, rechts Steuerung & Export, unten Epochen-Streifen */
+:root{color-scheme:light dark;--bg:light-dark(#fbfaf7,#121417);--card:light-dark(#ffffff,#1a1d21);--ink:light-dark(#16161a,#ecebe7);--mute:light-dark(#5a5a5f,#a8a7a2);--line:light-dark(#e2e0da,#2b3036);--blue:light-dark(#1f5fa8,#76aee8);--brick:light-dark(#9a4a2c,#e0956f);--tint:light-dark(#f2efe8,#181c20)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Archivo,system-ui,sans-serif;overflow-x:clip}
+a{color:var(--blue)}
+.wrap{max-width:1240px;margin:0 auto;padding:0 max(4vw,16px)}
+nav{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:18px;min-height:58px;flex-wrap:wrap}
+.brand{font-weight:800;font-size:18px;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:10px;margin-right:auto}
+.brand svg{flex:none}
+nav .links{display:flex;gap:16px;flex-wrap:wrap}
+nav .links a{color:var(--ink);text-decoration:none;font-weight:600;font-size:15px}
+nav .links a:hover,nav .links a[aria-current=page]{color:var(--blue)}
+main{padding:clamp(20px,3vw,34px) 0 56px}
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px 24px;margin-bottom:18px}
+.kicker{color:var(--brick);font-weight:600;font-size:14px;margin:0 0 4px}
+h1{font-size:clamp(26px,4vw,38px);line-height:1.08;margin:0;font-weight:800;letter-spacing:-0.015em}
+.lead{font-size:16px;color:var(--mute);margin:6px 0 0;max-width:64ch}
+.search{position:relative;width:min(320px,100%);flex:none}
+.search input{width:100%;font:15px Archivo,sans-serif;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);min-height:44px}
+.search ul{position:absolute;z-index:40;left:0;right:0;top:100%;margin:4px 0 0;padding:4px;list-style:none;background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.22);max-height:260px;overflow:auto}
+.search li{padding:8px 10px;border-radius:6px;cursor:pointer;font-size:14px;color:var(--ink)}
+.search li small{display:block;color:var(--mute);font-size:12px}
+.search li:hover,.search li[aria-selected=true]{background:var(--tint)}
+
+/* Ortswahl-Leiste */
+.spots{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;margin:0 0 16px;scrollbar-width:thin}
+@media(min-width:720px){.spots{flex-wrap:wrap;overflow-x:visible;padding-bottom:2px}}
+.spot{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 14px Archivo,sans-serif;padding:8px 14px;border-radius:22px;cursor:pointer;min-height:40px;white-space:nowrap;transition:border-color .15s,background .15s,color .15s}
+.spot:hover{border-color:var(--brick);color:var(--brick)}
+.spot[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+
+/* Hauptlayout: Bühne links, Steuerung rechts */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start}
+@media(max-width:960px){.layout{grid-template-columns:1fr}}
+
+/* Gerahmte 3:2-Bühne */
+.stage-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 10px 30px rgba(20,20,30,.08)}
+.viewport{position:relative;aspect-ratio:3/2;width:100%;border-radius:10px;overflow:hidden;background:#dcd6c8;border:1px solid var(--line);user-select:none;touch-action:none}
+.viewport canvas{display:block;width:100%;height:100%;cursor:grab}
+.viewport canvas.dragging{cursor:grabbing}
+.viewport canvas.wipe-mode{cursor:ew-resize}
+.ztools{position:absolute;top:76px;right:12px;z-index:5;display:flex;flex-direction:column;gap:4px}
+.ztools button{width:36px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:rgba(18,20,24,.74);color:#fff;font:700 18px/1 Archivo,sans-serif;cursor:pointer;backdrop-filter:blur(4px);display:grid;place-items:center}
+.ztools button:hover{background:rgba(18,20,24,.92)}
+.wipe-handle{position:absolute;top:0;bottom:0;width:4px;margin-left:-2px;background:#fff;z-index:6;box-shadow:0 0 0 1px rgba(0,0,0,.45),0 0 14px rgba(0,0,0,.35);cursor:ew-resize;touch-action:none}
+.wipe-handle span{position:absolute;top:50%;left:50%;width:42px;height:42px;margin:-21px 0 0 -21px;border-radius:50%;background:#fff;border:2px solid #16161a;color:#16161a;display:grid;place-items:center;font:800 15px Archivo,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.wipe-handle:focus-visible span{outline:3px solid var(--blue);outline-offset:2px}
+.loadbar{height:4px;background:var(--tint);border-radius:4px;overflow:hidden;margin:10px 0 0}
+.loadbar i{display:block;height:100%;width:0%;background:var(--blue);transition:width .18s}
+
+/* Wiedergabe & Epochen-Zeitachse */
+.player{margin-top:12px;display:grid;gap:10px}
+.prow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 14px Archivo,sans-serif;border-radius:8px;padding:8px 14px;min-height:42px;cursor:pointer;text-decoration:none}
+.btn:hover{border-color:var(--blue);color:var(--blue)}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover{filter:brightness(1.06);color:#fff}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.seg{display:inline-flex;background:var(--tint);border:1px solid var(--line);border-radius:8px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;color:var(--ink);font:600 13px Archivo,sans-serif;padding:6px 10px;border-radius:6px;cursor:pointer;min-height:36px}
+.seg button[aria-pressed=true]{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.15);color:var(--blue)}
+.spacer{flex:1}
+
+/* Zeitachse mit Epochen-Punkten */
+.timeline{padding:6px 4px 2px}
+.timeline input[type=range]{width:100%;accent-color:var(--brick);height:28px;margin:0;cursor:pointer}
+.ticks{display:flex;justify-content:space-between;gap:4px;margin-top:2px;font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
+.ticks button{border:0;background:transparent;color:inherit;font:inherit;padding:2px 4px;border-radius:4px;cursor:pointer}
+.ticks button:hover{color:var(--ink);background:var(--tint)}
+.ticks button.on{color:var(--brick);font-weight:800}
+.status{font-size:13px;color:var(--mute);margin:2px 0 0;min-height:1.3em}
+
+/* Rechte Steuerleiste */
+.rail{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:16px}
+.rail h2{font-size:20px;line-height:1.2;margin:0;font-weight:800}
+.rail .desc{font-size:14px;color:var(--mute);margin:6px 0 0}
+.meta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px;color:var(--brick);font-weight:600;margin-top:8px;font-variant-numeric:tabular-nums}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;background:var(--tint);border:1px solid var(--line);padding:3px;border-radius:9px}
+.tabs button{border:0;background:transparent;color:var(--ink);font:600 13px Archivo,sans-serif;padding:8px 4px;border-radius:6px;cursor:pointer;min-height:40px}
+.tabs button[aria-pressed=true]{background:var(--card);color:var(--blue);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.grp{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:14px}
+.grp-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);margin:0}
+label.fld{display:grid;gap:4px;font-size:13px;font-weight:600}
+select{width:100%;font:14px Archivo,sans-serif;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);min-height:40px}
+.chk{display:flex;gap:10px;align-items:center;font-size:14px;cursor:pointer;min-height:36px}
+.chk input{width:18px;height:18px;accent-color:var(--blue);flex:none}
+.stack{display:grid;gap:8px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* Epochen-Streifen (Small Multiples) */
+.strip-sec{margin-top:26px}
+.strip-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 16px;margin-bottom:12px}
+.strip-head h2{font-size:20px;margin:0;font-weight:800}
+.strip-head span{font-size:14px;color:var(--mute)}
+.strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+@media(max-width:960px){.strip{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:560px){.strip{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.thumb{border:1px solid var(--line);background:var(--card);border-radius:10px;overflow:hidden;padding:0;text-align:left;cursor:pointer;transition:transform .12s,border-color .15s,box-shadow .15s;color:var(--ink)}
+.thumb:hover{transform:translateY(-2px);border-color:var(--blue)}
+.thumb.active{border-color:var(--brick);box-shadow:0 0 0 2px color-mix(in srgb,var(--brick) 35%,transparent)}
+.thumb canvas{display:block;width:100%;aspect-ratio:3/2;background:#dcd6c8}
+.thumb .tc{padding:8px 10px}
+.thumb b{display:block;font-size:17px;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--brick)}
+.thumb small{display:block;font-size:12px;color:var(--mute);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* QR-Dialog */
+.dlg{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:rgba(0,0,0,.48);padding:16px}
+.dlg .box{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:20px;width:min(440px,100%);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.dlg h3{margin:0 0 6px;font-size:19px}
+.dlg p{margin:0 0 12px;font-size:14px;color:var(--mute)}
+.qrwrap{display:grid;place-items:center;margin:0 0 12px}
+.qrwrap canvas{width:min(280px,70vw);height:auto;border:1px solid var(--line);border-radius:8px;background:#fff}
+
+footer{padding:28px 0 40px;border-top:1px solid var(--line);font-size:14px;color:var(--mute)}
+footer .wrap{display:flex;flex-wrap:wrap;gap:10px 24px;justify-content:space-between}
+footer a{color:var(--mute)}
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+[hidden]{display:none!important}
+@media(max-width:600px){nav .links{display:none}.stage-card{padding:10px}.ztools{top:56px;right:8px}.ztools button{width:32px;height:32px;font-size:16px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<nav aria-label="Hauptnavigation">
+  <div class="wrap">
+    <a class="brand" href="./">
+      <svg width="28" height="28" viewBox="0 0 30 30" aria-hidden="true"><rect width="30" height="30" rx="6" fill="#9a4a2c"/><path d="M7 20h16v3H7zM9 13l4-4 4 4v7H9zM17 15l3-3 3 3v5h-6z" fill="#fff"/></svg>
+      Zeitreise Schweiz
+    </a>
+    <div class="links">
+      <a href="./">Übersicht</a>
+      <a href="flug-3d.html">3D-Flug</a>
+      <a href="karte-2d.html">2D-Karte</a>
+      <a href="zeitraffer.html" aria-current="page">Zeitraffer</a>
+      <a href="methodik.html">Methodik</a>
+      <a href="unterricht.html">Unterricht</a>
+    </div>
+  </div>
+</nav>
+
+<main class="wrap">
+  <header class="head">
+    <div>
+      <p class="kicker">Entwicklung von oben · Epochen im Vergleich</p>
+      <h1>Zeitraffer für bestimmte Bereiche</h1>
+      <p class="lead">Wählen Sie einen prägnanten Schweizer Ort – oder suchen Sie Ihren eigenen Ausschnitt. Der Zeitraffer zeigt nur diesen Bereich über alle verfügbaren Epochen bis heute.</p>
+    </div>
+    <div class="search">
+      <input id="q" type="search" placeholder="Beliebigen Ort in der Schweiz suchen …" autocomplete="off" aria-label="Ort in der Schweiz suchen" role="combobox" aria-controls="qres" aria-expanded="false">
+      <ul id="qres" role="listbox" hidden></ul>
+    </div>
+  </header>
+
+  <div class="spots" id="spots" role="group" aria-label="Ausgewählte Entwicklungs-Orte"></div>
+
+  <div class="layout">
+    <section class="stage-card" aria-label="Zeitraffer-Ansicht">
+      <div class="viewport" id="viewport">
+        <canvas id="stage" width="960" height="640" aria-label="Gerahmter Ausschnitt im Zeitraffer"></canvas>
+        <div class="ztools" aria-label="Ausschnitt vergrössern oder verkleinern">
+          <button id="zoomIn" type="button" title="Näher heran (kleinerer Bereich)" aria-label="Näher heran">+</button>
+          <button id="zoomOut" type="button" title="Weiter weg (grösserer Bereich)" aria-label="Weiter weg">−</button>
+        </div>
+        <div class="wipe-handle" id="wipeHandle" hidden tabindex="0" role="slider" aria-label="Vorher-Nachher-Trennlinie verschieben" aria-valuemin="5" aria-valuemax="95" aria-valuenow="50"><span>⇔</span></div>
+      </div>
+
+      <div class="loadbar" aria-hidden="true"><i id="loadFill"></i></div>
+
+      <div class="player" id="playerBox">
+        <div class="prow">
+          <button class="btn primary" id="playBtn" type="button">▶ Abspielen</button>
+          <button class="btn" id="prevBtn" type="button" aria-label="Vorherige Epoche">◀</button>
+          <button class="btn" id="nextBtn" type="button" aria-label="Nächste Epoche">▶</button>
+          <span class="spacer"></span>
+          <div class="seg" role="group" aria-label="Geschwindigkeit">
+            <button id="spSlow" type="button" aria-pressed="false">Langsam</button>
+            <button id="spMid" type="button" aria-pressed="true">Normal</button>
+            <button id="spFast" type="button" aria-pressed="false">Schnell</button>
+          </div>
+        </div>
+        <div class="timeline">
+          <input type="range" id="scrubber" min="0" max="1" step="0.001" value="0" aria-label="Zeitpunkt im Zeitraffer">
+          <div class="ticks" id="ticks"></div>
+        </div>
+      </div>
+
+      <p class="status" id="status" aria-live="polite"></p>
+    </section>
+
+    <aside class="rail" aria-label="Einstellungen und Export">
+      <div>
+        <h2 id="placeTitle">Sulzer-Areal Winterthur</h2>
+        <p class="desc" id="placeDesc"></p>
+        <div class="meta" id="placeMeta"></div>
+      </div>
+
+      <div class="tabs" role="group" aria-label="Darstellungsmodus">
+        <button id="mLuft" type="button" aria-pressed="true">Luftbilder</button>
+        <button id="mKarte" type="button" aria-pressed="false">Karten</button>
+        <button id="mCmp" type="button" aria-pressed="false">Vorher / Jetzt</button>
+      </div>
+
+      <div class="grp" id="cmpGrp" hidden>
+        <p class="grp-title">Direktvergleich im selben Bereich</p>
+        <div class="seg" role="group" aria-label="Grundlage für Vergleich" style="width:100%">
+          <button id="cmpSrcLuft" type="button" aria-pressed="true" style="flex:1">Luftbilder</button>
+          <button id="cmpSrcKarte" type="button" aria-pressed="false" style="flex:1">Karten</button>
+        </div>
+        <label class="fld">Vorher (links)
+          <select id="cmpLeft"></select>
+        </label>
+        <label class="fld">Nachher / Jetzt (rechts)
+          <select id="cmpRight"></select>
+        </label>
+      </div>
+
+      <div class="grp" id="optGrp">
+        <p class="grp-title">Ausschnitt &amp; Epochen</p>
+        <label class="fld">Bereichsgrösse
+          <select id="zoomSel">
+            <option value="17">Sehr nah (ca. 0,8 km Breite)</option>
+            <option value="16">Nah (ca. 1,5 km Breite)</option>
+            <option value="15">Quartier (ca. 3 km Breite)</option>
+            <option value="14">Tal / Stadt (ca. 6 km Breite)</option>
+            <option value="13">Region (ca. 12 km Breite)</option>
+          </select>
+        </label>
+        <label class="fld" id="densWrap">Epochen-Auswahl
+          <select id="densSel">
+            <option value="key">Schlüsselepochen (ca. 10–12 Stände, schnell)</option>
+            <option value="all">Alle verfügbaren Stände (komplett)</option>
+          </select>
+        </label>
+        <label class="chk" id="todayWrap" hidden>
+          <input type="checkbox" id="endAerial" checked> Am Schluss auf heutiges Luftbild blenden
+        </label>
+        <label class="chk">
+          <input type="checkbox" id="fadeChk" checked> Weiches Überblenden zwischen Epochen
+        </label>
+        <label class="chk">
+          <input type="checkbox" id="focusChk" checked> Fokus-Rahmen für den Kernbereich
+        </label>
+      </div>
+
+      <div class="grp">
+        <p class="grp-title">Speichern &amp; Weiterführen</p>
+        <div class="stack">
+          <button class="btn primary" id="pngBtn" type="button">Epochen-Streifen als Bild (PNG)</button>
+          <button class="btn" id="vidBtn" type="button">Zeitraffer als Video (WebM)</button>
+          <div class="two-col">
+            <button class="btn" id="linkBtn" type="button">Link kopieren</button>
+            <button class="btn" id="qrBtn" type="button">QR-Code</button>
+          </div>
+          <div class="two-col">
+            <button class="btn" id="to3d" type="button">Im 3D-Flug</button>
+            <a class="btn" id="to2d" href="karte-2d.html">In 2D-Karte</a>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <section class="strip-sec" aria-label="Epochen auf einen Blick">
+    <div class="strip-head">
+      <h2>Epochen auf einen Blick</h2>
+      <span id="stripSub">Klick auf eine Kachel springt direkt zu diesem Jahr</span>
+    </div>
+    <div class="strip" id="strip"></div>
+  </section>
+</main>
+
+<div class="dlg" id="qrDlg" hidden role="dialog" aria-modal="true" aria-labelledby="qrH">
+  <div class="box">
+    <h3 id="qrH">QR-Code zu diesem Zeitraffer</h3>
+    <p id="qrTxt"></p>
+    <div class="qrwrap"><canvas id="qrCv" width="10" height="10" aria-label="QR-Code"></canvas></div>
+    <div class="two-col">
+      <button class="btn primary" id="qrSave" type="button">Als Bild speichern</button>
+      <button class="btn" id="qrClose" type="button">Schliessen</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>Zeitreise Schweiz · Luftbilder &amp; historische Karten © <a href="https://www.swisstopo.admin.ch">swisstopo</a> (SWISSIMAGE Zeitreise &amp; Karten-Zeitreihe)</span>
+    <span><a href="./">Übersicht</a> · <a href="flug-3d.html">3D-Flug</a> · <a href="karte-2d.html">2D-Karte</a> · <a href="methodik.html">Methodik</a> · <a href="unterricht.html">Unterricht</a></span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  'use strict';
+
+  const W = 960, H = 640;
+  const $ = id => document.getElementById(id);
+  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (REDUCED) $('fadeChk').checked = false;
+
+  /* Kuratierte Schweizer Entwicklungs-Orte mit starkem, dokumentiertem Wandel von oben */
+  const SPOTS = [
+    {
+      id: 'sulzer',
+      short: 'Winterthur · Sulzer-Areal',
+      title: 'Winterthur – Sulzer-Areal & Lokstadt',
+      lat: 47.4980, lon: 8.7185, z: 16,
+      desc: 'Vom weitläufigen Maschinenbau-Fabrikgelände westlich des Bahnhofs zum neuen Stadtquartier mit Wohnbauten, Hochschulen und erhaltenen Industriehallen.'
+    },
+    {
+      id: 'flughafen',
+      short: 'Flughafen Zürich-Kloten',
+      title: 'Flughafen Zürich-Kloten',
+      lat: 47.4582, lon: 8.5555, z: 14,
+      desc: 'Vom offenen Riedland bei Kloten zum heutigen Landesflughafen mit Pistenkreuz, Terminals und Autobahnanschluss.'
+    },
+    {
+      id: 'zuerich-west',
+      short: 'Zürich-West',
+      title: 'Zürich-West & Escher-Wyss',
+      lat: 47.3905, lon: 8.5175, z: 16,
+      desc: 'Vom Industrie- und Gleisgebiet zwischen Limmat und Bahnlinie zum dicht bebauten Wohn-, Kultur- und Dienstleistungsquartier.'
+    },
+    {
+      id: 'rheinhafen',
+      short: 'Basel · Rheinhafen',
+      title: 'Basel – Rheinhafen Kleinhüningen',
+      lat: 47.5805, lon: 7.5855, z: 15,
+      desc: 'Vom Dorf an der Wiesemündung zum internationalen Rheinhafen mit Hafenbecken, Silos und Dreiländereck.'
+    },
+    {
+      id: 'dixence',
+      short: 'Grande Dixence',
+      title: 'Grande Dixence & Lac des Dix (VS)',
+      lat: 46.0740, lon: 7.4025, z: 14,
+      desc: 'Im Walliser Val d’Hérémence entsteht ab den 1950er-Jahren mit der neuen Staumauer der grösste Stausee der Schweiz.'
+    },
+    {
+      id: 'grindelwald',
+      short: 'Grindelwaldgletscher',
+      title: 'Unterer Grindelwaldgletscher (BE)',
+      lat: 46.5920, lon: 8.0595, z: 14,
+      desc: 'Der Rückzug der Gletscherzunge oberhalb von Grindelwald wird über die Jahrzehnte aus der Vogelperspektive unmittelbar sichtbar.'
+    },
+    {
+      id: 'aletsch',
+      short: 'Aletschgletscher',
+      title: 'Grosser Aletschgletscher – Gletscherzunge (VS)',
+      lat: 46.4040, lon: 8.0050, z: 14,
+      desc: 'Am unteren Ende des längsten Alpengletschers weicht das Eis sichtbar zurück und legt die Felsschlucht der Massa frei.'
+    },
+    {
+      id: 'wankdorf',
+      short: 'Bern · Wankdorf',
+      title: 'Bern – Wankdorf & Autobahnkreuz',
+      lat: 46.9648, lon: 7.4660, z: 15,
+      desc: 'Vom offenen Landwirtschafts- und Exerziergebiet am Stadtrand zum Verkehrsknoten mit Autobahnverzweigung, Stadion und Stadtquartier.'
+    }
+  ];
+
+  const LAYER_MAX_Z = {
+    'ch.swisstopo.zeitreihen': 16,
+    'ch.swisstopo.swissimage-product': 18,
+    'ch.swisstopo.pixelkarte-farbe': 18,
+    'ch.swisstopo.swissimage': 19
+  };
+
+  /* Zustand */
+  const st = {
+    spotId: 'sulzer',
+    title: SPOTS[0].title,
+    desc: SPOTS[0].desc,
+    lat: SPOTS[0].lat,
+    lon: SPOTS[0].lon,
+    z: SPOTS[0].z,
+    mode: 'luft',       /* 'luft' | 'karte' | 'cmp' */
+    cmpBase: 'luft',    /* welche Epochenliste für Vorher/Jetzt geladen ist */
+    density: 'key',     /* 'key' | 'all' */
+    speedMs: 950,       /* Verweildauer pro Epoche in ms */
+    frames: [],         /* [{year, label, epoch, sub, layer, ts, fmt, cv, ready}] */
+    pos: 0,             /* Fliesskomma-Index 0..(frames.length-1) */
+    playing: false,
+    recording: false,
+    wipeFrac: 0.5,
+    cmpL: 0,
+    cmpR: 0,
+    dragDx: 0,
+    dragDy: 0,
+    loadSeq: 0,
+    lastTick: 0,
+    rafId: 0
+  };
+
+  /* Koordinaten & Kartenmathematik (WGS84 <-> LV95 & WebMercator EPSG:3857) */
+  function toLV95(lon, lat){
+    const p = (lat * 3600 - 169028.66) / 10000, l = (lon * 3600 - 26782.5) / 10000;
+    return [
+      2600072.37 + 211455.93*l - 10938.51*l*p - 0.36*l*p*p - 44.54*l*l*l,
+      1200147.07 + 308807.95*p + 3745.25*l*l + 76.63*p*p - 194.56*l*l*p + 119.79*p*p*p
+    ];
+  }
+  function latLonToWorld(lat, lon, z){
+    const scale = 256 * Math.pow(2, z);
+    const s = Math.sin(lat * Math.PI / 180);
+    return [
+      ((lon + 180) / 360) * scale,
+      (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * scale
+    ];
+  }
+  function worldToLatLon(wx, wy, z){
+    const scale = 256 * Math.pow(2, z);
+    const lon = (wx / scale) * 360 - 180;
+    const n = Math.PI - 2 * Math.PI * (wy / scale);
+    const lat = (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+    return [lat, lon];
+  }
+  function metersPerPixel(lat, z){
+    return (156543.03392 * Math.cos(lat * Math.PI / 180)) / Math.pow(2, z);
+  }
+  function epochName(y){
+    if (y < 1870) return 'Dufour-Epoche';
+    if (y <= 1914) return 'Gründerzeit & Eisenbahn';
+    if (y <= 1945) return 'Zwischenkriegszeit';
+    if (y <= 1973) return 'Nachkriegsboom';
+    if (y <= 1999) return 'Spätes 20. Jahrhundert';
+    if (y <= 2019) return '21. Jahrhundert';
+    return 'Gegenwart';
+  }
+
+  /* Gleichmässige Auswahl von Schlüsselepochen nach Jahresabstand (behält ersten & letzten Stand) */
+  function pickKeyEpochs(list, target = 11){
+    if (list.length <= target) return list;
+    const out = [list[0]];
+    const firstY = list[0].year, lastY = list[list.length - 1].year;
+    const used = new Set([0, list.length - 1]);
+    for (let k = 1; k < target - 1; k++) {
+      const wantY = firstY + (lastY - firstY) * (k / (target - 1));
+      let bestI = -1, bestD = Infinity;
+      for (let i = 1; i < list.length - 1; i++) {
+        if (used.has(i)) continue;
+        const d = Math.abs(list[i].year - wantY);
+        if (d < bestD) { bestD = d; bestI = i; }
+      }
+      if (bestI >= 0) { used.add(bestI); out.push(list[bestI]); }
+    }
+    out.push(list[list.length - 1]);
+    return out.sort((a, b) => a.year - b.year);
+  }
+
+  /* Verfügbare Epochen für den aktuellen Bereich von swisstopo abfragen */
+  async function fetchEpochList(kind){
+    const [E, N] = toLV95(st.lon, st.lat);
+    const half = Math.max(400, Math.round(metersPerPixel(st.lat, st.z) * W * 0.45));
+    const env = `${(E - half).toFixed(0)},${(N - half).toFixed(0)},${(E + half).toFixed(0)},${(N + half).toFixed(0)}`;
+
+    if (kind === 'luft') {
+      const u = `https://api3.geo.admin.ch/rest/services/all/MapServer/identify?geometry=${E.toFixed(0)},${N.toFixed(0)}&geometryType=esriGeometryPoint&sr=2056`
+        + `&layers=all:ch.swisstopo.swissimage-product.metadata&tolerance=1&mapExtent=${env}&imageDisplay=800,600,96&returnGeometry=false`;
+      const res = await fetch(u);
+      const j = await res.json();
+      const byYear = new Map();
+      for (const r of (j.results || [])) {
+        const a = r.attributes || {};
+        const fy = Number(a.flightyear), bg = Number(a.bgdi_flugjahr);
+        if (!Number.isFinite(fy) || !Number.isFinite(bg)) continue;
+        const prev = byYear.get(fy);
+        if (!prev || bg < prev.bg) {
+          byYear.set(fy, {
+            year: fy,
+            bg,
+            mode: a.colormode === 'BW' ? 'SW' : (a.colormode === 'RGB' ? 'Farbe' : ''),
+            gsd: typeof a.gsd === 'string' ? a.gsd : ''
+          });
+        }
+      }
+      let items = [...byYear.values()].sort((a, b) => a.year - b.year).map(it => {
+        const ts = it.bg > 2025 ? 'current' : (it.bg === 1928 ? '1927' : String(it.bg));
+        const det = [it.mode, it.gsd].filter(Boolean).join(' · ');
+        return {
+          year: it.year,
+          label: String(it.year),
+          epoch: epochName(it.year),
+          sub: 'Luftbild' + (det ? ' (' + det + ')' : ''),
+          layer: 'ch.swisstopo.swissimage-product',
+          ts,
+          fmt: 'jpeg'
+        };
+      });
+      if (!items.length) return [];
+      if (st.density === 'key') items = pickKeyEpochs(items, 11);
+      /* Sicherstellen, dass ganz am Schluss der aktuellste SWISSIMAGE-Stand verfügbar ist */
+      const last = items[items.length - 1];
+      if (last && last.year < 2024) {
+        items.push({
+          year: 2025, label: 'Heute', epoch: 'Gegenwart', sub: 'Aktuelles Luftbild · SWISSIMAGE',
+          layer: 'ch.swisstopo.swissimage', ts: 'current', fmt: 'jpeg'
+        });
+      }
+      return items;
+    }
+
+    /* Karten-Epochen: ch.swisstopo.zeitreihen/releases + Landeskarte heute (+ optional Luftbild heute) */
+    let raw = [];
+    try {
+      const u = `https://api3.geo.admin.ch/rest/services/all/MapServer/ch.swisstopo.zeitreihen/releases?imageDisplay=800,600,96&mapExtent=${env}&geometry=${E.toFixed(0)},${N.toFixed(0)}&geometryType=esriGeometryPoint&sr=2056`;
+      const j = await (await fetch(u)).json();
+      raw = (j.results || []).filter(s => /^\d{8}$/.test(s));
+    } catch (e) {}
+    if (!raw.length) raw = ['18601231','18801231','19001231','19201231','19451231','19601231','19781231','19921231','20061231','20181231'];
+
+    let items = raw.map(ts => {
+      const y = Number(ts.slice(0, 4));
+      const src = y < 1870 ? 'Dufourkarte' : (y <= 1945 ? 'Siegfriedkarte' : 'Landeskarte');
+      return {
+        year: y, label: String(y), epoch: epochName(y), sub: src + ' · Zeitreihe',
+        layer: 'ch.swisstopo.zeitreihen', ts, fmt: 'png'
+      };
+    });
+    if (st.density === 'key') items = pickKeyEpochs(items, 10);
+    items.push({
+      year: 2025, label: 'Heute', epoch: 'Gegenwart', sub: 'Aktuelle Landeskarte',
+      layer: 'ch.swisstopo.pixelkarte-farbe', ts: 'current', fmt: 'jpeg'
+    });
+    if ($('endAerial').checked) {
+      items.push({
+        year: 2026, label: 'Heute', epoch: 'Gegenwart · Luftbild', sub: 'Aktuelles Luftbild · SWISSIMAGE',
+        layer: 'ch.swisstopo.swissimage', ts: 'current', fmt: 'jpeg'
+      });
+    }
+    return items;
+  }
+
+  /* Ein einzelnes Epochen-Bild (960×640) aus WMTS-Kacheln zusammensetzen (mit Parallelitätsgrenze & Retry) */
+  const imgCache = new Map();
+  let activeTiles = 0;
+  const tileQueue = [];
+  function runTileSlot(fn){
+    return new Promise(res => {
+      const start = () => {
+        activeTiles++;
+        fn().finally(() => {
+          activeTiles--;
+          if (tileQueue.length) tileQueue.shift()();
+        }).then(res);
+      };
+      if (activeTiles < 8) start(); else tileQueue.push(start);
+    });
+  }
+  function fetchImgOnce(url){
+    return new Promise(res => {
+      const im = new Image();
+      im.crossOrigin = 'anonymous';
+      im.onload = () => res(im.naturalWidth > 0 ? im : null);
+      im.onerror = () => res(null);
+      im.src = url;
+    });
+  }
+  function loadTile(url){
+    if (imgCache.has(url)) return imgCache.get(url);
+    const p = runTileSlot(async () => {
+      let im = await fetchImgOnce(url);
+      if (!im) {
+        await new Promise(r => setTimeout(r, 350));
+        im = await fetchImgOnce(url);
+      }
+      if (!im) imgCache.delete(url);
+      return im;
+    });
+    if (imgCache.size > 900) imgCache.clear();
+    imgCache.set(url, p);
+    return p;
+  }
+
+  async function renderFrameCanvas(fr){
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const g = cv.getContext('2d');
+    g.fillStyle = '#dcd6c8';
+    g.fillRect(0, 0, W, H);
+
+    const maxZ = LAYER_MAX_Z[fr.layer] || 18;
+    const tz = Math.min(st.z, maxZ);
+    const zScale = Math.pow(2, st.z - tz);
+    const tilePx = 256 * zScale;
+    const [cx, cy] = latLonToWorld(st.lat, st.lon, st.z);
+    const left = cx - W / 2, top = cy - H / 2;
+    const x0 = Math.floor(left / tilePx), x1 = Math.floor((left + W - 1) / tilePx);
+    const y0 = Math.floor(top / tilePx), y1 = Math.floor((top + H - 1) / tilePx);
+
+    const jobs = [];
+    for (let tx = x0; tx <= x1; tx++) {
+      for (let ty = y0; ty <= y1; ty++) {
+        const u = `https://wmts.geo.admin.ch/1.0.0/${fr.layer}/default/${fr.ts}/3857/${tz}/${tx}/${ty}.${fr.fmt}`;
+        jobs.push(loadTile(u).then(im => ({im, dx: tx * tilePx - left, dy: ty * tilePx - top})));
+      }
+    }
+    const tiles = await Promise.all(jobs);
+    for (const t of tiles) {
+      if (t.im) g.drawImage(t.im, Math.round(t.dx), Math.round(t.dy), Math.ceil(tilePx), Math.ceil(tilePx));
+    }
+    fr.cv = cv;
+    fr.ready = true;
+    return cv;
+  }
+
+  /* Massstabsbalken berechnen */
+  function scaleBar(){
+    const mpp = metersPerPixel(st.lat, st.z);
+    const steps = [50, 100, 200, 250, 500, 1000, 2000, 5000];
+    let meters = 500;
+    for (const s of steps) {
+      const px = s / mpp;
+      if (px >= 72 && px <= 155) { meters = s; break; }
+    }
+    return {px: Math.round(meters / mpp), label: meters >= 1000 ? (meters / 1000) + ' km' : meters + ' m'};
+  }
+
+  /* Haupt-Canvas zeichnen (Zeitraffer mit optionalem Crossfade ODER Vorher/Jetzt-Wischvergleich) */
+  const stageCv = $('stage'), ctx = stageCv.getContext('2d');
+
+  function drawOverlay(g, fr, alphaFr){
+    /* Optionaler Fokus-Rahmen für den Kernbereich */
+    if ($('focusChk').checked) {
+      const mx = 74, my = 54, rw = W - 2 * mx, rh = H - 2 * my;
+      g.save();
+      g.fillStyle = 'rgba(14,16,20,0.22)';
+      g.fillRect(0, 0, W, my);
+      g.fillRect(0, H - my, W, my);
+      g.fillRect(0, my, mx, rh);
+      g.fillRect(W - mx, my, mx, rh);
+      g.strokeStyle = 'rgba(255,255,255,0.72)';
+      g.lineWidth = 1.5;
+      g.strokeRect(mx + 0.5, my + 0.5, rw - 1, rh - 1);
+      /* Ecken-Markierungen wie auf einem Luftbild-Messrahmen */
+      const c = 14;
+      g.strokeStyle = '#ffffff';
+      g.lineWidth = 2.5;
+      for (const [x, y, sx, sy] of [[mx,my,1,1],[mx+rw,my,-1,1],[mx,my+rh,1,-1],[mx+rw,my+rh,-1,-1]]) {
+        g.beginPath(); g.moveTo(x, y + sy * c); g.lineTo(x, y); g.lineTo(x + sx * c, y); g.stroke();
+      }
+      g.restore();
+    }
+
+    /* Jahr & Epochen-Badge (oben links im Zeitraffer-Modus; im Vergleichsmodus links & rechts) */
+    if (st.mode === 'cmp') {
+      const fl = st.frames[st.cmpL], frR = st.frames[st.cmpR];
+      if (fl) drawBadge(g, 16, 16, 'Vorher · ' + fl.label, fl.sub, '#1f5fa8');
+      if (frR) drawBadgeRight(g, W - 16, 16, 'Nachher · ' + frR.label, frR.sub, '#9a4a2c');
+    } else if (fr) {
+      g.save();
+      const padX = 16, padY = 14;
+      g.font = '800 44px Archivo, system-ui, sans-serif';
+      const yrTxt = fr.label;
+      const yrW = g.measureText(yrTxt).width;
+      g.font = '600 13px Archivo, system-ui, sans-serif';
+      const subTxt = fr.epoch + ' · ' + fr.sub;
+      const subW = g.measureText(subTxt).width;
+      const bw = Math.max(yrW, subW) + 32, bh = 74;
+      roundRect(g, padX, padY, bw, bh, 10);
+      g.fillStyle = 'rgba(18,20,24,0.80)';
+      g.fill();
+      g.strokeStyle = 'rgba(255,255,255,0.18)';
+      g.lineWidth = 1;
+      g.stroke();
+      g.fillStyle = '#ffffff';
+      g.font = '800 40px Archivo, system-ui, sans-serif';
+      g.fillText(yrTxt, padX + 16, padY + 42);
+      g.fillStyle = '#e5dfd4';
+      g.font = '600 13px Archivo, system-ui, sans-serif';
+      g.fillText(subTxt, padX + 16, padY + 62);
+      g.restore();
+    }
+
+    /* Massstabsbalken & Nordpfeil (unten links) */
+    const sb = scaleBar();
+    g.save();
+    const sx = 18, sy = H - 22;
+    roundRect(g, sx - 8, sy - 24, sb.px + 52, 32, 7);
+    g.fillStyle = 'rgba(18,20,24,0.72)';
+    g.fill();
+    g.fillStyle = '#ffffff';
+    g.fillRect(sx, sy - 6, sb.px, 3);
+    g.fillRect(sx, sy - 10, 2, 7);
+    g.fillRect(sx + sb.px - 2, sy - 10, 2, 7);
+    g.font = '700 12px Archivo, system-ui, sans-serif';
+    g.fillText(sb.label, sx, sy - 12);
+    /* Nordpfeil */
+    const nx = sx + sb.px + 22, ny = sy - 9;
+    g.beginPath(); g.moveTo(nx, ny - 10); g.lineTo(nx + 5, ny + 4); g.lineTo(nx, ny + 1); g.lineTo(nx - 5, ny + 4); g.closePath();
+    g.fill();
+    g.font = '800 10px Archivo, system-ui, sans-serif';
+    g.textAlign = 'center';
+    g.fillText('N', nx, ny + 13);
+    g.restore();
+
+    /* Quellenangabe (unten rechts) */
+    g.save();
+    const attr = '© swisstopo · ' + st.title;
+    g.font = '600 12px Archivo, system-ui, sans-serif';
+    const aw = g.measureText(attr).width + 18;
+    roundRect(g, W - aw - 14, H - 34, aw, 22, 6);
+    g.fillStyle = 'rgba(18,20,24,0.68)';
+    g.fill();
+    g.fillStyle = '#f2efe8';
+    g.fillText(attr, W - aw - 5, H - 19);
+    g.restore();
+  }
+
+  function drawBadge(g, x, y, title, sub, accent){
+    g.save();
+    g.font = '800 17px Archivo, system-ui, sans-serif';
+    const w1 = g.measureText(title).width;
+    g.font = '600 12px Archivo, system-ui, sans-serif';
+    const w2 = g.measureText(sub).width;
+    const bw = Math.max(w1, w2) + 28;
+    roundRect(g, x, y, bw, 48, 8);
+    g.fillStyle = 'rgba(18,20,24,0.82)'; g.fill();
+    g.fillStyle = accent; g.fillRect(x, y + 6, 4, 36);
+    g.fillStyle = '#fff'; g.font = '800 17px Archivo, system-ui, sans-serif'; g.fillText(title, x + 14, y + 23);
+    g.fillStyle = '#dcd6c8'; g.font = '600 12px Archivo, system-ui, sans-serif'; g.fillText(sub, x + 14, y + 40);
+    g.restore();
+  }
+  function drawBadgeRight(g, rightX, y, title, sub, accent){
+    g.save();
+    g.font = '800 17px Archivo, system-ui, sans-serif';
+    const w1 = g.measureText(title).width;
+    g.font = '600 12px Archivo, system-ui, sans-serif';
+    const w2 = g.measureText(sub).width;
+    const bw = Math.max(w1, w2) + 28;
+    const x = Math.max(16, rightX - bw);
+    roundRect(g, x, y, bw, 48, 8);
+    g.fillStyle = 'rgba(18,20,24,0.82)'; g.fill();
+    g.fillStyle = accent; g.fillRect(x + bw - 4, y + 6, 4, 36);
+    g.fillStyle = '#fff'; g.font = '800 17px Archivo, system-ui, sans-serif'; g.fillText(title, x + 12, y + 23);
+    g.fillStyle = '#dcd6c8'; g.font = '600 12px Archivo, system-ui, sans-serif'; g.fillText(sub, x + 12, y + 40);
+    g.restore();
+  }
+  function roundRect(g, x, y, w, h, r){
+    g.beginPath();
+    g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r);
+    g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r);
+    g.arcTo(x, y, x + w, y, r); g.closePath();
+  }
+
+  function drawStage(){
+    ctx.fillStyle = '#dcd6c8';
+    ctx.fillRect(0, 0, W, H);
+    if (!st.frames.length) return;
+
+    if (st.mode === 'cmp') {
+      const fl = st.frames[st.cmpL], fr = st.frames[st.cmpR];
+      const splitX = Math.round(W * st.wipeFrac);
+      if (fl && fl.ready) {
+        ctx.save(); ctx.beginPath(); ctx.rect(0, 0, splitX, H); ctx.clip();
+        ctx.drawImage(fl.cv, st.dragDx, st.dragDy);
+        ctx.restore();
+      }
+      if (fr && fr.ready) {
+        ctx.save(); ctx.beginPath(); ctx.rect(splitX, 0, W - splitX, H); ctx.clip();
+        ctx.drawImage(fr.cv, st.dragDx, st.dragDy);
+        ctx.restore();
+      }
+      drawOverlay(ctx, null, 0);
+      return;
+    }
+
+    const maxI = st.frames.length - 1;
+    const clamped = Math.max(0, Math.min(maxI, st.pos));
+    const i0 = Math.floor(clamped);
+    const i1 = Math.min(maxI, i0 + 1);
+    const frac = $('fadeChk').checked ? (clamped - i0) : 0;
+    const f0 = st.frames[i0], f1 = st.frames[i1];
+
+    if (f0 && f0.ready) {
+      ctx.drawImage(f0.cv, st.dragDx, st.dragDy);
+    }
+    if (frac > 0.005 && f1 && f1.ready && i1 !== i0) {
+      ctx.save();
+      ctx.globalAlpha = frac;
+      ctx.drawImage(f1.cv, st.dragDx, st.dragDy);
+      ctx.restore();
+    }
+    const active = (frac >= 0.5 && f1) ? f1 : f0;
+    drawOverlay(ctx, active, frac);
+    highlightActive(Math.round(clamped));
+  }
+
+  function highlightActive(idx){
+    $('ticks').querySelectorAll('button').forEach(b => b.classList.toggle('on', Number(b.dataset.i) === idx));
+    $('strip').querySelectorAll('.thumb').forEach(t => t.classList.toggle('active', Number(t.dataset.i) === idx));
+  }
+
+  /* Epochen-Zeitachse & Filmstreifen (5 Schlüsselepochen) aufbauen */
+  function buildTimeline(){
+    const n = st.frames.length;
+    const scr = $('scrubber');
+    scr.min = 0; scr.max = Math.max(0, n - 1); scr.value = st.pos;
+
+    const tk = $('ticks'); tk.textContent = '';
+    if (!n) return;
+    const maxTicks = Math.min(n, 7);
+    const shown = new Set();
+    for (let k = 0; k < maxTicks; k++) {
+      const idx = maxTicks === 1 ? 0 : Math.round(k * (n - 1) / (maxTicks - 1));
+      if (shown.has(idx)) continue;
+      shown.add(idx);
+      const b = document.createElement('button');
+      b.type = 'button'; b.dataset.i = idx; b.textContent = st.frames[idx].label;
+      b.addEventListener('click', () => { pause(); st.pos = idx; scr.value = idx; drawStage(); });
+      tk.appendChild(b);
+    }
+
+    /* Vergleichs-Dropdowns füllen */
+    const fillSel = (sel, val) => {
+      sel.textContent = '';
+      st.frames.forEach((fr, i) => {
+        const o = document.createElement('option');
+        o.value = i; o.textContent = `${fr.label} – ${fr.sub}`;
+        sel.appendChild(o);
+      });
+      sel.value = Math.max(0, Math.min(n - 1, val));
+    };
+    st.cmpL = 0;
+    st.cmpR = Math.max(0, n - 1);
+    fillSel($('cmpLeft'), st.cmpL);
+    fillSel($('cmpRight'), st.cmpR);
+  }
+
+  function buildStrip(){
+    const box = $('strip'); box.textContent = '';
+    const n = st.frames.length;
+    if (!n) return;
+    const count = Math.min(5, n);
+    const idxs = [];
+    for (let k = 0; k < count; k++) {
+      const idx = count === 1 ? 0 : Math.round(k * (n - 1) / (count - 1));
+      if (!idxs.includes(idx)) idxs.push(idx);
+    }
+    for (const idx of idxs) {
+      const fr = st.frames[idx];
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'thumb'; btn.dataset.i = idx;
+      const cv = document.createElement('canvas'); cv.width = 240; cv.height = 160;
+      const cap = document.createElement('div'); cap.className = 'tc';
+      const b = document.createElement('b'); b.textContent = fr.label;
+      const sm = document.createElement('small'); sm.textContent = fr.epoch;
+      cap.append(b, sm);
+      btn.append(cv, cap);
+      btn.addEventListener('click', () => {
+        if (st.mode === 'cmp') setMode(st.cmpBase, false);
+        pause();
+        st.pos = idx;
+        $('scrubber').value = idx;
+        drawStage();
+      });
+      box.appendChild(btn);
+      fr.thumbCv = cv;
+      if (fr.ready) cv.getContext('2d').drawImage(fr.cv, 0, 0, 240, 160);
+    }
+  }
+
+  /* Haupt-Laderoutine für den aktuellen Ausschnitt */
+  async function loadArea(autoPlay){
+    const seq = ++st.loadSeq;
+    pause();
+    const kind = st.mode === 'cmp' ? st.cmpBase : st.mode;
+    $('loadFill').style.width = '6%';
+    $('status').textContent = 'Frage verfügbare swisstopo-Epochen für diesen Bereich ab …';
+    updatePlaceMeta();
+    updateLinks();
+
+    let list = [];
+    try {
+      list = await fetchEpochList(kind);
+    } catch (e) {
+      if (seq !== st.loadSeq) return;
+      $('status').textContent = 'Abruf bei swisstopo fehlgeschlagen – bitte Internetverbindung prüfen.';
+      $('loadFill').style.width = '0%';
+      return;
+    }
+    if (seq !== st.loadSeq) return;
+    if (!list.length) {
+      st.frames = [];
+      ctx.fillStyle = '#dcd6c8'; ctx.fillRect(0, 0, W, H);
+      $('strip').textContent = '';
+      $('ticks').textContent = '';
+      $('loadFill').style.width = '0%';
+      $('status').textContent = 'Für diesen Ausschnitt liegen bei swisstopo keine Luftbilder vor – wählen Sie einen Ort in der Schweiz oder wechseln Sie auf «Karten».';
+      return;
+    }
+
+    st.frames = list.map(it => ({...it, cv: null, ready: false, thumbCv: null}));
+    st.pos = 0;
+    buildTimeline();
+    buildStrip();
+    updatePlaceMeta();
+
+    /* Zuerst ersten und letzten Stand laden (sofortiges Bild + sofortiger Vorher/Jetzt-Vergleich) */
+    const order = [];
+    if (st.frames.length > 0) order.push(0);
+    if (st.frames.length > 1) order.push(st.frames.length - 1);
+    for (let i = 1; i < st.frames.length - 1; i++) order.push(i);
+
+    let done = 0;
+    const total = order.length;
+    /* Parallel in 3er-Gruppen laden: schnell und schonend für swisstopo */
+    let cursor = 0;
+    async function worker(){
+      while (cursor < order.length) {
+        if (seq !== st.loadSeq) return;
+        const idx = order[cursor++];
+        const fr = st.frames[idx];
+        await renderFrameCanvas(fr);
+        if (seq !== st.loadSeq) return;
+        if (fr.thumbCv) fr.thumbCv.getContext('2d').drawImage(fr.cv, 0, 0, 240, 160);
+        done++;
+        $('loadFill').style.width = Math.round((done / total) * 100) + '%';
+        $('status').textContent = done < total
+          ? `Lade Epochen … ${done} / ${total} (${fr.label})`
+          : `${total} Epochen bereit (${st.frames[0].label} bis ${st.frames[total - 1].label}). ${st.mode === 'cmp' ? 'Trennlinie nach links oder rechts ziehen.' : 'Leertaste startet/pausiert, Ziehen im Bild verschiebt den Bereich.'}`;
+        if (idx === 0 || idx === st.frames.length - 1 || Math.floor(st.pos) === idx) drawStage();
+      }
+    }
+    await Promise.all([worker(), worker(), worker()]);
+    if (seq !== st.loadSeq) return;
+    drawStage();
+    setTimeout(() => { if (seq === st.loadSeq) $('loadFill').style.width = '0%'; }, 600);
+    if (autoPlay && !REDUCED && st.mode !== 'cmp' && st.frames.length > 1) play();
+  }
+
+  function updatePlaceMeta(){
+    $('placeTitle').textContent = st.title;
+    $('placeDesc').textContent = st.desc;
+    const widthKm = (metersPerPixel(st.lat, st.z) * W / 1000).toFixed(1).replace('.', ',');
+    const span = st.frames.length ? `${st.frames[0].label} – ${st.frames[st.frames.length - 1].label} (${st.frames.length} Stände)` : 'wird ermittelt …';
+    $('placeMeta').textContent = '';
+    for (const txt of [`Ausschnitt: ca. ${widthKm} km breit`, span]) {
+      const s = document.createElement('span'); s.textContent = txt;
+      $('placeMeta').appendChild(s);
+    }
+  }
+
+  /* Wiedergabe-Schleife */
+  function stepLoop(now){
+    if (!st.playing) return;
+    const dt = st.lastTick ? Math.min(120, now - st.lastTick) : 16;
+    st.lastTick = now;
+    const maxI = st.frames.length - 1;
+    if (maxI <= 0) { pause(); return; }
+
+    /* Bei jeder Epoche kurz verweilen und im letzten Drittel weich überblenden */
+    const step = dt / st.speedMs;
+    const nextPos = st.pos + step;
+    if (nextPos >= maxI) {
+      st.pos = maxI;
+      $('scrubber').value = maxI;
+      drawStage();
+      if (st.recording) { pause(); return; }
+      /* Am Schluss kurz auf «Heute» stehen bleiben, dann von vorn */
+      st.playing = false;
+      setTimeout(() => {
+        if ($('playBtn').dataset.want === '1') {
+          st.pos = 0; st.playing = true; st.lastTick = 0;
+          st.rafId = requestAnimationFrame(stepLoop);
+        }
+      }, 1500);
+      return;
+    }
+    st.pos = nextPos;
+    $('scrubber').value = st.pos;
+    drawStage();
+    st.rafId = requestAnimationFrame(stepLoop);
+  }
+  function play(){
+    if (st.frames.length < 2) return;
+    if (st.mode === 'cmp') setMode(st.cmpBase, false);
+    if (st.pos >= st.frames.length - 1.05) st.pos = 0;
+    st.playing = true;
+    st.lastTick = 0;
+    $('playBtn').textContent = '❚❚ Pause';
+    $('playBtn').dataset.want = '1';
+    st.rafId = requestAnimationFrame(stepLoop);
+  }
+  function pause(){
+    st.playing = false;
+    cancelAnimationFrame(st.rafId);
+    $('playBtn').textContent = '▶ Abspielen';
+    $('playBtn').dataset.want = '0';
+  }
+
+  /* Modus wechseln */
+  function setMode(m, reload = true){
+    const prevBase = st.cmpBase;
+    if (m === 'luft' || m === 'karte') st.cmpBase = m;
+    st.mode = m;
+    $('mLuft').setAttribute('aria-pressed', m === 'luft');
+    $('mKarte').setAttribute('aria-pressed', m === 'karte');
+    $('mCmp').setAttribute('aria-pressed', m === 'cmp');
+    $('cmpSrcLuft').setAttribute('aria-pressed', st.cmpBase === 'luft');
+    $('cmpSrcKarte').setAttribute('aria-pressed', st.cmpBase === 'karte');
+    $('cmpGrp').hidden = m !== 'cmp';
+    $('todayWrap').hidden = !(m === 'karte' || (m === 'cmp' && st.cmpBase === 'karte'));
+    $('playerBox').hidden = m === 'cmp';
+    $('wipeHandle').hidden = m !== 'cmp';
+    stageCv.classList.toggle('wipe-mode', m === 'cmp');
+    updateWipePos();
+    updateLinks();
+    if (m === 'cmp') {
+      pause();
+      if (st.frames.length) drawStage(); else if (reload) loadArea(false);
+    } else if (reload && (prevBase !== m || !st.frames.length)) {
+      loadArea(true);
+    } else {
+      drawStage();
+    }
+  }
+
+  /* Vorher/Jetzt-Trennlinie */
+  function updateWipePos(){
+    const pct = Math.round(st.wipeFrac * 100);
+    $('wipeHandle').style.left = (st.wipeFrac * 100) + '%';
+    $('wipeHandle').setAttribute('aria-valuenow', pct);
+  }
+  function setWipeFromClientX(clientX){
+    const r = $('viewport').getBoundingClientRect();
+    st.wipeFrac = Math.max(0.05, Math.min(0.95, (clientX - r.left) / r.width));
+    updateWipePos();
+    drawStage();
+  }
+  $('wipeHandle').addEventListener('pointerdown', e => {
+    e.stopPropagation();
+    $('wipeHandle').setPointerCapture(e.pointerId);
+    const mv = ev => setWipeFromClientX(ev.clientX);
+    const up = () => $('wipeHandle').removeEventListener('pointermove', mv);
+    $('wipeHandle').addEventListener('pointermove', mv);
+    $('wipeHandle').addEventListener('pointerup', up, {once: true});
+  });
+  $('wipeHandle').addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft') { st.wipeFrac = Math.max(0.05, st.wipeFrac - 0.04); updateWipePos(); drawStage(); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { st.wipeFrac = Math.min(0.95, st.wipeFrac + 0.04); updateWipePos(); drawStage(); e.preventDefault(); }
+  });
+
+  /* Canvas ziehen: im Vergleichsmodus Wischlinie, im Zeitraffer Ausschnitt verschieben */
+  stageCv.addEventListener('pointerdown', e => {
+    if (st.mode === 'cmp') {
+      stageCv.setPointerCapture(e.pointerId);
+      setWipeFromClientX(e.clientX);
+      const mv = ev => setWipeFromClientX(ev.clientX);
+      const up = () => stageCv.removeEventListener('pointermove', mv);
+      stageCv.addEventListener('pointermove', mv);
+      stageCv.addEventListener('pointerup', up, {once: true});
+      return;
+    }
+    const r = stageCv.getBoundingClientRect();
+    const scaleX = W / r.width, scaleY = H / r.height;
+    const x0 = e.clientX, y0 = e.clientY;
+    let moved = false;
+    stageCv.setPointerCapture(e.pointerId);
+    stageCv.classList.add('dragging');
+    const mv = ev => {
+      const dx = (ev.clientX - x0) * scaleX, dy = (ev.clientY - y0) * scaleY;
+      if (Math.hypot(dx, dy) > 4) moved = true;
+      st.dragDx = dx; st.dragDy = dy;
+      drawStage();
+    };
+    const up = () => {
+      stageCv.removeEventListener('pointermove', mv);
+      stageCv.classList.remove('dragging');
+      const dx = st.dragDx, dy = st.dragDy;
+      st.dragDx = 0; st.dragDy = 0;
+      if (moved && Math.hypot(dx, dy) > 10) {
+        const [cx, cy] = latLonToWorld(st.lat, st.lon, st.z);
+        const [nLat, nLon] = worldToLatLon(cx - dx, cy - dy, st.z);
+        if (nLat > 45.7 && nLat < 47.9 && nLon > 5.8 && nLon < 10.6) {
+          st.lat = nLat; st.lon = nLon;
+          st.spotId = '';
+          updateSpotButtons();
+          if (!st.title.includes('(angepasst)')) {
+            st.desc = `Verschobener Ausschnitt (${st.lat.toFixed(4)}° N, ${st.lon.toFixed(4)}° E).`;
+          }
+          loadArea(false);
+          return;
+        }
+      }
+      drawStage();
+    };
+    stageCv.addEventListener('pointermove', mv);
+    stageCv.addEventListener('pointerup', up, {once: true});
+  });
+
+  /* Ortswahl-Leiste */
+  function updateSpotButtons(){
+    $('spots').querySelectorAll('.spot').forEach(b => b.setAttribute('aria-pressed', b.dataset.id === st.spotId));
+  }
+  function selectSpot(sp, autoPlay = false){
+    st.spotId = sp.id;
+    st.title = sp.title;
+    st.desc = sp.desc;
+    st.lat = sp.lat;
+    st.lon = sp.lon;
+    st.z = sp.z;
+    $('zoomSel').value = String(Math.max(13, Math.min(17, sp.z)));
+    updateSpotButtons();
+    loadArea(autoPlay);
+  }
+  SPOTS.forEach(sp => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'spot'; b.dataset.id = sp.id;
+    b.textContent = sp.short;
+    b.addEventListener('click', () => selectSpot(sp, st.mode !== 'cmp'));
+    $('spots').appendChild(b);
+  });
+
+  /* Ortssuche ganze Schweiz (geo.admin.ch) */
+  {
+    const inp = $('q'), list = $('qres');
+    const KIND = {gg25:'Gemeinde', address:'Adresse', zipcode:'PLZ', sn25:'Ort/Flurname', kantone:'Kanton', district:'Bezirk', gazetteer:'Ort'};
+    const plain = t => String(t || '').replace(/<[^>]+>/g, '').trim();
+    let timer, items = [], sel = -1;
+    const render = () => {
+      list.textContent = '';
+      items.forEach((it, i) => {
+        const li = document.createElement('li');
+        li.setAttribute('role', 'option'); li.setAttribute('aria-selected', i === sel);
+        li.textContent = it.name;
+        const sm = document.createElement('small'); sm.textContent = it.kind; li.appendChild(sm);
+        li.addEventListener('mousedown', e => { e.preventDefault(); pick(i); });
+        list.appendChild(li);
+      });
+      list.hidden = !items.length; inp.setAttribute('aria-expanded', !list.hidden);
+    };
+    const pick = i => {
+      const it = items[i]; if (!it) return;
+      list.hidden = true; inp.value = it.name; inp.blur();
+      st.spotId = '';
+      st.title = it.name;
+      st.desc = `Gewählter Ausschnitt rund um ${it.name} (${it.kind}). Ziehen Sie die Karte, um den Kernbereich fein auszurichten.`;
+      st.lat = it.lat; st.lon = it.lon;
+      st.z = it.kind === 'Adresse' ? 16 : (it.kind === 'Kanton' ? 13 : 15);
+      $('zoomSel').value = String(st.z);
+      updateSpotButtons();
+      loadArea(false);
+    };
+    inp.addEventListener('input', () => {
+      clearTimeout(timer);
+      const q = inp.value.trim();
+      if (q.length < 2) { items = []; render(); return; }
+      timer = setTimeout(async () => {
+        try {
+          const j = await (await fetch(`https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(q)}&type=locations&sr=4326&limit=8`)).json();
+          items = (j.results || []).map(r => ({name: plain(r.attrs.label), kind: KIND[r.attrs.origin] || 'Ort', lon: +r.attrs.lon, lat: +r.attrs.lat}))
+            .filter(it => Number.isFinite(it.lon) && Number.isFinite(it.lat));
+        } catch (e) { items = []; }
+        sel = -1; render();
+      }, 220);
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown') { sel = Math.min(items.length - 1, sel + 1); render(); e.preventDefault(); }
+      if (e.key === 'ArrowUp') { sel = Math.max(0, sel - 1); render(); e.preventDefault(); }
+      if (e.key === 'Enter') { pick(sel < 0 ? 0 : sel); e.preventDefault(); }
+      if (e.key === 'Escape') { list.hidden = true; }
+    });
+    inp.addEventListener('blur', () => setTimeout(() => { list.hidden = true; }, 150));
+  }
+
+  /* Steuerungs-Events */
+  $('playBtn').addEventListener('click', () => { if (st.playing || $('playBtn').dataset.want === '1') pause(); else play(); });
+  $('prevBtn').addEventListener('click', () => { pause(); st.pos = Math.max(0, Math.round(st.pos) - 1); $('scrubber').value = st.pos; drawStage(); });
+  $('nextBtn').addEventListener('click', () => { pause(); st.pos = Math.min(st.frames.length - 1, Math.round(st.pos) + 1); $('scrubber').value = st.pos; drawStage(); });
+  $('scrubber').addEventListener('input', e => { pause(); st.pos = Number(e.target.value); drawStage(); });
+
+  const setSpeed = (id, ms) => {
+    st.speedMs = ms;
+    ['spSlow','spMid','spFast'].forEach(k => $(k).setAttribute('aria-pressed', k === id));
+  };
+  $('spSlow').addEventListener('click', () => setSpeed('spSlow', 1650));
+  $('spMid').addEventListener('click', () => setSpeed('spMid', 950));
+  $('spFast').addEventListener('click', () => setSpeed('spFast', 450));
+
+  $('mLuft').addEventListener('click', () => setMode('luft', true));
+  $('mKarte').addEventListener('click', () => setMode('karte', true));
+  $('mCmp').addEventListener('click', () => setMode('cmp', true));
+  $('cmpSrcLuft').addEventListener('click', () => { if (st.cmpBase === 'luft') return; st.cmpBase = 'luft'; $('cmpSrcLuft').setAttribute('aria-pressed', 'true'); $('cmpSrcKarte').setAttribute('aria-pressed', 'false'); $('todayWrap').hidden = true; loadArea(false); });
+  $('cmpSrcKarte').addEventListener('click', () => { if (st.cmpBase === 'karte') return; st.cmpBase = 'karte'; $('cmpSrcLuft').setAttribute('aria-pressed', 'false'); $('cmpSrcKarte').setAttribute('aria-pressed', 'true'); $('todayWrap').hidden = false; loadArea(false); });
+  $('cmpLeft').addEventListener('change', e => { st.cmpL = Number(e.target.value); drawStage(); });
+  $('cmpRight').addEventListener('change', e => { st.cmpR = Number(e.target.value); drawStage(); });
+
+  function changeZoom(nz){
+    const clamped = Math.max(13, Math.min(17, nz));
+    if (clamped === st.z) return;
+    st.z = clamped;
+    $('zoomSel').value = String(st.z);
+    loadArea(false);
+  }
+  $('zoomSel').addEventListener('change', e => changeZoom(Number(e.target.value)));
+  $('zoomIn').addEventListener('click', () => changeZoom(st.z + 1));
+  $('zoomOut').addEventListener('click', () => changeZoom(st.z - 1));
+  $('densSel').addEventListener('change', e => { st.density = e.target.value; loadArea(false); });
+  $('endAerial').addEventListener('change', () => { if (st.mode === 'karte' || (st.mode === 'cmp' && st.cmpBase === 'karte')) loadArea(false); });
+  $('fadeChk').addEventListener('change', () => drawStage());
+  $('focusChk').addEventListener('change', () => drawStage());
+
+  /* Tastaturkürzel */
+  document.addEventListener('keydown', e => {
+    if (e.target.matches('input,select,textarea,button') && e.target.id !== 'scrubber') return;
+    if (e.code === 'Space' && st.mode !== 'cmp') { e.preventDefault(); if (st.playing) pause(); else play(); }
+    if (e.key === 'ArrowLeft' && st.mode !== 'cmp') { e.preventDefault(); $('prevBtn').click(); }
+    if (e.key === 'ArrowRight' && st.mode !== 'cmp') { e.preventDefault(); $('nextBtn').click(); }
+  });
+
+  /* Export 1: Epochen-Streifen als druckfertiges PNG (4 Stationen nebeneinander) */
+  $('pngBtn').addEventListener('click', () => {
+    const ready = st.frames.filter(f => f.ready);
+    if (!ready.length) return;
+    const count = Math.min(4, ready.length);
+    const pick = [];
+    for (let k = 0; k < count; k++) {
+      const idx = count === 1 ? 0 : Math.round(k * (ready.length - 1) / (count - 1));
+      if (!pick.includes(ready[idx])) pick.push(ready[idx]);
+    }
+    const cw = 390, ch = 260, gap = 16, pad = 28, topH = 74, botH = 54;
+    const out = document.createElement('canvas');
+    out.width = pad * 2 + pick.length * cw + (pick.length - 1) * gap;
+    out.height = topH + ch + botH + 34;
+    const g = out.getContext('2d');
+    g.fillStyle = '#fbfaf7'; g.fillRect(0, 0, out.width, out.height);
+
+    g.fillStyle = '#16161a'; g.font = '800 24px Archivo, system-ui, sans-serif';
+    g.fillText(st.title + ' – Entwicklung von oben', pad, 38, out.width - pad * 2);
+    g.fillStyle = '#5a5a5f'; g.font = '600 14px Archivo, system-ui, sans-serif';
+    const sb = scaleBar();
+    const widthKm = (metersPerPixel(st.lat, st.z) * W / 1000).toFixed(1).replace('.', ',');
+    g.fillText(`${pick[0].label} bis ${pick[pick.length - 1].label} · Ausschnitt ca. ${widthKm} km breit`, pad, 60, out.width - pad * 2);
+
+    pick.forEach((fr, i) => {
+      const x = pad + i * (cw + gap), y = topH;
+      g.drawImage(fr.cv, x, y, cw, ch);
+      g.strokeStyle = '#dcd6c8'; g.lineWidth = 1; g.strokeRect(x + 0.5, y + 0.5, cw - 1, ch - 1);
+      g.fillStyle = '#9a4a2c'; g.font = '800 22px Archivo, system-ui, sans-serif';
+      g.fillText(fr.label, x, y + ch + 28, 72);
+      g.fillStyle = '#5a5a5f'; g.font = '600 13px Archivo, system-ui, sans-serif';
+      g.fillText(`${fr.epoch} · ${fr.sub}`, x + 78, y + ch + 26, cw - 80);
+    });
+
+    g.fillStyle = '#5a5a5f'; g.font = '400 13px Archivo, system-ui, sans-serif';
+    g.fillText(`Daten: © swisstopo (SWISSIMAGE Zeitreise / Landeskarte-Zeitreihe) · Zeitreise Schweiz · Massstab pro Bild: ${sb.label}`, pad, out.height - 16, out.width - pad * 2);
+
+    out.toBlob(blob => {
+      if (!blob) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      const slug = (st.spotId || st.title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      a.download = `zeitraffer-${slug || 'schweiz'}.png`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      $('status').textContent = 'Epochen-Streifen als PNG gespeichert.';
+    }, 'image/png');
+  });
+
+  /* Export 2: Zeitraffer direkt als WebM-Video aufnehmen */
+  const canRecord = typeof MediaRecorder !== 'undefined' && typeof stageCv.captureStream === 'function';
+  if (!canRecord) $('vidBtn').hidden = true;
+  $('vidBtn').addEventListener('click', () => {
+    if (!canRecord || st.recording || st.frames.length < 2) return;
+    if (st.frames.some(f => !f.ready)) {
+      $('status').textContent = 'Bitte warten, bis alle Epochen geladen sind.';
+      return;
+    }
+    if (st.mode === 'cmp') setMode(st.cmpBase, false);
+    pause();
+    const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(m => MediaRecorder.isTypeSupported(m)) || '';
+    let rec;
+    try {
+      const stream = stageCv.captureStream(30);
+      rec = mime ? new MediaRecorder(stream, {mimeType: mime, videoBitsPerSecond: 4000000}) : new MediaRecorder(stream);
+    } catch (e) {
+      $('status').textContent = 'Video-Aufnahme wird von diesem Browser nicht unterstützt – nutzen Sie den PNG-Streifen.';
+      return;
+    }
+    const chunks = [];
+    rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    rec.onstop = () => {
+      st.recording = false;
+      $('vidBtn').disabled = false;
+      $('vidBtn').textContent = 'Zeitraffer als Video (WebM)';
+      const blob = new Blob(chunks, {type: mime || 'video/webm'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      const slug = (st.spotId || st.title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      a.download = `zeitraffer-${slug || 'schweiz'}.webm`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 6000);
+      $('status').textContent = 'Zeitraffer-Video (WebM) gespeichert.';
+    };
+
+    st.recording = true;
+    $('vidBtn').disabled = true;
+    $('vidBtn').textContent = 'Nehme Video auf …';
+    $('status').textContent = 'Nehme einen vollständigen Durchlauf als Video auf …';
+    st.pos = 0;
+    drawStage();
+    rec.start();
+    const startMs = performance.now();
+    const durPerFrame = Math.max(450, Math.min(1200, st.speedMs));
+    const totalMs = (st.frames.length - 1) * durPerFrame;
+    const holdEnd = 900;
+    function recTick(now){
+      const el = now - startMs;
+      if (el <= totalMs) {
+        st.pos = (el / totalMs) * (st.frames.length - 1);
+        $('scrubber').value = st.pos;
+        drawStage();
+        requestAnimationFrame(recTick);
+      } else if (el <= totalMs + holdEnd) {
+        st.pos = st.frames.length - 1;
+        drawStage();
+        requestAnimationFrame(recTick);
+      } else {
+        rec.stop();
+      }
+    }
+    requestAnimationFrame(recTick);
+  });
+
+  /* Permalink, Weiterführen (3D/2D) und QR-Code */
+  function permalink(){
+    const q = new URLSearchParams();
+    if (st.spotId) q.set('ort', st.spotId);
+    else {
+      q.set('lat', st.lat.toFixed(5));
+      q.set('lon', st.lon.toFixed(5));
+      if (st.title) q.set('name', st.title);
+    }
+    q.set('z', String(st.z));
+    q.set('mode', st.mode);
+    if (st.mode === 'cmp') q.set('base', st.cmpBase);
+    return location.origin + location.pathname + '?' + q.toString();
+  }
+  function updateLinks(){
+    const q2 = new URLSearchParams({lat: st.lat.toFixed(5), lon: st.lon.toFixed(5), z: String(st.z), mode: 'cmp'});
+    $('to2d').href = 'karte-2d.html?' + q2.toString();
+  }
+  $('to3d').addEventListener('click', async () => {
+    const [E, N] = toLV95(st.lon, st.lat);
+    let ground = 500;
+    $('to3d').disabled = true;
+    try {
+      const ac = new AbortController(), t = setTimeout(() => ac.abort(), 3000);
+      const j = await (await fetch(`https://api3.geo.admin.ch/rest/services/height?easting=${E.toFixed(1)}&northing=${N.toFixed(1)}&sr=2056`, {signal: ac.signal})).json();
+      clearTimeout(t);
+      if (Number.isFinite(+j.height)) ground = +j.height;
+    } catch (e) {}
+    const q3 = new URLSearchParams({
+      lon: st.lon.toFixed(6), lat: (st.lat - 0.0055).toFixed(6), h: Math.round(ground + 650), hdg: '0', pitch: '-38',
+      c: st.lon.toFixed(5) + ',' + st.lat.toFixed(5), mode: 'fly', year: '1900'
+    });
+    location.href = 'flug-3d.html?' + q3.toString();
+  });
+  window.addEventListener('pageshow', () => { $('to3d').disabled = false; });
+
+  $('linkBtn').addEventListener('click', async () => {
+    const url = permalink();
+    try { await navigator.clipboard.writeText(url); $('status').textContent = 'Link zu diesem Zeitraffer kopiert.'; }
+    catch (e) { window.prompt('Link zu diesem Zeitraffer:', url); }
+  });
+
+  let qrLib = null, qrFile = '';
+  const loadQrLib = () => qrLib || (qrLib = new Promise((res, rej) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
+    sc.onload = () => typeof window.qrcode === 'function' ? res() : rej(new Error('qrcode fehlt'));
+    sc.onerror = () => { qrLib = null; rej(new Error('nicht geladen')); };
+    document.head.appendChild(sc);
+  }));
+  function drawQr(cv, url, title){
+    const q = window.qrcode(0, 'M'); q.addData(url); q.make();
+    const n = q.getModuleCount(), cell = Math.max(6, Math.floor(460 / (n + 8))), pad = 4 * cell, side = n * cell + 2 * pad, band = 92;
+    cv.width = side; cv.height = side + band;
+    const g = cv.getContext('2d');
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, cv.width, cv.height);
+    g.fillStyle = '#151515';
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) g.fillRect(pad + c * cell, pad + r * cell, cell, cell);
+    g.textAlign = 'center';
+    g.fillStyle = '#9a4a2c'; g.font = '800 22px Archivo, system-ui, sans-serif';
+    g.fillText(title, side / 2, side + 28, side - 24);
+    g.fillStyle = '#151515'; g.font = '600 14px Archivo, system-ui, sans-serif';
+    g.fillText('Scannen: Zeitraffer von oben öffnen', side / 2, side + 54, side - 24);
+    g.fillStyle = '#5b5b5b'; g.font = '400 12px Archivo, system-ui, sans-serif';
+    g.fillText('Daten: © swisstopo · Zeitreise Schweiz', side / 2, side + 76, side - 24);
+  }
+  $('qrBtn').addEventListener('click', async () => {
+    try { await loadQrLib(); drawQr($('qrCv'), permalink(), st.title); }
+    catch (e) { $('status').textContent = 'QR-Code konnte nicht erstellt werden – Internet prüfen.'; return; }
+    const slug = (st.spotId || 'ort').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    qrFile = 'qr-zeitraffer-' + slug + '.png';
+    $('qrTxt').textContent = 'Öffnet den Zeitraffer direkt für: ' + st.title + '.';
+    $('qrDlg').hidden = false; $('qrSave').focus();
+  });
+  $('qrSave').addEventListener('click', () => {
+    $('qrCv').toBlob(b => {
+      if (!b) return;
+      const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = qrFile || 'qr-zeitraffer.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    }, 'image/png');
+  });
+  $('qrClose').addEventListener('click', () => { $('qrDlg').hidden = true; $('qrBtn').focus(); });
+  $('qrDlg').addEventListener('click', e => { if (e.target === $('qrDlg')) $('qrDlg').hidden = true; });
+  $('qrDlg').addEventListener('keydown', e => { if (e.key === 'Escape') $('qrDlg').hidden = true; });
+
+  /* URL-Parameter auslesen & initial starten */
+  const Q = new URLSearchParams(location.search);
+  const qSpot = SPOTS.find(s => s.id === Q.get('ort'));
+  const qLat = Number(Q.get('lat')), qLon = Number(Q.get('lon')), qZ = Number(Q.get('z'));
+  const qMode = Q.get('mode');
+  if (Q.get('base') === 'karte') st.cmpBase = 'karte';
+
+  if (qSpot) {
+    st.spotId = qSpot.id; st.title = qSpot.title; st.desc = qSpot.desc;
+    st.lat = qSpot.lat; st.lon = qSpot.lon; st.z = qSpot.z;
+  } else if (Number.isFinite(qLat) && Number.isFinite(qLon) && qLat > 45.7 && qLat < 47.9 && qLon > 5.8 && qLon < 10.6) {
+    st.spotId = '';
+    st.title = (Q.get('name') || 'Gewählter Ausschnitt').slice(0, 70);
+    st.desc = `Ausgewählter Bereich (${qLat.toFixed(4)}° N, ${qLon.toFixed(4)}° E). Ziehen Sie die Karte, um den Rahmen zu verschieben.`;
+    st.lat = qLat; st.lon = qLon; st.z = 15;
+  }
+  if (Number.isFinite(qZ) && qZ >= 13 && qZ <= 17) st.z = Math.round(qZ);
+  $('zoomSel').value = String(st.z);
+  updateSpotButtons();
+  setMode(['luft','karte','cmp'].includes(qMode) ? qMode : 'luft', false);
+  loadArea(st.mode !== 'cmp');
+})();
+</script>
+</body>
+</html>

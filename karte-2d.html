@@ -79,7 +79,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 <aside class="panel" id="panel" aria-label="Steuerung">
   <button class="btn ptog" id="pTog" type="button" aria-expanded="true" aria-controls="panel">Karte ganz zeigen ▾</button>
   <h1>Zeitreise Schweiz</h1>
-  <p class="sub"><a href="./" style="color:var(--blue)">← Übersicht</a> · <a href="flug-3d.html" style="color:var(--blue)">3D-Flug</a></p>
+  <p class="sub"><a href="./" style="color:var(--blue)">← Übersicht</a> · <a href="flug-3d.html" style="color:var(--blue)">3D-Flug</a> · <a href="zeitraffer.html" style="color:var(--blue)">Zeitraffer</a></p>
   <p class="sub">Historische Karten und Luftbilder von swisstopo, 1844 bis heute</p>
   <div class="search"><input id="q" type="search" placeholder="Ort oder Adresse suchen …" autocomplete="off" aria-label="Ort suchen" role="combobox" aria-controls="qres" aria-expanded="false"><ul id="qres" role="listbox" hidden></ul></div>
 
@@ -123,6 +123,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
   <div class="places" id="places"></div>
   <label class="chk"><input type="checkbox" id="storyOn" checked> Geschichten an Orten (Marker)</label>
   <button class="btn primary" id="to3d" style="width:100%;margin-top:12px">Hier im 3D-Flug ansehen</button>
+  <button class="btn" id="toTimelapse" style="width:100%;margin-top:8px">Ausschnitt als Zeitraffer von oben</button>
   <button class="btn" id="linkBtn" style="width:100%;margin-top:8px">Link zu dieser Ansicht kopieren</button>
   <button class="btn" id="qrBtn" style="width:100%;margin-top:8px" title="Link als QR-Code zum Aushängen oder Ausdrucken">QR-Code zu dieser Ansicht</button>
   <p class="sub" id="linkMsg" aria-live="polite" style="margin:6px 0 0"></p>
@@ -467,6 +468,13 @@ $('to3d').addEventListener('click', async () => {
   location.href = 'flug-3d.html?' + q.toString();
 });
 window.addEventListener('pageshow', () => { $('to3d').disabled = false; });   /* nach «Zurück» wieder bereit */
+$('toTimelapse').addEventListener('click', () => {
+  const c = map.getCenter(), z = Math.max(13, Math.min(17, map.getZoom()));
+  const cmp = !$('pCmp').hidden, src = cmp ? $('lSrc').value : $('tSrc').value;
+  const q = new URLSearchParams({lat: c.lat.toFixed(5), lon: c.lng.toFixed(5), z: String(z), mode: cmp ? 'cmp' : (src === 'luft' ? 'luft' : 'karte')});
+  const nm = $('q').value.trim(); if (nm) q.set('name', nm);
+  location.href = 'zeitraffer.html?' + q.toString();
+});
 
 /* ---------- Permalink: ?lat=&lon=&z=&mode=(time|cmp)&t=&y=&op=&l=&ly=&r=&ry= ---------- */
 function permalink(){
