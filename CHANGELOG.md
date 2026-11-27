@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- 2D-Karte: Ortssuche für die ganze Schweiz (Gemeinde, Adresse, Flurname) über geo.admin.ch; Titel heisst jetzt «Zeitreise Schweiz».
 - 2D-Karte: Knopf «Link zu dieser Ansicht kopieren»; Ort, Zoom, Modus, Quellen, Jahre und Durchsicht stehen im Link und werden beim Öffnen übernommen.
 - Produktseite: Funktion «Messen» ergänzt, Geschichten als vorhanden (bisher Winterthur) statt «in Arbeit» aufgeführt, Schulkarte nennt vier Aufträge.
 - 2D-Karte: die Geschichten aus `stories/winterthur.json` erscheinen als Marker mit Titel, Text, Quelle und Link, in beiden Modi; abschaltbar.
