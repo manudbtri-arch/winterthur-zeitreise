@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Messwerkzeug (Knopf «Messen» oder Taste L): zwei Punkte im 3D-Bild anklicken, die Infokarte zeigt Distanz, waagrechte Distanz, Höhenunterschied und Steigung als Richtwert.
 - Zeitregler: die Jahreszahlen der Kartenausgaben sind jetzt Knöpfe und springen direkt zum Jahr; auf Touch-Geräten als grosse Knöpfe, der Regler nutzt dort die ganze Breite.
 - Barrierefreiheit: bei «Bewegung reduzieren» kurze Kamerafahrten und langsamerer Kiosk-Rundflug, Infokarte mit Esc schliessen, Bau- und Hinweismeldungen werden Screenreadern vorgelesen.
 - Produktseite: neuer Abschnitt «So setzen Sie es ein» für Museum (Kiosk), Gemeinde-Website (Einbetten), Schule und Forschung.

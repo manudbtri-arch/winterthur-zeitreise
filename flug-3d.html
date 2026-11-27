@@ -34,6 +34,7 @@ input[type=range]{accent-color:var(--blue);height:32px}
 .chk input{width:20px;height:20px;accent-color:var(--blue)}
 .btn{border:1px solid var(--line);background:var(--bg);color:var(--ink);font:600 15px Archivo,sans-serif;border-radius:6px;padding:10px 14px;min-height:44px;cursor:pointer;width:100%;margin-top:8px}
 .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+#measBtn[aria-pressed=true]{background:var(--brown);border-color:var(--brown);color:#fff}
 .seg{display:flex;gap:4px;background:var(--line);padding:4px;border-radius:8px}
 .seg button{flex:1;border:0;background:transparent;color:var(--ink);font:600 15px Archivo,sans-serif;padding:8px;border-radius:6px;cursor:pointer;min-height:40px}
 .seg button[aria-pressed=true]{background:var(--bg);box-shadow:0 1px 3px rgba(0,0,0,.15)}
@@ -211,6 +212,7 @@ body.intro-on .joy{visibility:hidden}
   </div>
   <button class="btn" id="tourBtn" disabled>Rundgang zu den Geschichten</button>
   <div class="places" id="places" aria-label="Bekannte Orte"></div>
+  <button class="btn" id="measBtn" aria-pressed="false" title="Zwei Punkte im Bild anklicken">Messen (L)</button>
   <button class="btn nokiosk" id="embedBtn">Einbetten (Code für Website)</button>
   <div class="row2 nokiosk">
     <button class="btn" id="csvBtn" title="Gebäudeliste des gebauten Gebiets">Liste CSV</button>
@@ -299,7 +301,7 @@ body.intro-on .joy{visibility:hidden}
   <div><b>Shift</b> rennen · <b>F</b> Fliegen/Gehen</div>
   <div><b>I</b>/<b>U</b> Flugtempo 1–100× · <b>J</b> Fernsicht</div>
   <div><b>M</b> Karte · <b>F3</b> Koordinaten · <b>B</b> Look</div>
-  <div><b>P</b> Bild mit Quellenangabe speichern</div>
+  <div><b>P</b> Bild mit Quellenangabe speichern · <b>L</b> Messen</div>
   <div><b>Klick</b> auf ein Haus oder einen Marker: Infos</div>
   <div><b>Tab</b> Menü · <b>Esc</b> Maus freigeben</div>
 </div>
@@ -1408,10 +1410,47 @@ function showInfo(p){
 }
 canvas.addEventListener('click', e => {
   const pos = locked ? new C.Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2) : new C.Cartesian2(e.offsetX, e.offsetY);
+  if (meas.on) { measureAt(pos); return; }
   let hit = null; try { hit = scene.pick(pos); } catch (err) {}
   if (hit && showInfo(hit)) return;
   if (!locked) try { canvas.requestPointerLock(); } catch (err) {}
 });
+
+/* ---------- Messen: zwei Punkte im 3D-Bild, Distanz und Höhenunterschied ---------- */
+const meas = {on: false, pts: [], ents: []};
+const MEAS_C = C.Color.fromCssColorString('#c8803f');
+function measClear(){ for (const e of meas.ents) viewer.entities.remove(e); meas.ents = []; meas.pts = []; }
+function setMeasure(on){
+  meas.on = on; measClear();
+  $('measBtn').setAttribute('aria-pressed', on);
+  $('measBtn').textContent = on ? 'Messen beenden (L)' : 'Messen (L)';
+  if (on) { if (!locked) setPanel(false); toast('Messen: zwei Punkte im Bild anklicken'); }
+  else $('info').hidden = true;
+}
+function measureAt(pos){
+  let p = null;
+  try { if (scene.pickPositionSupported) p = scene.pickPosition(pos); } catch (e) {}
+  if (!p) { const ray = camera.getPickRay(pos); p = ray && globe.pick(ray, scene); }
+  if (!p) { toast('Dort ist kein Boden – nochmals versuchen'); return; }
+  if (meas.pts.length >= 2) measClear();
+  meas.pts.push(p);
+  meas.ents.push(viewer.entities.add({position: p, point: {pixelSize: 11, color: MEAS_C, outlineColor: C.Color.WHITE, outlineWidth: 2, disableDepthTestDistance: Number.POSITIVE_INFINITY}}));
+  if (meas.pts.length < 2) { toast('Erster Punkt gesetzt – jetzt den zweiten'); return; }
+  const [a, b] = meas.pts;
+  meas.ents.push(viewer.entities.add({polyline: {positions: [a, b], width: 3, arcType: C.ArcType.NONE,
+    material: MEAS_C, depthFailMaterial: new C.PolylineDashMaterialProperty({color: MEAS_C})}}));
+  const ca = C.Cartographic.fromCartesian(a), cb = C.Cartographic.fromCartesian(b);
+  const flat = new C.EllipsoidGeodesic(ca, cb).surfaceDistance || 0, dz = cb.height - ca.height;
+  const d3 = C.Cartesian3.distance(a, b), m = v => v >= 1000 ? (v / 1000).toFixed(2).replace('.', ',') + ' km' : Math.round(v) + ' m';
+  const slope = flat > 1 ? ` · Steigung ${Math.round(dz / flat * 100)} %` : '';
+  $('iTitle').textContent = m(d3);
+  $('iText').textContent = `waagrecht ${m(flat)} · Höhenunterschied ${dz >= 0 ? '+' : '−'}${Math.round(Math.abs(dz))} m${slope}`;
+  $('iSrc').textContent = 'Gemessen im 3D-Bild (Gelände und Gebäude von swisstopo). Richtwert, keine amtliche Vermessung.';
+  $('iBadge').textContent = 'Messung'; $('iBadge').classList.remove('rec');
+  $('iLink').hidden = true; $('info').hidden = false;
+  clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, 30000);
+}
+$('measBtn').addEventListener('click', () => setMeasure(!meas.on));
 
 function setPanel(show){
   $('panel').classList.toggle('off', !show);
@@ -1453,6 +1492,8 @@ document.addEventListener('keydown', e => {
   if (e.code === 'F3') { e.preventDefault(); $('f3').hidden = !$('f3').hidden; }
   if (e.code === 'KeyM') { e.preventDefault(); $('mapov').hidden ? openMap() : closeMap(); }
   if (e.code === 'KeyP') { saveShot(); }
+  if (e.code === 'KeyL') { setMeasure(!meas.on); }
+  if (e.key === 'Escape' && meas.on) { setMeasure(false); }
   if (e.code === 'KeyB') { setBlocky(!blocky); toast(`Minecraft-Look ${blocky ? 'an' : 'aus'}`); }
   if (locked && e.code === 'Space') e.preventDefault();
 });
@@ -1829,6 +1870,7 @@ function kioskStart(){
   kiosk.auto = true; kiosk.hdg = 0; kiosk.yearT = performance.now(); kiosk.ei = 0;
   if (document.pointerLockElement) document.exitPointerLock();
   tourEnd(); closeMap(); $('embedDlg').hidden = true; $('info').hidden = true;
+  if (meas.on) setMeasure(false);
   if (present) setPresent(false);
   setMode(false); setPanel(false);
   $('yr').value = EDITIONS[0]; $('yBig').textContent = EDITIONS[0]; applyYear(EDITIONS[0]); showLayer();
