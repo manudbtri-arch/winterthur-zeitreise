@@ -200,7 +200,7 @@ body.intro-on .joy{visibility:hidden}
   </div>
   <button class="btn" id="build">Hier neu bauen</button>
   <div class="prog" aria-hidden="true"><i id="progBar"></i></div>
-  <p class="sub" id="bStat" style="margin:8px 0 0">Baue Winterthur …</p>
+  <p class="sub" id="bStat" style="margin:8px 0 0" aria-live="polite">Baue Winterthur …</p>
   <div class="legend" aria-label="Legende">
     <div><i style="background:#e8d6b4"></i><span><b>Belegt:</b> steht heute noch, 3D-Modell swisstopo, Baujahr GWR</span></div>
     <div><i id="lgRec" style="background:#bfa98a"></i><span><b>Rekonstruiert:</b> aus der Siegfriedkarte, Höhe geschätzt</span></div>
@@ -240,7 +240,7 @@ body.intro-on .joy{visibility:hidden}
 </aside>
 
 <pre class="f3" id="f3" hidden></pre>
-<div class="toast" id="toast" hidden></div>
+<div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
 <div class="mapov" id="mapov" hidden>
   <div id="omap"></div>
   <div class="mapbar">
@@ -326,6 +326,9 @@ const $ = id => document.getElementById(id);
 const C = Cesium;
 /* Höhe über Ellipsoid: Winterthur liegt rund 500 m darüber, also 300 m über Boden */
 const HOME = {lon:8.7290, lat:47.4890, h:800, heading:15, pitch:-22};
+/* «Bewegung reduzieren» im System: Kamerafahrten kurz statt lang */
+const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const flyDur = d => REDUCE ? Math.min(d, 0.3) : d;
 /* Permalink: ?lon=&lat=&h=&hdg=&pitch=&year=&mode=(fly|walk|now)&c=lon,lat (Mitte des gebauten Gebiets) */
 const LINK = (() => {
   const q = new URLSearchParams(location.search), num = k => (q.has(k) && q.get(k) !== '' ? Number(q.get(k)) : NaN);
@@ -1152,7 +1155,7 @@ function goPlace(it){
   closeIntro && closeIntro();
   setMode(false);
   const dest = C.Cartesian3.fromDegrees(it.lon, it.lat - 0.0055, 1050);
-  camera.flyTo({destination: dest, orientation: {heading: 0, pitch: C.Math.toRadians(-38), roll: 0}, duration: 2.5,
+  camera.flyTo({destination: dest, orientation: {heading: 0, pitch: C.Math.toRadians(-38), roll: 0}, duration: flyDur(2.5),
     complete: () => { if (!present) buildHouses([it.lon, it.lat]); }});
   toast(it.name);
   placeName = it.name;
@@ -1321,7 +1324,7 @@ $('introFly').addEventListener('click', () => { closeIntro(); goHome(1.5); });
 /* Kamera */
 function goHome(dur){
   camera.flyTo({destination:C.Cartesian3.fromDegrees(HOME.lon,HOME.lat,HOME.h),
-    orientation:{heading:C.Math.toRadians(HOME.heading),pitch:C.Math.toRadians(HOME.pitch),roll:0}, duration:dur});
+    orientation:{heading:C.Math.toRadians(HOME.heading),pitch:C.Math.toRadians(HOME.pitch),roll:0}, duration:flyDur(dur)});
 }
 goHome(0);
 $('home').addEventListener('click', () => goHome(2));
@@ -1405,6 +1408,7 @@ document.addEventListener('mousemove', e => {
 });
 document.addEventListener('keydown', e => {
   if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+  if (e.key === 'Escape' && !$('info').hidden) { $('info').hidden = true; }
   if (e.code === 'Tab') { e.preventDefault(); setPanel($('panel').classList.contains('off')); return; }
   keys[e.code] = true;
   if (e.code === 'KeyF') setMode(!walk);
@@ -1631,7 +1635,7 @@ function tourGo(i, bar = true){
   const c = C.Cartographic.fromDegrees(st.lon, st.lat);
   const gh = globe.getHeight(c) ?? 450;
   camera.flyToBoundingSphere(new C.BoundingSphere(C.Cartesian3.fromDegrees(st.lon, st.lat, gh + 10), 30),
-    {offset: new C.HeadingPitchRange(C.Math.toRadians(20), C.Math.toRadians(-32), 320), duration: 2.5,
+    {offset: new C.HeadingPitchRange(C.Math.toRadians(20), C.Math.toRadians(-32), 320), duration: flyDur(2.5),
      complete: () => { if (tourIdx >= 0 && stories[tourIdx] === ent) showInfo({id: ent}); }});
   $('tourLbl').textContent = `${tourIdx + 1}/${stories.length} · ${st.titel}`;
   $('tour').hidden = !bar;
@@ -1808,7 +1812,7 @@ if (KIOSK) {
   setInterval(() => { if (!kiosk.auto && performance.now() - kiosk.last > 120000) kioskStart(); }, 2000);
   scene.preRender.addEventListener((sc, time) => {
     if (!kiosk.auto) return;
-    kiosk.hdg += 0.0012;
+    kiosk.hdg += REDUCE ? 0.0004 : 0.0012;
     kioskView(kiosk.hdg, -28, 1100);
     /* alle 20 Sekunden die nächste Kartenausgabe zeigen */
     if (performance.now() - kiosk.yearT > 20000) {

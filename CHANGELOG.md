@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Barrierefreiheit: bei «Bewegung reduzieren» kurze Kamerafahrten und langsamerer Kiosk-Rundflug, Infokarte mit Esc schliessen, Bau- und Hinweismeldungen werden Screenreadern vorgelesen.
 - Produktseite: neuer Abschnitt «So setzen Sie es ein» für Museum (Kiosk), Gemeinde-Website (Einbetten), Schule und Forschung.
 - Anleitung für Partner `stories/README.md` (Format, Quellenregeln, Ablauf), verlinkt im Pilotabschnitt der Produktseite.
 - Handy: Seitenleiste als unteres Blatt über dem Zeitregler mit Griff «Mehr/Weniger» und «Schliessen», Menüknopf rechts unten neben dem Joystick.
