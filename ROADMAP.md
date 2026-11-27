@@ -125,4 +125,4 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 ## 11. Für andere Orte und Klassen
 - [x] Museen und Gemeinden: Kiosk-Rundflug um jeden Ort – `?kiosk=1` mit Ort aus dem Link (`lon`, `lat` bzw. `c`), Höhe aus dem Gelände; auf der Produktseite erklärt.
 - [x] Schulen: Unterrichtsseite um einen Auftrag mit dem Vorher-Nachher-Bild ergänzen (Veränderung beschreiben und belegen).
-- [ ] Handy: im Querformat Zeitregler und Menü schmaler, damit mehr vom Bild sichtbar bleibt.
+- [x] Handy: im Querformat Zeitregler und Menü schmaler, damit mehr vom Bild sichtbar bleibt.

@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Handy im Querformat: Menü schmal links, Zeitregler kompakt rechts unten, Infokarte rechts, Tastenhilfe und Minikarte ausgeblendet, damit mehr vom 3D-Bild sichtbar bleibt.
 - Unterrichtsseite: Auftrag 6 «Vorher und nachher» mit dem Vorher-Nachher-Bild (Veränderungen beschreiben, mit den Infokarten belegen, sichere Aussagen von Vermutungen trennen); druckbar mit Antwortlinien; Produktseite nennt sechs Aufträge.
 - Kiosk für jeden Ort: `flug-3d.html?kiosk=1` mit Ort im Link (z. B. aus «Link kopieren») kreist um diesen Ort statt um Winterthur, die Höhe kommt aus dem Gelände; Produktseite erklärt, wie man den Link baut.
 - Neuer Knopf «Vorher-Nachher-Bild» im Reiter «Export»: speichert den gleichen Blick im gewählten Jahr und heute nebeneinander als PNG, mit Jahr, Kartenblatt, Ort, Koordinaten und Quellen; danach ist alles wie vorher eingestellt. Auf der Produktseite genannt.

@@ -198,3 +198,17 @@ body.kiosk .compass{display:none}
 .hint .btn{width:auto;margin-top:8px}
 .pill.openfull{left:auto;right:16px;top:58px;bottom:auto;text-decoration:none;font-weight:600}
 @media(max-width:700px){.pill.openfull{right:8px;top:48px;left:auto;bottom:auto}}
+/* Handy im Querformat: Menü schmal links, Zeitregler kompakt rechts unten, damit mehr vom Bild sichtbar bleibt */
+@media (pointer:coarse) and (orientation:landscape) and (max-height:500px){
+  .keys,.mini{display:none!important}
+  .panel{top:8px;left:8px;width:280px;max-height:calc(100% - 16px);padding:12px 14px}
+  .panel h1{font-size:18px}
+  .timeline{left:auto;right:8px;bottom:6px;transform:none;width:min(560px,calc(100% - 304px));padding:6px 12px 8px;gap:2px 12px}
+  .timeline .year{font-size:30px}
+  .hud{top:8px;right:8px;font-size:12px;padding:4px 10px}
+  .joy{left:12px;bottom:12px;width:96px;height:96px}
+  .panel:not(.off) ~ .joy{visibility:hidden}
+  .pill{top:8px;left:8px}
+  .info{left:auto;right:8px;transform:none;bottom:calc(var(--tl,90px) + 10px);max-width:min(460px,calc(100% - 140px))}
+  .hint{top:12px}
+}
