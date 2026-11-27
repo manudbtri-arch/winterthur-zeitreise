@@ -1,6 +1,11 @@
 # Änderungen
 
 ## 2026-11-27
+- Boden-Shader und Landschaft: exakte Distanzberechnung über Tiefenpuffer (`GROUND_FS`, behebt harte Kachelkanten auf Seen und Feldern), ruhige Wellen ohne Moiré-Ringe auf Seen, weiche organische Ränder für Pflaster, Gärten und Ufer über 8-Nachbar-Chamfer-Abstand statt eckiger Treppen, und gefilterte Hausmaske ohne Text/Felszeichnungen.
+- Bundesdaten-Themen: aktive Themen blenden Pflaster und Gärten vorübergehend aus und schichten Flächen (ISOS, Arealstatistik) stets unter Linien und Punkten (IVS, KGS, LUBIS, Ortsnamen, Gewässer), damit Inventare auch mitten in der Altstadt gut sichtbar sind; in der Methodik ergänzt.
+- Alpine Kartenblätter: Steilhang-Filter (> 40° Neigung) sortiert Felszeichnungen aus, damit auf Gebirgsblättern wie Grindelwald deutlich weniger Fehlklötze an Felswänden entstehen; Kachelabfragen zudem auf die Schweiz begrenzt; in der Methodik ergänzt.
+- Bedienung, Layout und Leistung im 3D-Flug: Seitenleiste endet auf breiten Bildschirmen sauber über der Minikarte und dem Zeitregler ohne Überlappung, Infokarte richtet sich dynamisch über dem Zeitregler aus, gewählter Jahrgang bleibt bei «Heute» und beim Vorher-Nachher-Bild erhalten, Ortsname wird auch bei Permalinks/Teleport über `swissBOUNDARIES3D` ermittelt (dynamischer Titel in der Übersichtskarte und bei Exporten), Rundgang-Knopf nennt den Ort der Story-Datei, Geländehöhen von Geschichten werden bei Bergorten nachgeladen, und unnötige Objekt-Allokationen sowie Minikarten-Reflows entfallen.
+- 2D-Karte nennt im Vergleichsmodus beim Teilen beide Ebenen; `README.md` aktualisiert und Inline-SVG-Favicon auf allen Seiten ergänzt.
 - Kiosk-Rundgang: die Infokarte einer Geschichte bleibt stehen, bis die nächste Station sie ersetzt, statt kurz vorher zu verschwinden.
 - Story-Werkstatt nennt die Testlinks für 3D-Flug, 2D-Karte und Kiosk-Rundgang.
 - 2D-Karte mit eigener Story-Datei: die Sprungziele sind die Geschichten der Datei, überschrieben mit dem Ort aus der Datei, statt der Winterthurer Quartiere.

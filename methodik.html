@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Methodik – Zeitreise Schweiz</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Crect width='30' height='30' rx='6' fill='%239a4a2c'/%3E%3Cpath d='M7 20h16v3H7zM9 13l4-4 4 4v7H9zM17 15l3-3 3 3v5h-6z' fill='%23fff'/%3E%3C/svg%3E">
 <meta name="description" content="Woher die Daten von Zeitreise Schweiz stammen, wie belegte und rekonstruierte Häuser entstehen, wie genau sie sind und wie man zitiert.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
@@ -107,7 +108,7 @@ footer a{color:var(--mute)}
   <li><b>Hausflächen finden:</b> Auf der Siegfriedkarte sind Gebäude schwarz gefüllt. Dunkle Bildpunkte werden ausgewählt; ein morphologisches Öffnen (Erosion, dann Dilatation) entfernt dünne Linien und einen Teil der Schrift.</li>
   <li><b>Raster:</b> Je 2 × 2 Bildpunkte der Kartenkacheln (Zoomstufe 16) bilden einen Block von etwa 3 m Kantenlänge. Zusammenhängende Blöcke ergeben ein Haus. Sehr kleine Flecken und dünn gefüllte, grosse Gitter (Gleisfelder, Strassennetze) werden verworfen, ebenso Formen, die eher Schrift oder Linie sind: nur einen Block breit und lang, schräg und locker gefüllt, oder lang ohne inneren Block. Solche Formen bleiben aber, wenn dort ein heute noch stehendes Gebäude liegt.</li>
   <li><b>Abgleich mit dem Register:</b> Liegt ein heute noch stehendes Gebäude mit passendem Baujahr in oder dicht neben einem Kartenhaus (etwa 6 m), übernimmt das echte 3D-Modell. Nur die übrigen Kartenhäuser werden nachgebaut.</li>
-  <li><b>Höhe:</b> Die Siegfriedkarte enthält keine Gebäudehöhen. Die Zahl der Geschosse wird aus der Grundfläche geschätzt (2 bis 4 Geschosse à 3,3 m); sehr grosse Flächen gelten als eingeschossige Halle. Das Dach ist ein vereinfachtes Stufendach.</li>
+  <li><b>Höhe:</b> Die Siegfriedkarte enthält keine Gebäudehöhen. Die Zahl der Geschosse wird aus der Grundfläche geschätzt (2 bis 4 Geschosse à 3,3 m); sehr grosse Flächen gelten als eingeschossige Halle. Das Dach ist ein schräges Satteldach mit Ziegelmuster (im Minecraft-Look ein Stufendach).</li>
   <li><b>Boden:</b> Bis rund 19 m um Häuser wird Pflaster gezeichnet, sonst Wiese; blaue Kartenflächen werden als Wasser gezeigt.</li>
 </ol>
 <div class="box">Rekonstruierte Häuser zeigen <b>Lage und ungefähren Grundriss</b> nach der Karte. Höhe, Dachform, Farbe und Fenster sind geschätzt bzw. schematisch und dürfen nicht als Befund gelesen werden.</div>
@@ -132,7 +133,7 @@ footer a{color:var(--mute)}
 <h2 id="grenzen">5. Bekannte Grenzen</h2>
 <ul>
   <li><b>Kartenstand:</b> Die Blätter der Siegfriedkarte wurden zu verschiedenen Zeiten nachgeführt. Der Kartenstand eines Orts kann darum einige Jahre vom gewählten Jahr abweichen. Unter dem Zeitregler steht deshalb das Blatt am Standort und sein Stand, abgefragt aus der Blatteinteilung von swisstopo (ch.swisstopo.hiks-siegfried.metadata). Die 2D-Karte zeigt es ebenso für den Kartenmittelpunkt, im Vergleich auf beiden Seiten.</li>
-  <li><b>Fehlklötze:</b> Schrift, Signaturen und dicke Linien der Karte werden über ihre Form grösstenteils herausgefiltert. Kompakte Zeichen (etwa fette Buchstaben) können trotzdem als Klötze erscheinen, die keine Häuser sind; umgekehrt kann ein sehr schmales Haus wegfallen.</li>
+  <li><b>Fehlklötze:</b> Schrift, Signaturen und dicke Linien der Karte werden über ihre Form grösstenteils herausgefiltert; an sehr steilen Hängen (über rund 40° Neigung) werden zudem Felszeichnungen der alpinen Kartenblätter aussortiert. Kompakte Zeichen (etwa fette Buchstaben) können trotzdem als Klötze erscheinen, die keine Häuser sind; umgekehrt kann ein sehr schmales Haus oder eine Hütte an einem Steilhang wegfallen.</li>
   <li><b>Verschmolzene Häuser:</b> Eng aneinander gebaute Häuser erscheinen oft als ein langer Block.</li>
   <li><b>Ersetzte Häuser:</b> Wurde ein altes Haus abgerissen und an gleicher Stelle neu gebaut, erscheint vor dem neuen Baujahr das rekonstruierte Haus aus der Karte – mit geschätzter Höhe.</li>
   <li><b>Bauperiode «vor 1919»:</b> Solche Häuser erscheinen ab 1880, auch wenn sie erst kurz vor 1919 gebaut wurden.</li>
@@ -144,7 +145,7 @@ footer a{color:var(--mute)}
 </ul>
 
 <h2 id="themen">Themen aus Bundesdaten</h2>
-<p>Im 3D-Flug lassen sich im Reiter «Themen» weitere offene Daten über die Karte legen. Ein Klick ins Bild fragt bei geo.admin.ch ab, was an dieser Stelle verzeichnet ist, und verlinkt ins Kartenportal des Bundes. Alle Themen zeigen den heutigen Stand der Inventare, nicht den Zustand im gewählten Jahr.</p>
+<p>Im 3D-Flug lassen sich im Reiter «Themen» weitere offene Daten über die Karte legen. Ein Klick ins Bild fragt bei geo.admin.ch ab, was an dieser Stelle verzeichnet ist, und verlinkt ins Kartenportal des Bundes. Solange ein Thema aktiv ist, werden Pflaster und Gärten vorübergehend ausgeblendet, damit Inventare und Linien auch in der Altstadt gut sichtbar bleiben. Alle Themen zeigen den heutigen Stand der Inventare, nicht den Zustand im gewählten Jahr.</p>
 <ul>
   <li><b>Historische Verkehrswege (IVS):</b> Bundesamt für Strassen ASTRA; Wege von nationaler, regionaler und lokaler Bedeutung sowie Wegbegleiter wie Brücken, Mauern oder Wegkreuze.</li>
   <li><b>Schützenswerte Ortsbilder (ISOS):</b> Bundesamt für Kultur BAK.</li>

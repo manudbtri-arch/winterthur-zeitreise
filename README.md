@@ -1,23 +1,28 @@
-# Winterthur Zeitreise
+# Zeitreise Schweiz
 
-Winterthur zwischen 1844 und heute: historische Karten und Luftbilder von swisstopo, in 2D und als 3D-Flug.
+Die Schweiz zwischen 1844 und heute: historische Karten und Luftbilder von swisstopo, in 2D und als begehbare 3D-Welt.
 
-- `index.html` – Übersicht
-- `karte-2d.html` – Zeitregler, Zeitraffer und Vergleich mit Trennstrich (Leaflet)
-- `flug-3d.html` – Siegfriedkarte auf dem swisstopo-Gelände, Ego-Steuerung mit WASD und Maus (CesiumJS). «Häuser hier bauen» zeigt die heute noch stehenden Gebäude als echte swissBUILDINGS3D-Modelle, gefiltert nach Baujahr aus dem Gebäuderegister (GWR, über `api3.geo.admin.ch`, Verknüpfung über EGID). Für abgerissene Häuser liest es die schwarzen Hausflächen der Siegfriedkarte im Browser aus (Schwellwert + morphologisches Öffnen, Blöcke à ca. 3 m) und stellt sie als Blockhäuser mit geschätzter Höhe (2–4 Geschosse) auf das Gelände. Beim Gehen sind die Wände fest.
+- `index.html` – Produkt- und Übersichtsseite mit eingebettetem 3D-Flug
+- `flug-3d.html` (mit `flug-3d.css`, `flug-3d-shader.js`, `flug-3d-worker.js`) – Siegfriedkarte auf dem 3D-Gelände von swisstopo in Kacheln rund um den Standort bis zum Horizont, Ego-Steuerung mit WASD/Maus bzw. Touch-Joystick (CesiumJS). Heute noch stehende Gebäude erscheinen als echte swissBUILDINGS3D-Modelle, gefiltert nach Baujahr aus dem Gebäuderegister (GWR, über `api3.geo.admin.ch`, Verknüpfung über EGID). Abgerissene Häuser werden im Browser aus den schwarzen Hausflächen der Siegfriedkarte rekonstruiert (Web Worker, Zwischenspeicher in IndexedDB) und mit Satteldächern (oder Stufendächern im Minecraft-Look) auf das Gelände gesetzt. Enthält Analyse nach Bauepoche, Themen aus Bundesdaten (IVS, ISOS, KGS, LUBIS, swissNAMES3D, Gewässer, Arealstatistik), Messwerkzeug, Bild-, Vorher-Nachher-, CSV- und GeoJSON-Export sowie Kiosk- und Einbettungsmodus.
+- `karte-2d.html` – Zeitregler, Zeitraffer, Wischvergleich, Ortssuche und Geschichten-Marker (Leaflet)
+- `methodik.html` – Datenquellen, Verfahren, Genauigkeit, bekannte Grenzen, Export-Spalten und Zitiervorschlag
+- `unterricht.html` – Unterrichtsvorschlag mit sechs Aufträgen für Schulen, druckbar als Arbeitsblatt
+- `stories/` – Belegte Geschichten an Orten (`winterthur.json`), Partner-Anleitung (`README.md`) und Browser-Editor (`werkstatt.html`)
+- `tests/bildtest.mjs` – Automatischer Bildtest über GitHub Actions (`.github/workflows/bildtest.yml`)
 
 Läuft über GitHub Pages. Lokal geöffnet (Doppelklick auf die Datei) lädt das 3D-Gelände nicht, weil der Browser von einer lokalen Datei aus keine Daten fremder Server nachladen darf.
 
 ## Datenquellen
 
-Alle Daten: © swisstopo, offene Geodaten (OGD), über `wmts.geo.admin.ch` und `3d.geo.admin.ch`.
+Alle Daten: © swisstopo, BFS, ASTRA, BAK, BABS (offene Behördendaten, OGD), direkt über `wmts.geo.admin.ch`, `3d.geo.admin.ch` und `api3.geo.admin.ch`.
 
 | Ebene | Layer | Zeitraum |
 |---|---|---|
 | Landeskarte-Zeitreihe | `ch.swisstopo.zeitreihen` | 1844–1960 |
-| Siegfriedkarte | `ch.swisstopo.hiks-siegfried` | 1870–1949 |
+| Siegfriedkarte (+ Blatteinteilung) | `ch.swisstopo.hiks-siegfried`, `…metadata` | 1870–1949 |
 | Dufourkarte | `ch.swisstopo.hiks-dufour` | 1845–1865 |
-| Luftbilder (Archiv) | `ch.swisstopo.swissimage-product` | 1926–2025 |
+| Luftbilder (heute / Archiv / LUBIS) | `ch.swisstopo.swissimage`, `…-product`, `…lubis-*` | 1926–heute |
 | Gelände | `ch.swisstopo.terrain.3d` | aktuell |
 | Baujahre | `ch.bfs.gebaeude_wohnungs_register` (GWR) | aktuell |
-| Gebäude / Bäume | `ch.swisstopo.swissbuildings3d.3d`, `ch.swisstopo.vegetation.3d` | aktuell |
+| Gebäude / Brücken / Bäume | `ch.swisstopo.swissbuildings3d.3d`, `…swisstlm3d.3d`, `…vegetation.3d` | aktuell |
+| Bundesdaten-Themen | IVS (ASTRA), ISOS (BAK), KGS (BABS), swissNAMES3D, Gewässer, Arealstatistik (BFS) | aktuell |

@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Zeitreise Schweiz – 2D-Karte</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Crect width='30' height='30' rx='6' fill='%239a4a2c'/%3E%3Cpath d='M7 20h16v3H7zM9 13l4-4 4 4v7H9zM17 15l3-3 3 3v5h-6z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
@@ -302,7 +303,7 @@ async function loadStories(file){
     }
     /* Direktlink in den 3D-Flug: fliegt zur Geschichte und öffnet ihre Infokarte */
     if (/^[A-Za-z0-9_-]{1,60}$/.test(String(st.id || ''))) {
-      const a3 = document.createElement('a'); a3.href = 'flug-3d.html?story=' + encodeURIComponent(st.id) + (STORY_NAME ? '&stories=' + STORY_NAME : ''); a3.textContent = 'Im 3D-Flug ansehen';
+      const a3 = document.createElement('a'); a3.href = 'flug-3d.html?story=' + encodeURIComponent(st.id) + (STORY_NAME ? '&stories=' + encodeURIComponent(STORY_NAME) : ''); a3.textContent = 'Im 3D-Flug ansehen';
       box.appendChild(a3);
     }
     L.circleMarker(ll, {radius: 8, color: '#fff', weight: 2, fillColor: '#c8803f', fillOpacity: 1})
@@ -464,8 +465,10 @@ const SHARE = matchMedia('(pointer:coarse)').matches && !!navigator.share;
 if (SHARE) $('linkBtn').textContent = 'Link zu dieser Ansicht teilen';
 $('linkBtn').addEventListener('click', async () => {
   const url = permalink();
+  const title = $('pCmp').hidden ? ('Zeitreise Schweiz – ' + $('yBig').textContent)
+    : ('Zeitreise Schweiz – ' + $('tagL').textContent + ' / ' + $('tagR').textContent);
   if (SHARE) {
-    try { await navigator.share({title: 'Zeitreise Schweiz – ' + $('yBig').textContent, url}); $('linkMsg').textContent = ''; return; }
+    try { await navigator.share({title, url}); $('linkMsg').textContent = ''; return; }
     catch (e) { if (e && e.name === 'AbortError') return; }
   }
   try { await navigator.clipboard.writeText(url); $('linkMsg').textContent = 'Link kopiert.'; }

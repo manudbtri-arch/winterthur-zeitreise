@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Zeitreise Schweiz 3D</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Crect width='30' height='30' rx='6' fill='%239a4a2c'/%3E%3Cpath d='M7 20h16v3H7zM9 13l4-4 4 4v7H9zM17 15l3-3 3 3v5h-6z' fill='%23fff'/%3E%3C/svg%3E">
 <script>window.CESIUM_BASE_URL = 'https://cdn.jsdelivr.net/npm/cesium@1.120.0/Build/Cesium/';</script>
 <link rel="preload" as="script" href="https://cdn.jsdelivr.net/npm/cesium@1.120.0/Build/Cesium/Cesium.js">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cesium@1.120.0/Build/Cesium/Widgets/widgets.css">
@@ -58,7 +59,7 @@
     <div id="themeBox">
       <p class="sub" style="margin:10px 0 0"><b>Themen aus Bundesdaten</b></p>
       <div id="themeList"></div>
-      <p class="note" style="margin-top:6px">Klick ins Bild zeigt, was an dieser Stelle verzeichnet ist. Inventare und Daten nach heutigem Stand. <a href="methodik.html#themen" target="_blank" rel="noopener">Quellen</a></p>
+      <p class="note" style="margin-top:6px">Klick ins Bild zeigt, was an dieser Stelle verzeichnet ist. Inventare und Daten nach heutigem Stand; aktive Themen blenden Pflaster und Gärten vorübergehend aus. <a href="methodik.html#themen" target="_blank" rel="noopener">Quellen</a></p>
     </div>
   </div>
 
@@ -111,7 +112,7 @@
 <div class="mapov" id="mapov" hidden>
   <div id="omap"></div>
   <div class="mapbar">
-    <b>Winterthur von oben</b>
+    <b id="mapTitle">Winterthur von oben</b>
     <span id="mapCoord">Mit der Maus über die Karte fahren</span>
     <label class="mslide">Luftbild heute <input type="range" id="mapPhoto" min="0" max="100" value="0" aria-label="Luftbild einblenden"></label>
     <button class="btn" id="mapFull">Vollbild</button>
@@ -194,7 +195,7 @@ const SRC = {
   karte: {name:'Heute: Landeskarte', layer:'ch.swisstopo.pixelkarte-farbe', fmt:'jpeg', fixed:'current', nz:18}
 };
 const $ = id => document.getElementById(id);
-const KIOSK_Q = new URLSearchParams(location.search).get('kiosk') === '1';
+const KIOSK = new URLSearchParams(location.search).get('kiosk') === '1';
 const C = Cesium;
 /* Höhe über Ellipsoid: Winterthur liegt rund 500 m darüber, also 300 m über Boden */
 const HOME = {lon:8.7290, lat:47.4890, h:800, heading:15, pitch:-22};
@@ -211,7 +212,8 @@ const LINK = (() => {
   const h = num('h'), hdg = num('hdg'), pitch = num('pitch'), year = Math.round(num('year'));
   const cc = String(q.get('c') || '').split(',').map(Number);
   const c = cc.length === 2 && cc[0] > 5.5 && cc[0] < 11 && cc[1] > 45.5 && cc[1] < 48 ? cc : [lon, lat];
-  return {lon, lat, c,
+  const ort = (q.get('ort') || '').trim().slice(0, 80);
+  return {lon, lat, c, ort,
     h: Number.isFinite(h) ? Math.min(20000, Math.max(200, h)) : 1000,
     hdg: Number.isFinite(hdg) ? hdg : 0,
     pitch: Number.isFinite(pitch) ? Math.min(90, Math.max(-90, pitch)) : -30,
@@ -236,7 +238,12 @@ if (location.protocol === 'file:') {
   $('hud').textContent = 'Als Datei geöffnet – Gelände braucht eine Webadresse';
 }
 C.CesiumTerrainProvider.fromUrl('https://3d.geo.admin.ch/ch.swisstopo.terrain.3d/v1/', {requestVertexNormals:true})
-  .then(tp => { viewer.terrainProvider = tp; terrainOk = true; globe.enableLighting = false; buildHouses(LINK ? LINK.c : [8.7290, 47.4997]); bridgeLayer(); })
+  .then(tp => {
+    viewer.terrainProvider = tp; terrainOk = true; globe.enableLighting = false;
+    buildHouses(LINK ? LINK.c : (KIOSK_TOUR && stories.length ? [stories[0].story.lon, stories[0].story.lat] : [8.7290, 47.4997]));
+    bridgeLayer();
+    if (KIOSK_TOUR && kiosk.auto && tourIdx >= 0 && stories[tourIdx] && !Number.isFinite(stories[tourIdx].story._gh)) tourGo(tourIdx, true, 0);
+  })
   .catch(err => {
     console.error(err);
     $('hud').textContent = 'Gelände nicht erreichbar – flache Ansicht';
@@ -426,7 +433,7 @@ $('oldOn').addEventListener('change', () => buildingLayer().catch(() => {}));
 $('genOn').addEventListener('change', () => { flags.gen = $('genOn').checked; applyYear(+$('yr').value || gwr.year); });
 $('blockOn').addEventListener('change', e => setBlocky(e.target.checked));
 $('shadowOn').addEventListener('change', e => { viewer.shadows = e.target.checked; });
-$('groundOn').addEventListener('change', () => refreshGrounds());
+$('groundOn').addEventListener('change', () => { syncGroundShow(); if ($('groundOn').checked) for (const c of world.chunks.values()) if (!c.ground && groundWanted(c.eds.get(c.shown))) makeGround(c); });
 
 /* LV95 → WGS84 (Näherungsformel von swisstopo) */
 function lv95(E, N){
@@ -659,20 +666,44 @@ async function buildEdition(area, year, reg, token, emit, lite){
   /* auffällige Formen nur verwerfen, wenn dort kein echtes Haus steht (sonst fehlt dessen Wand) */
   let nDrop = 0;
   comps.forEach((c, i) => { if (keep[i] && c.bad && !real[i]) { keep[i] = false; nDrop++; } });
-  /* Kacheln: nur Häuser, deren Mitte in der Kachel liegt (die übrigen baut die Nachbarkachel) */
-  if (emit) comps.forEach((c, i) => { if (keep[i] && !emit(c)) keep[i] = false; });
   /* Zufallswerte am Ort festmachen, damit ein Haus in jeder Kachel und Kartenausgabe gleich aussieht */
   const gk = c => (px0 / CELL + c.x0) * 7919 + (py0 / CELL + c.y0) * 104729;
 
-  /* Bodenhöhe, Geschosse, Farben, Dachrichtung */
-  const pts = comps.map(c => C.Cartographic.fromDegrees(x2lon(px0 + (c.cx + .5) * CELL), y2lat(py0 + (c.cy + .5) * CELL)));
-  if (terrainOk) await C.sampleTerrainMostDetailed(viewer.terrainProvider, pts);
-  if (token !== buildToken) return null;
+  /* Bodenhöhe nur für behaltene Häuser abfragen; bei nachgebauten zusätzlich +10 m Ost/Nord gegen Felszeichnungen an Steilhängen */
   const mpp = 156543.03392 * Math.cos(lat * Math.PI / 180) / 2 ** Z, cm = CELL * mpp;
+  const mLat = 1 / 111320, mLon = 1 / (111320 * Math.cos(lat * Math.PI / 180));
+  const pts = [], ptIdx = new Int32Array(comps.length).fill(-1), slopeIdx = new Int32Array(comps.length).fill(-1);
+  comps.forEach((c, i) => {
+    if (!keep[i]) return;
+    const lo = x2lon(px0 + (c.cx + .5) * CELL), la = y2lat(py0 + (c.cy + .5) * CELL);
+    ptIdx[i] = pts.length;
+    pts.push(C.Cartographic.fromDegrees(lo, la));
+    if (!real[i] && terrainOk) {
+      slopeIdx[i] = pts.length;
+      pts.push(C.Cartographic.fromDegrees(lo + 10 * mLon, la), C.Cartographic.fromDegrees(lo, la + 10 * mLat));
+    }
+  });
+  if (terrainOk && pts.length) await C.sampleTerrainMostDetailed(viewer.terrainProvider, pts);
+  if (token !== buildToken) return null;
+  /* Felszeichnungen der alpinen Siegfriedkarte aussortieren: an Steilhängen > 40° (oder steilen Hochalpen-Kleinflecken) stehen keine Häuser */
+  if (terrainOk) comps.forEach((c, i) => {
+    if (!keep[i] || real[i] || slopeIdx[i] < 0) return;
+    const h0 = pts[ptIdx[i]].height, hE = pts[slopeIdx[i]].height, hN = pts[slopeIdx[i] + 1].height;
+    if (!Number.isFinite(h0) || !Number.isFinite(hE) || !Number.isFinite(hN)) return;
+    const slope = Math.hypot((hE - h0) / 10, (hN - h0) / 10);
+    if (slope > 0.85 || (h0 > 1600 && slope > 0.58 && c.n < 30)) { keep[i] = false; nDrop++; }
+  });
+  /* Gefilterte Hausmaske für den Boden (inkl. Kachelrand, ohne Text, Gleisfelder und Felszeichnungen) */
+  const bldg = new Uint8Array(cw * ch);
+  for (let i = 0; i < cw * ch; i++) { const id = comp[i]; if (id >= 0 && keep[id]) bldg[i] = 1; }
+  /* Kacheln: nur Häuser, deren Mitte in der Kachel liegt (die übrigen baut die Nachbarkachel) */
+  if (emit) comps.forEach((c, i) => { if (keep[i] && !emit(c)) keep[i] = false; });
+
   comps.forEach((c, id) => {
+    if (!keep[id]) return;
     const r = hash(gk(c) + 1);
     c.floors = c.n > 700 ? 3 : c.n > 150 ? 3 + Math.round(r) : c.n > 35 ? 2 + Math.round(r * 2) : 2;
-    c.base = (pts[id].height || 0) - 1.5;
+    c.base = (ptIdx[id] >= 0 ? pts[ptIdx[id]].height || 0 : 0) - 1.5;
     c.h = c.floors * 3.3 + 1.5;
     c.wall = C.Color.fromCssColorString(WALL[Math.floor(r * WALL.length)]);
     c.roof = C.Color.fromCssColorString(c.n > 700 ? '#5c5a56' : ROOF[Math.floor(hash(gk(c) + 77) * ROOF.length)]);
@@ -705,7 +736,6 @@ async function buildEdition(area, year, reg, token, emit, lite){
   };
   const tint = (col, f) => new C.Color(Math.min(1, col.red * f), Math.min(1, col.green * f), Math.min(1, col.blue * f), 1);
   const cellLon = x => x2lon(px0 + (x + .5) * CELL), cellLat = y => y2lat(py0 + (y + .5) * CELL);
-  const mLat = 1 / 111320, mLon = 1 / (111320 * Math.cos(lat * Math.PI / 180));
 
   /* Wände und Dach: Ost-West-Häuser zeilenweise, Nord-Süd-Häuser spaltenweise */
   const pass = (alongX) => {
@@ -787,7 +817,7 @@ async function buildEdition(area, year, reg, token, emit, lite){
     shadows: C.ShadowMode.ENABLED
   })) : null;
   if (prim) prim.show = false;
-  return {year, prim, roof, nGen, nOld, occ, wat, parts, hl: false, nDrop, recs, full: !lite};
+  return {year, prim, roof, nGen, nOld, occ, bldg, wat, parts, hl: false, nDrop, recs, full: !lite};
 }
 
 /* ---------- Boden: Pflaster in Gassen und auf Plätzen, sonst Wiese, Bäche blau ---------- */
@@ -807,38 +837,57 @@ function makeGround(c){
   /* Boden auch für mittlere Kacheln (mit Register): sonst endet er mitten im Bild mit einer harten Kante, etwa auf Flüssen und Seen */
   c.groundFull = groundWanted(ed);
   if (!c.groundFull || !$('groundOn').checked) return;
-  const {cw, ch} = c, m = MARGIN / CELL, n = CHUNK / CELL;
-  /* Abstand zum nächsten Haus (über die ganze Kachel mit Rand gerechnet) */
-  const dist = new Int16Array(cw * ch).fill(99), q = [];
-  for (let i = 0; i < cw * ch; i++) if (ed.occ[i]) { dist[i] = 0; q.push(i); }
-  for (let h = 0; h < q.length; h++) {
-    const i = q[h], x = i % cw, y = (i - x) / cw, dd = dist[i] + 1;
-    if (dd > 8) continue;
-    for (const [nx, ny] of [[x+1,y],[x-1,y],[x,y+1],[x,y-1]])
-      if (nx >= 0 && ny >= 0 && nx < cw && ny < ch && dist[ny * cw + nx] > dd) { dist[ny * cw + nx] = dd; q.push(ny * cw + nx); }
+  const {cw, ch} = c, m = MARGIN / CELL, n = CHUNK / CELL, src = ed.bldg || ed.occ;
+  /* Abstand zum nächsten Haus über 8-Nachbar-Chamfer-Sweep (Zehntel-Zellen: 10 gerade, 14 diagonal → runde statt treppige Ränder) */
+  const dist = new Int16Array(cw * ch);
+  for (let i = 0; i < cw * ch; i++) dist[i] = src[i] ? 0 : 999;
+  for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) {
+    const i = y * cw + x; let v = dist[i]; if (!v) continue;
+    if (x > 0 && dist[i - 1] + 10 < v) v = dist[i - 1] + 10;
+    if (y > 0) {
+      if (dist[i - cw] + 10 < v) v = dist[i - cw] + 10;
+      if (x > 0 && dist[i - cw - 1] + 14 < v) v = dist[i - cw - 1] + 14;
+      if (x < cw - 1 && dist[i - cw + 1] + 14 < v) v = dist[i - cw + 1] + 14;
+    }
+    dist[i] = v;
+  }
+  for (let y = ch - 1; y >= 0; y--) for (let x = cw - 1; x >= 0; x--) {
+    const i = y * cw + x; let v = dist[i]; if (!v) continue;
+    if (x < cw - 1 && dist[i + 1] + 10 < v) v = dist[i + 1] + 10;
+    if (y < ch - 1) {
+      if (dist[i + cw] + 10 < v) v = dist[i + cw] + 10;
+      if (x < cw - 1 && dist[i + cw + 1] + 14 < v) v = dist[i + cw + 1] + 14;
+      if (x > 0 && dist[i + cw - 1] + 14 < v) v = dist[i + cw - 1] + 14;
+    }
+    dist[i] = v;
   }
   /* Bebauungsdichte (Summenbild, Fenster rund 45 m): in der Stadt sind Gassen und Plätze gepflastert, auf dem Land nur der Hof */
   const S = new Int32Array((cw + 1) * (ch + 1));
-  for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) S[(y + 1) * (cw + 1) + x + 1] = ed.occ[y * cw + x] + S[y * (cw + 1) + x + 1] + S[(y + 1) * (cw + 1) + x] - S[y * (cw + 1) + x];
+  for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) S[(y + 1) * (cw + 1) + x + 1] = src[y * cw + x] + S[y * (cw + 1) + x + 1] + S[(y + 1) * (cw + 1) + x] - S[y * (cw + 1) + x];
   const dens = (x, y) => { const a = Math.max(0, x - 7), b = Math.max(0, y - 7), e = Math.min(cw, x + 8), f = Math.min(ch, y + 8);
     return (S[f * (cw + 1) + e] - S[b * (cw + 1) + e] - S[f * (cw + 1) + a] + S[b * (cw + 1) + a]) / ((e - a) * (f - b)); };
-  /* Wasser: Seen sind auf der Karte schraffiert; Lücken zwischen den blauen Linien schliessen (2 Zellen dehnen, dann 2 schrumpfen) */
-  const grow = (src, r, any) => { const out = new Uint8Array(cw * ch);
+  /* Wasser: Seen sind auf der Karte schraffiert; Lücken zwischen den blauen Linien schliessen (trennbar 1D-waagrecht + 1D-senkrecht) */
+  const grow1 = (arr, r, any, horiz) => { const out = new Uint8Array(cw * ch);
     for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) { let hit = any ? 0 : 1;
-      for (let k = -r; k <= r && (any ? !hit : hit); k++) for (let j = -r; j <= r; j++) {
-        const xx = x + j, yy = y + k, v = xx < 0 || yy < 0 || xx >= cw || yy >= ch ? (any ? 0 : 1) : src[yy * cw + xx];
-        if (any && v) { hit = 1; break; } if (!any && !v) { hit = 0; break; } }
+      for (let k = -r; k <= r; k++) {
+        const xx = horiz ? x + k : x, yy = horiz ? y : y + k;
+        const v = xx < 0 || yy < 0 || xx >= cw || yy >= ch ? (any ? 0 : 1) : arr[yy * cw + xx];
+        if (any && v) { hit = 1; break; } if (!any && !v) { hit = 0; break; }
+      }
       out[y * cw + x] = hit; }
     return out; };
+  const grow = (arr, r, any) => grow1(grow1(arr, r, any, true), r, any, false);
   const wat = grow(grow(ed.wat, 2, true), 2, false);
   const cv = document.createElement('canvas'); cv.width = n; cv.height = n;
   const g = cv.getContext('2d'), img = g.createImageData(n, n);
   for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
-    const i = (y + m) * cw + x + m, o = (y * n + x) * 4;
-    const town = dens(x + m, y + m) > 0.22;
-    img.data[o] = dist[i] <= (town ? 6 : 2) ? 255 : 0;          /* Pflaster */
-    img.data[o + 1] = wat[i] ? 255 : 0;                          /* Wasser */
-    img.data[o + 2] = dist[i] <= 8 ? 255 : 0;                    /* Garten: Wiese, die Karte scheint leicht durch */
+    const gx = x + m, gy = y + m, i = gy * cw + gx, o = (y * n + x) * 4;
+    const d = dist[i] / 10, wet = wat[i];
+    const nb = (gx > 0 ? wat[i - 1] : 0) + (gx < cw - 1 ? wat[i + 1] : 0) + (gy > 0 ? wat[i - cw] : 0) + (gy < ch - 1 ? wat[i + cw] : 0);
+    const pRad = 1.6 + Math.min(1, Math.max(0, (dens(gx, gy) - 0.08) / 0.16)) * 4.4;
+    img.data[o]     = wet ? 0 : Math.max(0, Math.min(255, Math.round((pRad + 0.8 - d) / 1.6 * 255)));   /* Pflaster: weicher Übergang */
+    img.data[o + 1] = wet ? Math.round((0.65 + 0.35 * nb / 4) * 255) : Math.round(nb / 4 * 90);         /* Wasser: weiches Ufer */
+    img.data[o + 2] = wet ? 0 : Math.max(0, Math.min(255, Math.round((7.5 - d) / 5.5 * 255)));          /* Garten: weich auslaufend */
     img.data[o + 3] = 255;
   }
   g.putImageData(img, 0, 0);
@@ -852,12 +901,16 @@ function makeGround(c){
     appearance: new C.MaterialAppearance({ material, translucent: true, materialSupport: C.MaterialAppearance.MaterialSupport.TEXTURED }),
     classificationType: C.ClassificationType.TERRAIN
   }));
+  /* Themen aus Bundesdaten sichtbar lassen: GroundPrimitive liegt über den Kartenebenen und wird bei aktiven Themen oder im Heute-Modus ausgeblendet */
+  c.ground.show = !present && $('groundOn').checked && !themeLayers.length;
 }
 const groundWanted = ed => !!ed && (ed.full || (ed.level ?? 0) >= 1);
 function refreshGrounds(){ for (const c of world.chunks.values()) makeGround(c); }
+function syncGroundShow(){ const show = !present && $('groundOn').checked && !themeLayers.length; for (const c of world.chunks.values()) if (c.ground) c.ground.show = show; }
 
 /* Rekonstruierte Häuser hervorheben: Wände und Dächer bläulich, damit sie sich von belegten abheben */
 const HL_WALL = C.Color.fromCssColorString('#9fbfe0'), HL_ROOF = C.Color.fromCssColorString('#4a74a6');
+let recHl = false, recHlDirty = false;
 function recolor(ed, on){
   ed.hl = on;
   const tmp = new C.Color();
@@ -868,7 +921,7 @@ function recolor(ed, on){
     at.color = C.ColorGeometryInstanceAttribute.toValue(c, at.color);
   }
 }
-$('recHl').addEventListener('change', e => { $('lgRec').style.background = e.target.checked ? '#9fbfe0' : '#bfa98a'; });
+$('recHl').addEventListener('change', e => { recHl = e.target.checked; recHlDirty = true; $('lgRec').style.background = recHl ? '#9fbfe0' : '#bfa98a'; });
 
 /* ---------- Analyse-Modus: Gebäude nach Bauepoche (Baujahr bzw. Bauperiode im GWR) ---------- */
 const EPOCHS = [
@@ -1084,21 +1137,25 @@ function reach(){
   return cap;
 }
 const needLevel = d => d <= NEAR + 0.5 ? 2 : d <= MID + 0.5 ? 1 : 0;
+const _sph = new C.BoundingSphere(new C.Cartesian3(), 320);
+const _cartoSched = new C.Cartographic();
 function schedTick(){
   if (!terrainOk || present) { building = false; return; }
   const f = currentFocus(); if (!f) return;
   world.focus = f;
-  const cc = C.Cartographic.fromCartesian(camera.position), gh = globe.getHeight(cc);
+  C.Cartographic.fromCartesian(camera.position, C.Ellipsoid.WGS84, _cartoSched);
+  const gh = globe.getHeight(_cartoSched);
   const R = Math.max(NEAR + 1, reach() / KM), Rc = Math.ceil(R), Rkeep = Math.max(R, PHONE ? 5 : 8) + 1.5;
   const fx = lon2x(f[0]) / CHUNK, fy = lat2y(f[1]) / CHUNK;
   const dOf = (tx, ty) => Math.hypot(tx + 0.5 - fx, ty + 0.5 - fy);
+  const inCH = (tx, ty) => { const lo = x2lon((tx + 0.5) * CHUNK), la = y2lat((ty + 0.5) * CHUNK); return lo >= 5.8 && lo <= 10.6 && la >= 45.7 && la <= 47.9; };
   /* im Bild? Kachel als Kugel auf Bodenhöhe gegen den Sichtkegel der Kamera prüfen */
   let cull = null;
   try { cull = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up); } catch (e) {}
   const visible = (tx, ty) => {
     if (!cull) return true;
-    const sph = new C.BoundingSphere(C.Cartesian3.fromDegrees(x2lon((tx + .5) * CHUNK), y2lat((ty + .5) * CHUNK), gh ?? 450), 320);
-    return cull.computeVisibility(sph) !== C.Intersect.OUTSIDE;
+    C.Cartesian3.fromDegrees(x2lon((tx + .5) * CHUNK), y2lat((ty + .5) * CHUNK), gh ?? 450, C.Ellipsoid.WGS84, _sph.center);
+    return cull.computeVisibility(_sph) !== C.Intersect.OUTSIDE;
   };
   /* weit entfernte Kacheln entladen (mit Spielraum, damit beim Umschauen nichts neu lädt), mittlere nur mit der aktuellen Kartenausgabe */
   for (const [k, c] of world.chunks) {
@@ -1115,7 +1172,7 @@ function schedTick(){
   let best = null, bestS = 1e9, want = 0, ready = 0;
   for (let j = -Rc - 1; j <= Rc + 1; j++) for (let i = -Rc - 1; i <= Rc + 1; i++) {
     const tx = Math.floor(fx) + i, ty = Math.floor(fy) + j, d = dOf(tx, ty);
-    if (d > R + 0.5) continue;
+    if (d > R + 0.5 || !inCH(tx, ty)) continue;
     const lv = needLevel(d);
     if (lv < 2 && !visible(tx, ty)) continue;
     want++;
@@ -1198,7 +1255,20 @@ function attachSearch(inp, list, onPick){
   });
   inp.addEventListener('blur', () => setTimeout(() => { list.hidden = true; }, 150));
 }
-let placeName = 'Winterthur';
+let placeName = (LINK && LINK.ort) || 'Winterthur', placeKey = '';
+/* Gemeinde am aktuellen Standort abfragen (swissBOUNDARIES3D), damit Bilder, Exporte und Karte auch nach Permalink oder Teleport den richtigen Ort tragen */
+async function resolvePlace(lon, lat){
+  const k = `${Math.round(lon * 50)}:${Math.round(lat * 50)}`;
+  if (k === placeKey) return;
+  placeKey = k;
+  const yr = new Date().getFullYear();
+  let res = await identifyAt(lon, lat, ['ch.swisstopo.swissboundaries3d-gemeinde-flaeche.fill'], `&timeInstant=${yr}`, 1);
+  if (!res.length) res = await identifyAt(lon, lat, ['ch.swisstopo.swissboundaries3d-gemeinde-flaeche.fill'], `&timeInstant=${yr - 1}`, 1);
+  if (placeKey !== k) return;
+  const nm = res[0] && res[0].attributes && res[0].attributes.gemname;
+  if (typeof nm === 'string' && nm.trim()) placeName = nm.trim();
+}
+if (LINK && !LINK.ort && Math.hypot(LINK.c[0] - 8.7290, LINK.c[1] - 47.4997) > 0.04) resolvePlace(LINK.c[0], LINK.c[1]);
 function goPlace(it){
   closeIntro && closeIntro();
   setMode(false);
@@ -1207,18 +1277,22 @@ function goPlace(it){
     complete: () => { if (!present) buildHouses([it.lon, it.lat]); }});
   toast(it.name);
   placeName = it.name;
+  placeKey = `${Math.round(it.lon * 50)}:${Math.round(it.lat * 50)}`;
 }
 attachSearch($('q'), $('qres'), goPlace);
 attachSearch($('q2'), $('qres2'), goPlace);
 
 /* ---------- «Heute»: saubere Gegenwart mit Luftbild, allen Gebäuden und Bäumen ---------- */
-let present = false;
+let present = false, savedYear = 1880;
 function setPresent(on){
+  if (on && !present) savedYear = +$('yr').value || savedYear;
   present = on;
   $('nowBtn').setAttribute('aria-pressed', on);
   $('nowBtn').textContent = on ? 'Zurück in die Zeit' : 'Heute';
   $('src').value = on ? 'foto' : 'sieg';
-  setRange(); showLayer();
+  setRange();
+  if (!on && savedYear >= 1870 && savedYear <= 1949) $('yr').value = savedYear;
+  showLayer();
   $('yWrap').hidden = on;
   $('bld').checked = on;
   $('genOn').checked = !on;
@@ -1227,10 +1301,10 @@ function setPresent(on){
   buildingLayer().catch(() => {});
   toggleTiles('v', 'https://3d.geo.admin.ch/ch.swisstopo.vegetation.3d/v1/tileset.json', on);
   bridgeLayer();
-  refreshGrounds();
+  syncGroundShow();
   applyYear(on ? 2100 : +$('yr').value);
   $('yBig').textContent = on ? 'Heute' : $('yr').value;
-  $('yLbl').textContent = on ? 'Luftbild und 3D-Gebäude von swisstopo' : 'Siegfriedkarte';
+  $('yLbl').textContent = on ? 'Luftbild und 3D-Gebäude von swisstopo' : (SRC.sieg.name + (sheet.txt ? ' · ' + sheet.txt : ''));
 }
 $('nowBtn').addEventListener('click', () => setPresent(!present));
 
@@ -1243,6 +1317,7 @@ const needLeaflet = () => leafP || (leafP = window.L ? Promise.resolve()
   : loadCss('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css').then(() => loadJs('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js')));
 async function openMap(){
   if (document.pointerLockElement) document.exitPointerLock();
+  $('mapTitle').textContent = placeName + ' von oben';
   $('mapov').hidden = false;
   await needLeaflet();
   const here = C.Cartographic.fromCartesian(camera.position);
@@ -1290,6 +1365,7 @@ $('mapFull').addEventListener('click', goFull);
 
 /* Teleport: im gebauten Gebiet auf eine freie Strassenstelle, sonst einfach auf den Boden */
 async function teleport(lon, lat){
+  resolvePlace(lon, lat);
   if (chunkReadyAt(lon, lat)) { await spawn([lon, lat]); return; }
   const p = C.Cartographic.fromDegrees(lon, lat);
   if (terrainOk) await C.sampleTerrainMostDetailed(viewer.terrainProvider, [p]);
@@ -1408,7 +1484,7 @@ function showInfo(p){
     const st = p.id.story;
     title = st.titel; text = st.text; badge = 'Geschichte'; hold = KIOSK ? 60000 : 20000;   /* im Kiosk-Rundgang bis zur nächsten Station */
     src = 'Quelle: ' + st.quelle;
-    link = /^https:\/\//.test(st.url || '') ? st.url : '';
+    link = !KIOSK && /^https:\/\//.test(st.url || '') ? st.url : '';
     story = STORY_ID_RE.test(String(st.id || '')) ? String(st.id) : null;
   } else if (p instanceof C.Cesium3DTileFeature && tlmTs && p.tileset === tlmTs) {
     title = isBridge(p) ? 'Brücke' : 'Bauwerk';
@@ -1461,14 +1537,15 @@ canvas.addEventListener('click', e => {
 });
 
 /* ---------- Themen aus Bundesdaten: als Kartenebene über der Siegfriedkarte, Klick zeigt den Eintrag ---------- */
+/* z: Flächen (1) immer unter Linien (2) und Punkten/Namen (3), damit Arealstatistik/ISOS nie LUBIS oder IVS verdecken */
 const THEMES = [
-  {key: 'ivs', name: 'Historische Verkehrswege (IVS)', draw: ['ch.astra.ivs-nat', 'ch.astra.ivs-reg_loc', 'ch.astra.ivs-nat_wegbegleiter'], ask: ['ch.astra.ivs-nat', 'ch.astra.ivs-reg_loc'], src: 'Bundesamt für Strassen ASTRA, Inventar historischer Verkehrswege (IVS)'},
-  {key: 'isos', name: 'Schützenswerte Ortsbilder (ISOS)', draw: ['ch.bak.bundesinventar-schuetzenswerte-ortsbilder'], alpha: 0.7, src: 'Bundesamt für Kultur BAK, ISOS'},
-  {key: 'kgs', name: 'Kulturgüter (KGS-Inventar)', draw: ['ch.babs.kulturgueter'], src: 'Bundesamt für Bevölkerungsschutz BABS, KGS-Inventar'},
-  {key: 'lubis', name: 'Luftbilder swisstopo: Aufnahmeorte', draw: ['ch.swisstopo.lubis-luftbilder_schwarzweiss', 'ch.swisstopo.lubis-luftbilder_farbe'], time: '99991231', src: 'swisstopo, Luftbilder (LUBIS)'},
-  {key: 'names', name: 'Ortsnamen (swissNAMES3D)', draw: ['ch.swisstopo.swissnames3d'], src: 'swisstopo, swissNAMES3D'},
-  {key: 'gew', name: 'Heutige Gewässer (swissTLM3D)', draw: ['ch.swisstopo.swisstlm3d-gewaessernetz'], src: 'swisstopo, swissTLM3D Gewässernetz'},
-  {key: 'areal', name: 'Bodennutzung (Arealstatistik)', draw: ['ch.bfs.arealstatistik'], time: '2024', identTime: 2024, alpha: 0.6, src: 'Bundesamt für Statistik BFS, Arealstatistik'}
+  {key: 'ivs', name: 'Historische Verkehrswege (IVS)', z: 2, draw: ['ch.astra.ivs-nat', 'ch.astra.ivs-reg_loc', 'ch.astra.ivs-nat_wegbegleiter'], ask: ['ch.astra.ivs-nat', 'ch.astra.ivs-reg_loc'], src: 'Bundesamt für Strassen ASTRA, Inventar historischer Verkehrswege (IVS)'},
+  {key: 'isos', name: 'Schützenswerte Ortsbilder (ISOS)', z: 1, draw: ['ch.bak.bundesinventar-schuetzenswerte-ortsbilder'], alpha: 0.7, src: 'Bundesamt für Kultur BAK, ISOS'},
+  {key: 'kgs', name: 'Kulturgüter (KGS-Inventar)', z: 3, draw: ['ch.babs.kulturgueter'], src: 'Bundesamt für Bevölkerungsschutz BABS, KGS-Inventar'},
+  {key: 'lubis', name: 'Luftbilder swisstopo: Aufnahmeorte', z: 3, draw: ['ch.swisstopo.lubis-luftbilder_schwarzweiss', 'ch.swisstopo.lubis-luftbilder_farbe'], time: '99991231', src: 'swisstopo, Luftbilder (LUBIS)'},
+  {key: 'names', name: 'Ortsnamen (swissNAMES3D)', z: 3, draw: ['ch.swisstopo.swissnames3d'], src: 'swisstopo, swissNAMES3D'},
+  {key: 'gew', name: 'Heutige Gewässer (swissTLM3D)', z: 2, draw: ['ch.swisstopo.swisstlm3d-gewaessernetz'], src: 'swisstopo, swissTLM3D Gewässernetz'},
+  {key: 'areal', name: 'Bodennutzung (Arealstatistik)', z: 1, draw: ['ch.bfs.arealstatistik'], time: '2024', identTime: 2024, alpha: 0.6, src: 'Bundesamt für Statistik BFS, Arealstatistik'}
 ];
 for (const t of THEMES) { t.on = false; t.imgs = []; if (!t.ask) t.ask = t.draw; }
 function setTheme(t, on){
@@ -1480,8 +1557,12 @@ function setTheme(t, on){
       url: `https://wmts.geo.admin.ch/1.0.0/${id}/default/${t.time || 'current'}/3857/{z}/{x}/{y}.png`,
       tilingScheme: new C.WebMercatorTilingScheme(), maximumLevel: 18, credit: t.src, rectangle: CH_RECT}));
     if (t.alpha) l.alpha = t.alpha;
+    l.__z = t.z || 2;
     t.imgs.push(l); themeLayers.push(l);
   }
+  themeLayers.sort((a, b) => (a.__z || 2) - (b.__z || 2));
+  for (const l of themeLayers) viewer.imageryLayers.raiseToTop(l);
+  syncGroundShow();
 }
 {
   const box = $('themeList');
@@ -1524,8 +1605,10 @@ async function themeInfo(lon, lat){
     $('iText').textContent = lines.slice(1, 6).join(' · ') + (lines.length > 6 ? ` · und ${lines.length - 6} weitere` : '');
   }
   $('iSrc').textContent = 'Quelle: ' + [...new Set(on.map(t => t.src))].join('; ') + ' · via geo.admin.ch';
-  $('iLink').href = `https://map.geo.admin.ch/#/map?lang=de&center=${E.toFixed(0)},${N.toFixed(0)}&z=10&layers=${ids}`;
-  $('iLink').textContent = 'Im Kartenportal des Bundes ansehen'; $('iLink').hidden = false;
+  if (!KIOSK) {
+    $('iLink').href = `https://map.geo.admin.ch/#/map?lang=de&center=${E.toFixed(0)},${N.toFixed(0)}&z=10&layers=${ids}`;
+    $('iLink').textContent = 'Im Kartenportal des Bundes ansehen'; $('iLink').hidden = false;
+  }
   infoTimer = setTimeout(() => { $('info').hidden = true; }, 25000);
 }
 
@@ -1581,7 +1664,7 @@ $('sheetSize').addEventListener('click', () => {
 $('sheetClose').addEventListener('click', () => setPanel(false));
 /* Menü in Reitern (Ort, Zeit, Themen, Export); Pfeiltasten wechseln, gewählter Reiter wird im Browser gemerkt */
 {
-  const tabs = [...document.querySelectorAll('.tabs [role=tab]')].filter(t => !(KIOSK_Q && t.classList.contains('nokiosk')));
+  const tabs = [...document.querySelectorAll('.tabs [role=tab]')].filter(t => !(KIOSK && t.classList.contains('nokiosk')));
   const pick = (t, focus) => {
     for (const b of tabs) { const on = b === t; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; $(b.getAttribute('aria-controls')).hidden = !on; }
     if (focus) t.focus();
@@ -1687,31 +1770,33 @@ function showHint(kind){
 $('hintOk').addEventListener('click', hideHint);
 document.addEventListener('keydown', e => { if (!$('hint').hidden && /^(Key[WASD]|Arrow|Escape)/.test(e.code)) hideHint(); });
 $('joy').addEventListener('pointerdown', () => { if (!$('hint').hidden) hideHint(); });
-const up = new C.Cartesian3(), fwd = new C.Cartesian3(), prevPos = new C.Cartesian3();
-const vel = new C.Cartesian3();            /* x = rechts, y = vorwärts, z = hoch (m/s) */
+const up = new C.Cartesian3(), vel = new C.Cartesian3();   /* vel: x = rechts, y = vorwärts, z = hoch (m/s) */
+const _want = new C.Cartesian3(), _disp = new C.Cartesian3(), _fw = new C.Cartesian3(), _tmp = new C.Cartesian3();
+const _cTo = new C.Cartesian3(), _cE = new C.Cartesian3(), _cN = new C.Cartesian3(), _cDe = new C.Cartesian3(), _cDn = new C.Cartesian3(), _cRest = new C.Cartesian3(), _cTry = new C.Cartesian3();
+const _cEnu = new C.Matrix4(), _carto = new C.Cartographic(), _cartoG = new C.Cartographic();
 const SPEEDS = [1, 2, 5, 10, 20, 50, 100];
 let speedIdx = 2, smoothH = null, bob = 0, fps = 60, hudTxt = '';
 let last = performance.now();
 const gridFree = pos => {
-  const c = C.Cartographic.fromCartesian(pos);
-  const r = roofAt(C.Math.toDegrees(c.longitude), C.Math.toDegrees(c.latitude));
-  return r === null || c.height >= r + 0.5;
+  C.Cartographic.fromCartesian(pos, C.Ellipsoid.WGS84, _cartoG);
+  const r = roofAt(C.Math.toDegrees(_cartoG.longitude), C.Math.toDegrees(_cartoG.latitude));
+  return r === null || _cartoG.height >= r + 0.5;
 };
 /* Minecraft-artig: Ost- und Nordanteil getrennt prüfen, dann gleitet man an Wänden entlang */
 function collide(from, disp){
-  const to = C.Cartesian3.add(from, disp, new C.Cartesian3());
-  if (gridFree(to) || !gridFree(from)) return to;   /* steht man schon in einem Haus, darf man hinaus */
-  const enu = C.Transforms.eastNorthUpToFixedFrame(from);
-  const e = new C.Cartesian3(enu[0], enu[1], enu[2]), n = new C.Cartesian3(enu[4], enu[5], enu[6]);
-  const de = C.Cartesian3.multiplyByScalar(e, C.Cartesian3.dot(disp, e), new C.Cartesian3());
-  const dn = C.Cartesian3.multiplyByScalar(n, C.Cartesian3.dot(disp, n), new C.Cartesian3());
-  const rest = C.Cartesian3.subtract(C.Cartesian3.subtract(disp, de, new C.Cartesian3()), dn, new C.Cartesian3());
-  let pos = C.Cartesian3.add(from, rest, new C.Cartesian3());
-  for (const part of [de, dn]) {
-    const t = C.Cartesian3.add(pos, part, new C.Cartesian3());
-    if (gridFree(t)) pos = t;
-  }
-  return pos;
+  C.Cartesian3.add(from, disp, _cTo);
+  if (gridFree(_cTo) || !gridFree(from)) return C.Cartesian3.clone(_cTo, from);   /* steht man schon in einem Haus, darf man hinaus */
+  C.Transforms.eastNorthUpToFixedFrame(from, C.Ellipsoid.WGS84, _cEnu);
+  C.Cartesian3.fromElements(_cEnu[0], _cEnu[1], _cEnu[2], _cE);
+  C.Cartesian3.fromElements(_cEnu[4], _cEnu[5], _cEnu[6], _cN);
+  C.Cartesian3.multiplyByScalar(_cE, C.Cartesian3.dot(disp, _cE), _cDe);
+  C.Cartesian3.multiplyByScalar(_cN, C.Cartesian3.dot(disp, _cN), _cDn);
+  C.Cartesian3.subtract(disp, _cDe, _cRest);
+  C.Cartesian3.subtract(_cRest, _cDn, _cRest);
+  C.Cartesian3.add(from, _cRest, _cTo);
+  if (gridFree(C.Cartesian3.add(_cTo, _cDe, _cTry))) C.Cartesian3.clone(_cTry, _cTo);
+  if (gridFree(C.Cartesian3.add(_cTo, _cDn, _cTry))) C.Cartesian3.clone(_cTry, _cTo);
+  return C.Cartesian3.clone(_cTo, from);
 }
 /* WGS84 → LV95 (Näherungsformel swisstopo) */
 function toLV95(lon, lat){
@@ -1743,11 +1828,18 @@ scene.preRender.addEventListener(() => {
       slowSince = 0; fps = 45;
     }
   } else slowSince = 0;
-  { const want = $('recHl').checked;
-    for (const c of world.chunks.values()) { const ed = c.eds.get(c.shown); if (ed && ed.prim && ed.prim.ready && ed.hl !== want) recolor(ed, want); } }
-  const carto = C.Cartographic.fromCartesian(camera.position);
-  const gnd = globe.getHeight(carto);
-  const agl = gnd === undefined ? carto.height : carto.height - gnd;
+  if (recHl || recHlDirty) {
+    let left = false;
+    for (const c of world.chunks.values()) {
+      const ed = c.eds.get(c.shown);
+      if (ed && ed.prim && ed.hl !== recHl) { if (ed.prim.ready) recolor(ed, recHl); else left = true; }
+    }
+    if (!recHl && !left) recHlDirty = false;
+  }
+  C.Cartographic.fromCartesian(camera.position, C.Ellipsoid.WGS84, _carto);
+  const rawGnd = globe.getHeight(_carto);
+  const gnd = rawGnd !== undefined && rawGnd > 0 && rawGnd < 5500 ? rawGnd : undefined;
+  let agl = gnd === undefined ? Math.max(0, _carto.height - 450) : _carto.height - gnd;
 
   /* weiches Umschauen */
   if (locked && look.active) {
@@ -1760,44 +1852,48 @@ scene.preRender.addEventListener(() => {
   /* Tempo mit Trägheit: beschleunigen und ausrollen statt ruckartig */
   const sprint = keys.ShiftLeft || keys.ShiftRight;
   const top = walk ? (sprint ? 9 : 4.5) : 10 * SPEEDS[speedIdx] * (sprint ? 3 : 1);
-  const want = new C.Cartesian3(
-    (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0),
-    (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0),
-    walk ? 0 : (keys.Space ? 1 : 0) - (keys.KeyC ? 1 : 0));
-  if (C.Cartesian3.magnitude(want) > 0) C.Cartesian3.multiplyByScalar(C.Cartesian3.normalize(want, want), top, want);
-  else if (joy.on) { want.x = joy.x * top; want.y = joy.y * top; }   /* Handy: Joystick, stufenlos */
+  _want.x = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0);
+  _want.y = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0);
+  _want.z = walk ? 0 : (keys.Space ? 1 : 0) - (keys.KeyC ? 1 : 0);
+  const wMag = C.Cartesian3.magnitude(_want);
+  if (wMag > 0) C.Cartesian3.multiplyByScalar(_want, top / wMag, _want);
+  else if (joy.on) { _want.x = joy.x * top; _want.y = joy.y * top; }   /* Handy: Joystick, stufenlos */
   /* Handy: beim Gehen dreht Wischen den Blick, Cesium-Gesten nur beim Fliegen */
   if (COARSE && !locked) ctl.enableInputs = !walk;
-  const k = 1 - Math.exp(-dt * (C.Cartesian3.magnitude(want) > 0 ? 9 : 7));
-  C.Cartesian3.lerp(vel, want, k, vel);
+  const k = 1 - Math.exp(-dt * (wMag > 0 || joy.on ? 9 : 7));
+  C.Cartesian3.lerp(vel, _want, k, vel);
   const speed = C.Cartesian3.magnitude(vel);
 
   if (speed > 0.02) {
     C.Ellipsoid.WGS84.geodeticSurfaceNormal(camera.position, up);
-    const fw = walk ? (() => {          /* beim Gehen nur waagrecht */
-      const f = C.Cartesian3.subtract(camera.direction, C.Cartesian3.multiplyByScalar(up, C.Cartesian3.dot(camera.direction, up), new C.Cartesian3()), new C.Cartesian3());
-      return C.Cartesian3.normalize(f, f); })() : camera.direction;
-    const disp = new C.Cartesian3();
-    C.Cartesian3.add(disp, C.Cartesian3.multiplyByScalar(fw, vel.y * dt, new C.Cartesian3()), disp);
-    C.Cartesian3.add(disp, C.Cartesian3.multiplyByScalar(camera.right, vel.x * dt, new C.Cartesian3()), disp);
-    C.Cartesian3.add(disp, C.Cartesian3.multiplyByScalar(up, vel.z * dt, new C.Cartesian3()), disp);
-    camera.position = collide(camera.position, disp);
+    let fw = camera.direction;
+    if (walk) {                         /* beim Gehen nur waagrecht */
+      C.Cartesian3.multiplyByScalar(up, C.Cartesian3.dot(camera.direction, up), _tmp);
+      C.Cartesian3.subtract(camera.direction, _tmp, _fw);
+      fw = C.Cartesian3.normalize(_fw, _fw);
+    }
+    C.Cartesian3.multiplyByScalar(fw, vel.y * dt, _disp);
+    C.Cartesian3.add(_disp, C.Cartesian3.multiplyByScalar(camera.right, vel.x * dt, _tmp), _disp);
+    C.Cartesian3.add(_disp, C.Cartesian3.multiplyByScalar(up, vel.z * dt, _tmp), _disp);
+    collide(camera.position, _disp);
+    C.Cartographic.fromCartesian(camera.position, C.Ellipsoid.WGS84, _carto);
   }
 
   /* Boden halten: Gehen weich auf Augenhöhe mit leichtem Wippen, Fliegen nie unter 3 m */
-  const c2 = C.Cartographic.fromCartesian(camera.position);
-  const g2 = globe.getHeight(c2);
+  const rawG2 = speed > 0.02 ? globe.getHeight(_carto) : gnd;
+  const g2 = rawG2 !== undefined && rawG2 > 0 && rawG2 < 5500 ? rawG2 : undefined;
   if (g2 !== undefined) {
     if (walk) {
       bob += speed * dt * 1.9;
       const target = g2 + 1.7;
       smoothH = smoothH === null || Math.abs(smoothH - target) > 8 ? target : smoothH + (target - smoothH) * (1 - Math.exp(-dt * 14));
-      c2.height = Math.max(smoothH, g2 + 1.2);
-      camera.position = C.Cartographic.toCartesian(c2);
+      _carto.height = Math.max(smoothH, g2 + 1.2);
+      C.Cartographic.toCartesian(_carto, C.Ellipsoid.WGS84, camera.position);
     } else {
       smoothH = null;
-      if (c2.height < g2 + 3) { c2.height = g2 + 3; camera.position = C.Cartographic.toCartesian(c2); }
+      if (_carto.height < g2 + 3) { _carto.height = g2 + 3; C.Cartographic.toCartesian(_carto, C.Ellipsoid.WGS84, camera.position); }
     }
+    agl = _carto.height - g2;
   }
 
   /* Anzeige */
@@ -1807,10 +1903,10 @@ scene.preRender.addEventListener(() => {
     if (ht !== hudTxt) { hudTxt = ht; $('hud').textContent = ht; }   /* nur bei Änderung: jedes Schreiben kostet Layout */
   }
   if (!$('f3').hidden) {
-    const lon = C.Math.toDegrees(c2.longitude), lat = C.Math.toDegrees(c2.latitude);
+    const lon = C.Math.toDegrees(_carto.longitude), lat = C.Math.toDegrees(_carto.latitude);
     const [E, N] = toLV95(lon, lat);
     const hdg = (C.Math.toDegrees(camera.heading) + 360) % 360;
-    $('f3').textContent = `E ${fmt(E)}   N ${fmt(N)}\nHöhe ${Math.round(c2.height)} m ü. M. · ${Math.round(agl)} m über Boden\nBlick ${DIRS[Math.round(hdg / 45) % 8]} (${Math.round(hdg)}°) · Tempo ${speed.toFixed(1)} m/s\n${Math.round(fps)} Bilder/s · Fernsicht ${farView ? 'an' : 'aus'}`;
+    $('f3').textContent = `E ${fmt(E)}   N ${fmt(N)}\nHöhe ${Math.round(_carto.height)} m ü. M. · ${Math.round(agl)} m über Boden\nBlick ${DIRS[Math.round(hdg / 45) % 8]} (${Math.round(hdg)}°) · Tempo ${speed.toFixed(1)} m/s\n${Math.round(fps)} Bilder/s · Fernsicht ${farView ? 'an' : 'aus'}`;
   }
 });
 
@@ -1849,6 +1945,7 @@ function permalink(){
     hdg: r((C.Math.toDegrees(camera.heading) + 360) % 360, 1), pitch: r(C.Math.toDegrees(camera.pitch), 1),
     year: +$('yr').value || 1880, mode: present ? 'now' : walk ? 'walk' : 'fly'});
   if (world.focus) q.set('c', world.focus.map(v => v.toFixed(5)).join(','));
+  if (placeName && placeName !== 'Winterthur') q.set('ort', placeName);
   if (STORY_NAME) q.set('stories', STORY_NAME);
   const th = THEMES.filter(t => t.on).map(t => t.key).join(','); if (th) q.set('themen', th);
   return location.origin + location.pathname + '?' + q.toString();
@@ -1869,6 +1966,7 @@ $('linkBtn').addEventListener('click', () => {
 });
 /* ---------- Geschichten an Orten: stories/<ort>.json, Marker im 3D-Bild ---------- */
 const stories = [];
+let storyPlace = '';
 async function geocodeAddr(adr){
   const u = `https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=${encodeURIComponent(adr)}&type=locations&origins=address&sr=4326&limit=1`;
   const r = ((await (await fetch(u)).json()).results || [])[0];
@@ -1878,6 +1976,7 @@ async function loadStories(file, check){
   let data;
   try { const r = await fetch(file); if (!r.ok) throw new Error(r.status); data = await r.json(); }
   catch (e) { if (check) toast(`Story-Datei ${file} nicht gefunden oder kein gültiges JSON`, 8000); return; }
+  storyPlace = typeof data.ort === 'string' ? data.ort.trim() : '';
   const skipped = [];
   for (const st of (data.geschichten || [])) {
     const nm = String(st.id || st.titel || '?');
@@ -1905,21 +2004,28 @@ async function loadStories(file, check){
     if (i >= 0) { closeIntro(); tourGo(i, false); }
     else toast(`Geschichte «${STORY_ID}» nicht gefunden`, 6000);
   }
-  if (check) {
+  if (check && !KIOSK) {
     /* Prüfmodus für Partner: Ergebnis kurz melden, Details in der Browser-Konsole */
     toast(`${stories.length} Geschichten geladen` + (skipped.length ? `, ${skipped.length} übersprungen (Details: Konsole)` : ''), 8000);
     if (skipped.length) console.warn('Übersprungene Geschichten in ' + file + ':\n' + skipped.join('\n'));
   }
   $('tourBtn').disabled = !stories.length;
+  if (stories.length && storyPlace) $('tourBtn').textContent = `Rundgang: ${storyPlace}`;
   /* bekannte Orte als Sprungziele */
   const pl = $('places'); pl.textContent = '';
+  if (storyPlace) pl.setAttribute('aria-label', `Geschichten in ${storyPlace}`);
   stories.forEach((ent, i) => {
     const b = document.createElement('button');
     const rg = storyRange(ent.story);
-    b.textContent = ent.story.titel + (rg ? ` · ${rg}` : ''); b.title = 'Hinfliegen';
-    b.addEventListener('click', () => { closeIntro(); tourGo(i, false); });
+    b.textContent = ent.story.titel + (rg ? ` · ${rg}` : ''); b.title = storyPlace ? `Hinfliegen (${storyPlace})` : 'Hinfliegen';
+    b.addEventListener('click', () => { closeIntro(); if (storyPlace) placeName = storyPlace; tourGo(i, false); });
     pl.appendChild(b);
   });
+  /* Kiosk mit eigener Story-Datei: Ort auf erste Station legen */
+  if (KIOSK_TOUR && stories.length) {
+    const s0 = stories[0].story;
+    if (!LINK) { if (storyPlace) placeName = storyPlace; if (terrainOk) buildHouses([s0.lon, s0.lat]); }
+  }
 }
 /* Zeitraum einer Geschichte (von/bis) als kurzer Text und erste Kartenausgabe, in der sie gilt */
 const storyRange = st => st.von != null && st.bis != null ? `${st.von}–${st.bis}` : st.von != null ? `ab ${st.von}` : st.bis != null ? `bis ${st.bis}` : '';
@@ -1940,7 +2046,7 @@ function storyFitYear(st){
 }
 /* Geführte Tour: Kamera fliegt die Geschichten der Reihe nach an */
 let tourIdx = -1;
-function tourGo(i, bar = true){
+function tourGo(i, bar = true, dur = 2.5, onDone){
   if (!stories.length) return;
   tourIdx = (i + stories.length) % stories.length;
   const ent = stories[tourIdx], st = ent.story;
@@ -1949,15 +2055,34 @@ function tourGo(i, bar = true){
   setMode(false); setPanel(false);
   if (!$('storyOn').checked) { $('storyOn').checked = true; updateStories(); }
   const c = C.Cartographic.fromDegrees(st.lon, st.lat);
-  const gh = globe.getHeight(c) ?? 450;
-  camera.flyToBoundingSphere(new C.BoundingSphere(C.Cartesian3.fromDegrees(st.lon, st.lat, gh + 10), 30),
-    {offset: new C.HeadingPitchRange(C.Math.toRadians(20), C.Math.toRadians(-32), 320), duration: flyDur(2.5),
-     complete: () => { if (tourIdx >= 0 && stories[tourIdx] === ent) showInfo({id: ent}); }});
+  const h0 = globe.getHeight(c);
+  const okH = h0 !== undefined && h0 > 150 && h0 < 4800;
+  const gh = Number.isFinite(st._gh) ? st._gh : (okH ? h0 : 450);
+  if (okH && globe.tilesLoaded) st._gh = h0;
+  else if (!Number.isFinite(st._gh) && terrainOk) {
+    const reqIdx = tourIdx;
+    C.sampleTerrainMostDetailed(viewer.terrainProvider, [c]).then(([p]) => {
+      if (Number.isFinite(p.height) && p.height > 150 && p.height < 4800) {
+        st._gh = p.height;
+        if (tourIdx === reqIdx && stories[tourIdx] === ent && Math.abs(p.height - gh) > 40) tourGo(reqIdx, bar, dur <= 0 ? 0 : 1.0, onDone);
+      }
+    }).catch(() => {});
+  }
+  const finish = () => { if (tourIdx >= 0 && stories[tourIdx] === ent) showInfo({id: ent}); if (onDone) onDone(); };
+  if (dur <= 0) {
+    camera.viewBoundingSphere(new C.BoundingSphere(C.Cartesian3.fromDegrees(st.lon, st.lat, gh + 10), 30),
+      new C.HeadingPitchRange(C.Math.toRadians(20), C.Math.toRadians(-32), 320));
+    camera.lookAtTransform(C.Matrix4.IDENTITY);
+    finish();
+  } else {
+    camera.flyToBoundingSphere(new C.BoundingSphere(C.Cartesian3.fromDegrees(st.lon, st.lat, gh + 10), 30),
+      {offset: new C.HeadingPitchRange(C.Math.toRadians(20), C.Math.toRadians(-32), 320), duration: flyDur(dur), complete: finish});
+  }
   $('tourLbl').textContent = `${tourIdx + 1}/${stories.length} · ${st.titel}`;
   $('tour').hidden = !bar;
 }
 function tourEnd(){ tourIdx = -1; $('tour').hidden = true; }
-$('tourBtn').addEventListener('click', () => { closeIntro(); tourGo(0); });
+$('tourBtn').addEventListener('click', () => { closeIntro(); if (storyPlace) placeName = storyPlace; tourGo(0); });
 $('tourNext').addEventListener('click', () => tourGo(tourIdx + 1));
 $('tourPrev').addEventListener('click', () => tourGo(tourIdx - 1));
 $('tourEnd').addEventListener('click', tourEnd);
@@ -1982,7 +2107,7 @@ $('iShare').addEventListener('click', async () => {
 loadStories(`stories/${STORY_NAME || 'winterthur'}.json`, !!STORY_NAME);
 
 /* ---------- Minikarte unten links: Standort und Blickrichtung ---------- */
-const mini = {map: null, layer: null, key: '', last: 0, busy: false};
+const mini = {map: null, layer: null, key: '', viewKey: '', hdg: null, needSize: true, busy: false};
 const miniVisible = () => $('miniOn').checked && matchMedia('(min-width:1200px)').matches && $('intro').classList.contains('off');
 async function miniTick(){
   if (!miniVisible() || mini.busy) return;
@@ -1991,7 +2116,7 @@ async function miniTick(){
     try { await needLeaflet(); } catch (e) { mini.busy = false; return; }
     mini.map = L.map('miniMap', {zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false,
       doubleClickZoom: false, boxZoom: false, keyboard: false, touchZoom: false, zoomSnap: 0});
-    mini.busy = false;
+    mini.needSize = true; mini.busy = false;
   }
   const yr = Math.min(1949, Math.max(1870, +$('yr').value || 1880));
   const key = present ? 'now' : String(yr);
@@ -2001,15 +2126,19 @@ async function miniTick(){
                         : `https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.hiks-siegfried/default/${yr}/3857/{z}/{x}/{y}.png`;
     if (mini.layer) mini.layer.setUrl(url); else mini.layer = L.tileLayer(url, {maxNativeZoom: present ? 18 : 16, maxZoom: 19}).addTo(mini.map);
   }
-  const c = C.Cartographic.fromCartesian(camera.position);
-  const agl = c.height - (globe.getHeight(c) ?? c.height - 300);
+  if (mini.needSize) { mini.needSize = false; mini.map.invalidateSize({pan: false}); }
+  C.Cartographic.fromCartesian(camera.position, C.Ellipsoid.WGS84, _cartoG);
+  const lat = C.Math.toDegrees(_cartoG.latitude), lon = C.Math.toDegrees(_cartoG.longitude);
+  const agl = _cartoG.height - (globe.getHeight(_cartoG) ?? _cartoG.height - 300);
   const z = agl < 60 ? 16 : agl < 600 ? 15 : agl < 2500 ? 14 : 12;
-  mini.map.invalidateSize({pan: false});
-  mini.map.setView([C.Math.toDegrees(c.latitude), C.Math.toDegrees(c.longitude)], z, {animate: false});
-  $('miniArrow').style.transform = `rotate(${(C.Math.toDegrees(camera.heading) + 360) % 360}deg)`;
+  const vk = `${lat.toFixed(5)},${lon.toFixed(5)},${z}`;
+  if (vk !== mini.viewKey) { mini.viewKey = vk; mini.map.setView([lat, lon], z, {animate: false}); }
+  const hdg = Math.round((C.Math.toDegrees(camera.heading) + 360) % 360);
+  if (hdg !== mini.hdg) { mini.hdg = hdg; $('miniArrow').style.transform = `rotate(${hdg}deg)`; }
 }
 setInterval(miniTick, 300);
-$('miniOn').addEventListener('change', e => { $('mini').classList.toggle('on', e.target.checked); });
+window.addEventListener('resize', () => { mini.needSize = true; });
+$('miniOn').addEventListener('change', e => { $('mini').classList.toggle('on', e.target.checked); mini.needSize = true; });
 $('mini').addEventListener('click', () => openMap());
 
 /* ---------- Bild speichern: PNG mit Jahr, Ort und Quellenangabe ---------- */
@@ -2174,9 +2303,8 @@ $('to2d').addEventListener('click', () => {
   if (STORY_NAME) q.set('stories', STORY_NAME);
   $('to2d').href = 'karte-2d.html?' + q.toString();
 });
-/* ---------- Kiosk-Modus (?kiosk=1): Rundflug im Leerlauf, Neustart nach 2 Minuten ohne Eingabe ---------- */
-const KIOSK = new URLSearchParams(location.search).get('kiosk') === '1';
-const kiosk = {auto: false, last: performance.now(), hdg: 0, yearT: 0, ei: 0, si: 0, tour: false};
+/* ---------- Kiosk-Modus (?kiosk=1): Rundflug oder Story-Rundgang (?kiosk=1&stories=<name>) im Leerlauf, Neustart nach 2 Min. ---------- */
+const kiosk = {auto: false, last: performance.now(), hdg: 0, yearT: 0, ei: 0, si: 0, tour: false, startedAt: performance.now()};
 /* Mittelpunkt des Rundflugs: Altstadt Winterthur, oder mit Link (?kiosk=1&lon=&lat=, bzw. c=) der Ort aus dem Link; Höhe aus dem Gelände */
 const KIOSK_LL = LINK ? LINK.c : [8.7290, 47.4997];
 let KIOSK_ENU = C.Transforms.eastNorthUpToFixedFrame(C.Cartesian3.fromDegrees(KIOSK_LL[0], KIOSK_LL[1], 450));
@@ -2198,14 +2326,14 @@ function kioskView(h, pDeg, r){
    Jahr je Station: erste Kartenausgabe, in der die Geschichte gilt (von/bis); passt keine, wird die Station übersprungen. */
 const KIOSK_TOUR = KIOSK && !!STORY_NAME;
 const kioskYear = storyYear;
-function kioskStation(){
+function kioskStation(instant = false){
   const n = stories.length;
   for (let k = 0; k < n; k++) {
     const i = (kiosk.si + k) % n, y = kioskYear(stories[i].story);
     if (y == null) continue;
     kiosk.si = (i + 1) % n;
     $('yr').value = y; $('yBig').textContent = y; applyYear(y); showLayer();
-    tourGo(i, true);   /* Leiste mit Station x/n; nach einer Berührung blättern Besucher selbst weiter */
+    tourGo(i, true, instant ? 0 : 2.5);   /* Leiste mit Station x/n; nach einer Berührung blättern Besucher selbst weiter */
     return true;
   }
   return false;
@@ -2234,10 +2362,13 @@ if (KIOSK) {
   setInterval(() => { if (!kiosk.auto && performance.now() - kiosk.last > 120000) kioskStart(); }, 2000);
   scene.preRender.addEventListener((sc, time) => {
     if (!kiosk.auto) return;
-    /* Rundgang: sobald die Geschichten geladen sind, Station um Station; sonst Rundflug */
-    if (KIOSK_TOUR && stories.some(e => kioskYear(e.story) != null)) {
-      if (!kiosk.tour || performance.now() - kiosk.yearT > 24000) { kiosk.yearT = performance.now(); kiosk.tour = kioskStation(); }
-      return;
+    /* Rundgang: sobald die Geschichten geladen sind, Station um Station; sonst kurz warten und auf Rundflug ausweichen */
+    if (KIOSK_TOUR) {
+      if (stories.some(e => kioskYear(e.story) != null)) {
+        if (!kiosk.tour || performance.now() - kiosk.yearT > 24000) { kiosk.yearT = performance.now(); kiosk.tour = kioskStation(!kiosk.tour); }
+        return;
+      }
+      if (!stories.length && performance.now() - kiosk.startedAt < 5000) return;
     }
     kiosk.hdg += REDUCE ? 0.0004 : 0.0012;
     kioskView(kiosk.hdg, -28, 1100);

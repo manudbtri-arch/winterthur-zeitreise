@@ -155,9 +155,13 @@ void main() {
 }`;
 
 const GROUND_FS = `
-czm_material czm_getMaterial(czm_materialInput mi) {
-  czm_material m = czm_getDefaultMaterial(mi);
-  vec2 st = mi.st;
+/* Exakte Distanz in Metern über Tiefenpuffer + homogene Division (ShadowVolumeAppearance teilt positionToEyeEC nicht durch w) */
+czm_material czm_getMaterial(czm_materialInput materialInput) {
+  czm_material m = czm_getDefaultMaterial(materialInput);
+  vec2 st = materialInput.st;
+  float _dp = czm_unpackDepth(texture(czm_globeDepthTexture, gl_FragCoord.xy / czm_viewport.zw));
+  vec4 _ec = czm_windowToEyeCoordinates(gl_FragCoord.xy, _dp);
+  float dist = _dp > 0.0 && abs(_ec.w) > 1e-7 ? length(_ec.xyz / _ec.w) : 2000.0;
   vec4 cls = texture(image, st);
   vec2 g = st * repeat;
   g.x += 0.5 * step(1.0, mod(floor(g.y), 2.0));
@@ -169,9 +173,10 @@ czm_material czm_getMaterial(czm_materialInput mi) {
   float gn = fract(sin(dot(gq, vec2(4.1, 7.7))) * 10000.0);
   float gn2 = fract(sin(dot(floor(st * repeat * 0.05), vec2(2.3, 5.9))) * 10000.0);
   vec3 grass = vec3(0.34, 0.50, 0.24) * (0.82 + 0.22 * gn) * (0.9 + 0.15 * gn2);
-  float wv = 0.5 + 0.5 * sin(dot(st * repeat, vec2(0.9, 0.4)));
-  vec3 water = mix(vec3(0.20, 0.36, 0.48), vec3(0.30, 0.48, 0.60), wv);
-  /* in der Ferne Muster ausblenden, sonst flimmert es */
+  /* sanfte Wellen (~1,6 m), in der Ferne geglättet gegen Moiré-Ringe auf Seen */
+  float wf = dot(st * repeat * 0.14, vec2(0.9, 0.4));
+  float wv = 0.5 + 0.5 * sin(wf);
+  vec3 water = mix(vec3(0.22, 0.38, 0.50), vec3(0.29, 0.46, 0.58), wv);
   /* Minecraft-Look: 1-m-Blöcke mit 16 x 16 Pixeln, jedes Pixel leicht anders getönt */
   if (blocky > 0.5) {
     vec2 mtr = st * repeat * 0.22;                     /* Meter */
@@ -188,16 +193,20 @@ czm_material czm_getMaterial(czm_materialInput mi) {
     grass = vec3(0.40, 0.56, 0.27) * (0.86 + 0.2 * pn) * (pn2 < 0.12 ? 0.9 : 1.0);
     water = vec3(0.20, 0.34, 0.75) * (0.85 + 0.2 * pn);
   }
-  float far = max(smoothstep(25.0, 120.0, length(mi.positionToEyeEC)), smoothstep(0.2, 0.6, max(fwidth(g.x), fwidth(g.y))));
+  /* in der Ferne Muster ausblenden, sonst flimmert es */
+  float far = max(smoothstep(25.0, 120.0, dist), smoothstep(0.2, 0.6, max(fwidth(g.x), fwidth(g.y))));
+  float wfar = max(far, smoothstep(0.15, 0.5, fwidth(wf) / 6.2832));
   cob = mix(cob, vec3(0.50, 0.48, 0.44), far);
   grass = mix(grass, vec3(0.36, 0.50, 0.26), far * 0.8);
+  water = mix(water, blocky > 0.5 ? vec3(0.20, 0.34, 0.75) : vec3(0.26, 0.42, 0.54), wfar);
   /* r = Gasse/Platz, g = Wasser, b = Garten bei Häusern; überall sonst bleibt die Karte sichtbar (Wald, Fels, Seen, Felder) */
-  vec3 col = mix(grass, cob, cls.r);
-  col = mix(col, water, cls.g);
-  float cover = max(max(cls.r, cls.g * 0.92), cls.b * 0.65);
+  float landM = max(cls.r, cls.b);
+  vec3 landCol = mix(grass, cob, cls.r / max(landM, 0.001));
+  vec3 col = mix(landCol, water, cls.g / max(max(cls.g, landM), 0.001));
+  float cover = max(max(cls.r * 0.94, cls.g * 0.90), cls.b * 0.58);
   m.diffuse = col;
-  /* ab rund 300 m weich in die Karte übergehen: keine eckigen Kachelränder, dahinter liegt die Siegfriedkarte */
-  m.alpha = cover * (1.0 - smoothstep(300.0, 800.0, length(mi.positionToEyeEC)));
+  /* ab 800 m weich in die Siegfriedkarte übergehen, deutlich vor der Kachelgrenze (rund 2 km) */
+  m.alpha = cover * (1.0 - smoothstep(800.0, 1700.0, dist));
   return m;
 }`;
 
