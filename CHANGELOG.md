@@ -2,6 +2,7 @@
 
 ## 2026-11-27
 - Bildtest: läuft bei schnell aufeinanderfolgenden Änderungen zu Ende statt abgebrochen zu werden, meldet fehlgeschlagene Abrufe mit Adresse und blendet den Bedienungshinweis aus.
+- Menü in Reitern: «Ort» (Losgehen, Karte, Rundgang, Messen, neu bauen), «Zeit» (Legende, Analyse nach Bauepoche, Neu seit der letzten Kartenausgabe), «Themen» (Bundesdaten) und «Export» (Link, Bild, Einbetten, Liste, GeoJSON); Suche, Baustatus und Einstellungen bleiben immer sichtbar; Pfeiltasten wechseln den Reiter, der gewählte wird gemerkt; Unterrichtsseite und Methodik nennen die Reiter.
 - Zeitsprung: die Karte des neuen Jahres blendet in 0,6 Sekunden weich über die alte, statt hart umzuspringen (bei «Bewegung reduzieren» sofort).
 - Beim ersten Gehen und beim ersten Flug erscheint ein kurzer Hinweis, wie man sich bewegt (Tastatur und Maus bzw. Joystick und Wischen auf dem Handy); er verschwindet mit «Verstanden», beim ersten Schritt oder nach 15 Sekunden und kommt im selben Browser nicht wieder; nicht im Kiosk und in der Einbettung.
 - Ferne nachgebaute Häuser verblassen jetzt im Dunst wie Gelände und echte Altbauten, statt am Horizont hart abzustechen.

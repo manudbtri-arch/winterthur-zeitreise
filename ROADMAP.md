@@ -110,5 +110,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [ ] Nur Brücken, die auf der Karte des Jahres vorkommen. – zurückgestellt: swissTLM3D hat kein Baujahr; Abgleich mit der Karte (Strasse über Gewässer) zuerst an den Testbildern prüfen.
 - [x] Hinweis beim ersten Start, wie man sich bewegt.
 - [x] Sanftes Überblenden beim Zeitsprung.
-- [ ] Menü in Reitern (Ort, Zeit, Themen, Export).
+- [x] Menü in Reitern (Ort, Zeit, Themen, Export).
 - [ ] 3D-Flug in mehrere Dateien aufteilen.

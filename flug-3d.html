@@ -198,6 +198,10 @@ body.intro-on .joy{visibility:hidden}
 body.intro-on .compass{visibility:hidden}
 body.kiosk .compass{display:none}
 @media(max-width:700px){.compass{right:8px;bottom:calc(var(--tl,130px) + 64px)}.panel:not(.off) ~ .compass{visibility:hidden}}
+.tabs{display:flex;gap:2px;margin:12px 0 0;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;border:0;border-bottom:3px solid transparent;background:none;color:var(--mute);font:600 14px Archivo,sans-serif;padding:8px 4px;min-height:40px;cursor:pointer}
+.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--brown)}
+@media(pointer:coarse){.tabs button{min-height:44px;font-size:15px}}
 .hint{position:absolute;z-index:13;left:50%;top:18%;transform:translateX(-50%);width:min(440px,calc(100% - 32px));background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:12px;padding:14px 18px;box-shadow:0 8px 28px rgba(0,0,0,.35)}
 .hint b{display:block;font-size:17px;margin-bottom:6px}
 .hint ul{margin:0 0 4px;padding-left:18px;font-size:15px}
@@ -216,42 +220,60 @@ body.kiosk .compass{display:none}
   <h1>Zeitreise Schweiz</h1>
   <div class="search"><input id="q" type="search" placeholder="Ort oder Adresse suchen …" autocomplete="off" aria-label="Ort suchen"><ul id="qres" hidden></ul></div>
   <p class="sub nokiosk"><a href="./" style="color:var(--blue)">← Übersicht</a> · <a href="karte-2d.html" id="to2d" style="color:var(--blue)">2D-Karte</a></p>
-
-  <button class="btn primary" id="spawn">Losgehen</button>
-  <div class="row2">
-    <button class="btn" id="mapBtn">Karte (M)</button>
-    <button class="btn" id="fullBtn">Vollbild</button>
-  </div>
-  <div class="row2 nokiosk">
-    <button class="btn" id="linkBtn">Link kopieren</button>
-    <button class="btn" id="shotBtn">Bild (P)</button>
-  </div>
-  <button class="btn" id="tourBtn" disabled>Rundgang zu den Geschichten</button>
-  <div class="places" id="places" aria-label="Bekannte Orte"></div>
-  <button class="btn" id="measBtn" aria-pressed="false" title="Zwei Punkte im Bild anklicken">Messen (L)</button>
-  <button class="btn nokiosk" id="embedBtn">Einbetten (Code für Website)</button>
-  <div class="row2 nokiosk">
-    <button class="btn" id="csvBtn" title="Gebäudeliste des gebauten Gebiets">Liste CSV</button>
-    <button class="btn" id="geoBtn" title="Gebäude als GeoJSON für GIS">GeoJSON</button>
-  </div>
-  <button class="btn" id="build">Hier neu bauen</button>
   <div class="prog" aria-hidden="true"><i id="progBar"></i></div>
   <p class="sub" id="bStat" style="margin:8px 0 0" aria-live="polite">Baue Winterthur …</p>
-  <div class="legend" aria-label="Legende">
-    <div><i style="background:#e8d6b4"></i><span><b>Belegt:</b> steht heute noch, 3D-Modell swisstopo, Baujahr GWR</span></div>
-    <div><i id="lgRec" style="background:#bfa98a"></i><span><b>Rekonstruiert:</b> aus der Siegfriedkarte, Höhe geschätzt</span></div>
-    <label class="chk"><input type="checkbox" id="recHl"> Rekonstruierte hervorheben</label>
-    <label class="chk"><input type="checkbox" id="epochOn"> Analyse: nach Bauepoche einfärben</label>
-    <label class="chk"><input type="checkbox" id="newOn"> Neu seit der letzten Kartenausgabe</label>
-    <div id="epochBox" hidden><div class="epochs" id="epochList"></div><span id="epochSum"></span><button class="btn nokiosk" id="epochCsv" type="button" title="Zählung als Tabelle für Excel oder Statistikprogramme">Statistik als CSV</button></div>
-    <div><a href="methodik.html" target="_blank" rel="noopener">Wie das entsteht</a></div>
+
+  <div class="tabs" role="tablist" aria-label="Menü">
+    <button role="tab" id="tabBtnOrt" aria-controls="tabOrt" aria-selected="true">Ort</button>
+    <button role="tab" id="tabBtnZeit" aria-controls="tabZeit" aria-selected="false" tabindex="-1">Zeit</button>
+    <button role="tab" id="tabBtnThemen" aria-controls="tabThemen" aria-selected="false" tabindex="-1">Themen</button>
+    <button role="tab" id="tabBtnExport" class="nokiosk" aria-controls="tabExport" aria-selected="false" tabindex="-1">Export</button>
   </div>
 
-  <details class="more" id="themeBox">
-    <summary>Themen aus Bundesdaten</summary>
-    <div id="themeList"></div>
-    <p class="note" style="margin-top:6px">Klick ins Bild zeigt, was an dieser Stelle verzeichnet ist. Inventare und Daten nach heutigem Stand. <a href="methodik.html#themen" target="_blank" rel="noopener">Quellen</a></p>
-  </details>
+  <div role="tabpanel" id="tabOrt" aria-labelledby="tabBtnOrt">
+    <button class="btn primary" id="spawn">Losgehen</button>
+    <div class="row2">
+      <button class="btn" id="mapBtn">Karte (M)</button>
+      <button class="btn" id="fullBtn">Vollbild</button>
+    </div>
+    <button class="btn" id="tourBtn" disabled>Rundgang zu den Geschichten</button>
+    <div class="places" id="places" aria-label="Bekannte Orte"></div>
+    <button class="btn" id="measBtn" aria-pressed="false" title="Zwei Punkte im Bild anklicken">Messen (L)</button>
+    <button class="btn" id="build">Hier neu bauen</button>
+  </div>
+
+  <div role="tabpanel" id="tabZeit" aria-labelledby="tabBtnZeit" hidden>
+    <div class="legend" aria-label="Legende">
+      <div><i style="background:#e8d6b4"></i><span><b>Belegt:</b> steht heute noch, 3D-Modell swisstopo, Baujahr GWR</span></div>
+      <div><i id="lgRec" style="background:#bfa98a"></i><span><b>Rekonstruiert:</b> aus der Siegfriedkarte, Höhe geschätzt</span></div>
+      <label class="chk"><input type="checkbox" id="recHl"> Rekonstruierte hervorheben</label>
+      <label class="chk"><input type="checkbox" id="epochOn"> Analyse: nach Bauepoche einfärben</label>
+      <label class="chk"><input type="checkbox" id="newOn"> Neu seit der letzten Kartenausgabe</label>
+      <div id="epochBox" hidden><div class="epochs" id="epochList"></div><span id="epochSum"></span><button class="btn nokiosk" id="epochCsv" type="button" title="Zählung als Tabelle für Excel oder Statistikprogramme">Statistik als CSV</button></div>
+      <div><a href="methodik.html" target="_blank" rel="noopener">Wie das entsteht</a></div>
+    </div>
+  </div>
+
+  <div role="tabpanel" id="tabThemen" aria-labelledby="tabBtnThemen" hidden>
+    <div id="themeBox">
+      <p class="sub" style="margin:10px 0 0"><b>Themen aus Bundesdaten</b></p>
+      <div id="themeList"></div>
+      <p class="note" style="margin-top:6px">Klick ins Bild zeigt, was an dieser Stelle verzeichnet ist. Inventare und Daten nach heutigem Stand. <a href="methodik.html#themen" target="_blank" rel="noopener">Quellen</a></p>
+    </div>
+  </div>
+
+  <div role="tabpanel" id="tabExport" class="nokiosk" aria-labelledby="tabBtnExport" hidden>
+    <div class="row2">
+      <button class="btn" id="linkBtn">Link kopieren</button>
+      <button class="btn" id="shotBtn">Bild (P)</button>
+    </div>
+    <button class="btn" id="embedBtn">Einbetten (Code für Website)</button>
+    <div class="row2">
+      <button class="btn" id="csvBtn" title="Gebäudeliste des gebauten Gebiets">Liste CSV</button>
+      <button class="btn" id="geoBtn" title="Gebäude als GeoJSON für GIS">GeoJSON</button>
+    </div>
+    <p class="note">Das Bild nennt Jahr, Ort und Quelle; Liste und GeoJSON zusätzlich das Abrufdatum.</p>
+  </div>
 
   <details class="more">
     <summary>Einstellungen</summary>
@@ -369,6 +391,7 @@ const SRC = {
   karte: {name:'Heute: Landeskarte', layer:'ch.swisstopo.pixelkarte-farbe', fmt:'jpeg', fixed:'current', nz:18}
 };
 const $ = id => document.getElementById(id);
+const KIOSK_Q = new URLSearchParams(location.search).get('kiosk') === '1';
 const C = Cesium;
 /* Höhe über Ellipsoid: Winterthur liegt rund 500 m darüber, also 300 m über Boden */
 const HOME = {lon:8.7290, lat:47.4890, h:800, heading:15, pitch:-22};
@@ -1983,6 +2006,24 @@ $('sheetSize').addEventListener('click', () => {
   $('sheetSize').setAttribute('aria-expanded', full);
 });
 $('sheetClose').addEventListener('click', () => setPanel(false));
+/* Menü in Reitern (Ort, Zeit, Themen, Export); Pfeiltasten wechseln, gewählter Reiter wird im Browser gemerkt */
+{
+  const tabs = [...document.querySelectorAll('.tabs [role=tab]')].filter(t => !(KIOSK_Q && t.classList.contains('nokiosk')));
+  const pick = (t, focus) => {
+    for (const b of tabs) { const on = b === t; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; $(b.getAttribute('aria-controls')).hidden = !on; }
+    if (focus) t.focus();
+    try { localStorage.setItem('zr-tab', t.id); } catch (e) {}
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => pick(t));
+    t.addEventListener('keydown', e => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (d) { e.preventDefault(); e.stopPropagation(); pick(tabs[(i + d + tabs.length) % tabs.length], true); }
+    });
+  });
+  let saved = null; try { saved = localStorage.getItem('zr-tab'); } catch (e) {}
+  const st = tabs.find(t => t.id === saved); if (st) pick(st);
+}
 const ctl = scene.screenSpaceCameraController;
 document.addEventListener('pointerlockchange', () => {
   locked = document.pointerLockElement === canvas;
