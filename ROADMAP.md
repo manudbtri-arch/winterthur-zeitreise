@@ -69,4 +69,10 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Story-Werkstatt: Tabelle (CSV mit den Spalten der Anleitung, Semikolon oder Komma) importieren, damit Gemeinden bestehende Listen übernehmen können.
 - [x] Story-Werkstatt: Knopf «Lage im 3D-Flug ansehen» öffnet den 3D-Flug mit Blick auf den gesetzten Punkt und baut dort die Häuser.
 - [x] Flüssiger und grösser: automatisch nachbauen beim Verlassen des Gebiets, echte Altbauten aller besuchten Gebiete behalten, Gebiet 1,5 km, weniger Rechenarbeit pro Bild, Qualität automatisch senken bei Ruckeln.
-- [ ] Welt in Kacheln wie in Minecraft: Testseite `flug-3d-welt.html` (Kacheln von rund 400 m laden rund um den Standort, die nächsten zuerst, ferne werden entladen). Nach Test durch Manuel als `flug-3d.html` übernehmen.
+- [x] Welt in Kacheln wie in Minecraft: Testseite `flug-3d-welt.html` (Kacheln von rund 400 m laden rund um den Standort, die nächsten zuerst, ferne werden entladen).
+- [ ] (Manuel) Testseite `flug-3d-welt.html` prüfen und freigeben; danach wird sie als `flug-3d.html` übernommen.
+
+## 8. Prüfen, teilen, drucken
+- [ ] Forschung und Gemeinden: Infokarte eines belegten Gebäudes mit Link «Im Gebäuderegister prüfen» (map.geo.admin.ch mit GWR-Ebene an der Lage des Gebäudes), damit Baujahr und Adresse selbst nachgeprüft werden können.
+- [ ] Handy: «Link kopieren» und «Link zu dieser Geschichte» öffnen auf Geräten mit Teilen-Funktion das System-Teilen (Nachricht, Mail), sonst wie bisher kopieren.
+- [ ] Schulen: Unterrichtsseite druckbar als Arbeitsblatt (Druckansicht ohne Navigation, Platz für Antworten, Knopf «Arbeitsblatt drucken»).
