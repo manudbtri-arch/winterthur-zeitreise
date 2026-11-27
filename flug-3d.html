@@ -69,7 +69,10 @@
       <button class="btn" id="shotBtn">Bild (P)</button>
     </div>
     <button class="btn" id="cmpBtn" title="Gleicher Blick im gewählten Jahr und heute nebeneinander">Vorher-Nachher-Bild</button>
-    <button class="btn" id="embedBtn">Einbetten (Code für Website)</button>
+    <div class="row2">
+      <button class="btn" id="embedBtn" title="Code für die eigene Website">Einbetten</button>
+      <button class="btn" id="qrBtn" title="Link als QR-Code zum Aushängen oder Ausdrucken">QR-Code</button>
+    </div>
     <div class="row2">
       <button class="btn" id="csvBtn" title="Gebäudeliste des gebauten Gebiets">Liste CSV</button>
       <button class="btn" id="geoBtn" title="Gebäude als GeoJSON für GIS">GeoJSON</button>
@@ -136,6 +139,14 @@
     <p>Diesen Code in die Website einfügen. Er zeigt die aktuelle Ansicht mit Ort, Jahr und Blickrichtung.</p>
     <textarea id="embedCode" readonly aria-label="Einbettungscode"></textarea>
     <div class="row2"><button class="btn primary" id="embedCopy">Code kopieren</button><button class="btn" id="embedClose">Schliessen</button></div>
+  </div>
+</div>
+<div class="dlg" id="qrDlg" hidden role="dialog" aria-modal="true" aria-labelledby="qrH">
+  <div class="box">
+    <h2 id="qrH">QR-Code zu dieser Ansicht</h2>
+    <p id="qrTxt"></p>
+    <div class="qrwrap"><canvas id="qrCv" width="10" height="10" aria-label="QR-Code"></canvas></div>
+    <div class="row2"><button class="btn primary" id="qrSave">Als Bild speichern</button><button class="btn" id="qrClose">Schliessen</button></div>
   </div>
 </div>
 <div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small><a id="iLink" hidden target="_blank" rel="noopener">Quelle öffnen</a><button class="ishare nokiosk" id="iShare" type="button" hidden>Link zu dieser Geschichte kopieren</button><button class="iclose" id="iClose" type="button" aria-label="Infokarte schliessen" title="Schliessen (Esc)">✕</button></div>
@@ -2295,6 +2306,57 @@ $('embedCopy').addEventListener('click', async () => {
 $('embedClose').addEventListener('click', () => { $('embedDlg').hidden = true; });
 $('embedDlg').addEventListener('click', e => { if (e.target === $('embedDlg')) $('embedDlg').hidden = true; });
 $('embedDlg').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') $('embedDlg').hidden = true; });
+/* ---------- QR-Code: Link als Bild zum Aushängen (Bibliothek qrcode-generator, erst beim ersten Gebrauch geladen) ---------- */
+let qrLib = null;
+const loadQrLib = () => qrLib || (qrLib = new Promise((res, rej) => {
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
+  s.onload = () => typeof window.qrcode === 'function' ? res(window.qrcode) : rej(new Error('qrcode fehlt'));
+  s.onerror = () => { qrLib = null; rej(new Error('nicht geladen')); };
+  document.head.appendChild(s);
+}));
+const qr = {url: '', title: '', file: ''};
+/* QR-Code mit Titel und Quellenzeile auf eine Leinwand zeichnen (weisser Rand, damit Handys ihn sicher lesen) */
+function drawQr(cv, url, title){
+  const q = window.qrcode(0, 'M'); q.addData(url); q.make();
+  const n = q.getModuleCount(), cell = Math.max(6, Math.floor(480 / (n + 8))), pad = 4 * cell, side = n * cell + 2 * pad, band = 96;
+  cv.width = side; cv.height = side + band;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, cv.width, cv.height);
+  g.fillStyle = '#16161a';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) g.fillRect(pad + c * cell, pad + r * cell, cell, cell);
+  g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+  g.fillStyle = '#8a5a2b'; g.font = '800 24px Archivo, system-ui, sans-serif';
+  g.fillText(title, side / 2, side + 30, side - 24);
+  g.fillStyle = '#16161a'; g.font = '600 15px Archivo, system-ui, sans-serif';
+  g.fillText('Mit der Handykamera scannen: 3D-Zeitreise öffnen', side / 2, side + 56, side - 24);
+  g.fillStyle = '#5a5a5f'; g.font = '400 12px Archivo, system-ui, sans-serif';
+  g.fillText('Daten: © swisstopo, BFS Gebäuderegister · Zeitreise Schweiz', side / 2, side + 80, side - 24);
+}
+async function showQr(url, title, file, intro){
+  if (document.pointerLockElement) document.exitPointerLock();
+  try { await loadQrLib(); } catch (e) { toast('QR-Code konnte nicht geladen werden – Internet prüfen', 2600); return; }
+  try { drawQr($('qrCv'), url, title); } catch (e) { toast('Link zu lang für einen QR-Code', 2600); return; }
+  Object.assign(qr, {url, title, file});
+  $('qrTxt').textContent = intro;
+  $('qrDlg').hidden = false; $('qrSave').focus();
+}
+$('qrBtn').addEventListener('click', () => {
+  const y = present ? 'heute' : String(+$('yr').value || 1880);
+  showQr(permalink(), `${placeName} ${y}`, `qr-${fileSlug()}-${y}.png`, `Öffnet den 3D-Flug mit diesem Blick: ${placeName}, ${present ? 'heute' : 'im Jahr ' + y}. Zum Ausdrucken für Ausstellung, Schulzimmer oder Arbeitsblatt.`);
+});
+$('qrSave').addEventListener('click', () => {
+  $('qrCv').toBlob(b => {
+    if (!b) { toast('Bild konnte nicht erstellt werden'); return; }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = qr.file || 'qr-zeitreise.png';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    toast('QR-Code gespeichert');
+  }, 'image/png');
+});
+$('qrClose').addEventListener('click', () => { $('qrDlg').hidden = true; });
+$('qrDlg').addEventListener('click', e => { if (e.target === $('qrDlg')) $('qrDlg').hidden = true; });
+$('qrDlg').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') $('qrDlg').hidden = true; });
 $('openFull').addEventListener('click', () => { $('openFull').href = permalink(); });
 /* 2D-Karte am aktuellen Ort und im gewählten Jahr öffnen */
 $('to2d').addEventListener('click', () => {
@@ -2341,7 +2403,7 @@ function kioskStation(instant = false){
 function kioskStart(){
   kiosk.auto = true; kiosk.hdg = 0; kiosk.yearT = performance.now(); kiosk.ei = 0; kiosk.si = 0; kiosk.tour = false;
   if (document.pointerLockElement) document.exitPointerLock();
-  tourEnd(); closeMap(); $('embedDlg').hidden = true; $('info').hidden = true;
+  tourEnd(); closeMap(); $('embedDlg').hidden = true; $('qrDlg').hidden = true; $('info').hidden = true;
   if (meas.on) setMeasure(false);
   if (present) setPresent(false);
   setMode(false); setPanel(false);

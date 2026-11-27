@@ -164,6 +164,8 @@ body.intro-on .joy{visibility:hidden}
 .dlg .box{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:18px;width:min(560px,100%);box-shadow:0 10px 40px rgba(0,0,0,.4)}
 .dlg h2{font-size:19px;margin:0 0 6px}
 .dlg p{font-size:14px;color:var(--mute);margin:0 0 10px}
+.dlg .qrwrap{display:grid;place-items:center;margin:0 0 12px}
+.dlg .qrwrap canvas{width:min(300px,70vw);height:auto;border:1px solid var(--line);border-radius:8px;background:#fff}
 .dlg textarea{width:100%;height:110px;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);resize:vertical}
 @media(min-width:1200px){.mini.on{display:block}body:has(.mini.on) .f3{bottom:212px}body:has(.mini.on) .panel{max-height:calc(100% - 224px)}}
 .intro .card{max-width:560px;text-align:left}

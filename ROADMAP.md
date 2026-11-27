@@ -155,6 +155,6 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Museen: Im Kiosk-Rundgang bleibt die Infokarte stehen, bis die nächste Station angeflogen wird (keine leere Pause).
 
 ## 17. Aushängen, Tasten, Tafeln vor Ort
-- [ ] Museen und Schulen: Knopf «QR-Code» im Reiter «Export» zeigt den Link zum aktuellen Blick als QR-Code mit Ort und Jahr, als PNG speicherbar (zum Aushängen in der Ausstellung oder auf dem Arbeitsblatt).
+- [x] Museen und Schulen: Knopf «QR-Code» im Reiter «Export» zeigt den Link zum aktuellen Blick als QR-Code mit Ort und Jahr, als PNG speicherbar (zum Aushängen in der Ausstellung oder auf dem Arbeitsblatt).
 - [ ] Bedienung: Taste «H» bzw. Knopf «Tasten und Gesten» öffnet eine Übersicht aller Tasten (Computer) bzw. Gesten (Handy); Esc schliesst sie.
 - [ ] Gemeinden: Infokarte einer Geschichte mit Knopf «QR-Code» (Direktlink `?story=<id>`), z. B. für eine Tafel am Ort.
