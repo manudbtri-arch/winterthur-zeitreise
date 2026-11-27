@@ -137,4 +137,4 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 ## 13. Geschichten im richtigen Jahr, Kartenstand in 2D, Rundgang auf dem Handy
 - [x] Gemeinden und Museen: Sprung zu einer Geschichte (Rundgang, bekannte Orte, Direktlink), die im gewählten Jahr noch nicht oder nicht mehr gilt, wechselt zur ersten passenden Kartenausgabe und meldet das; die Knöpfe der bekannten Orte nennen den Zeitraum.
 - [x] Forschung: 2D-Karte zeigt wie der 3D-Flug das Blatt der Siegfriedkarte am Kartenmittelpunkt mit seinem tatsächlichen Kartenstand (ch.swisstopo.hiks-siegfried.metadata).
-- [ ] Handy: Rundgang-Leiste auf schmalen Bildschirmen einzeilig mit gekürztem Titel und grossen Tasten, damit sie das Bild nicht verdeckt.
+- [x] Handy: Rundgang-Leiste auf schmalen Bildschirmen einzeilig mit gekürztem Titel und grossen Tasten, damit sie das Bild nicht verdeckt.

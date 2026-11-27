@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Handy: die Rundgang-Leiste nutzt die ganze Breite, kürzt lange Titel ab, hat Tasten von 44 px und ein ✕ statt «Beenden», damit sie schmal bleibt und gut zu treffen ist.
 - 2D-Karte: bei der Siegfriedkarte steht unter der Jahrzahl (im Vergleich an der jeweiligen Seite) das Blatt am Kartenmittelpunkt mit seinem tatsächlichen Kartenstand, wie im 3D-Flug; in der Methodik genannt.
 - Geschichten im richtigen Jahr: Wer zu einer Geschichte springt (Rundgang, bekannte Orte, Direktlink), die im gewählten Jahr noch nicht oder nicht mehr gilt, landet in der ersten passenden Kartenausgabe (oder heute) mit kurzer Meldung; die Knöpfe der bekannten Orte nennen den Zeitraum («ab 1869»).
 - Kiosk mit eigener Story-Datei (`flug-3d.html?kiosk=1&stories=<name>`): im Leerlauf ein Rundgang statt Rundflug, alle 24 Sekunden die nächste Geschichte mit Infokarte im passenden Jahr; im Kiosk erscheint kein Quellen-Link nach aussen mehr; auf Produktseite und in der Partner-Anleitung erklärt.

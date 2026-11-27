@@ -123,8 +123,14 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
 .mini span{position:absolute;z-index:500;left:6px;bottom:4px;font-size:10px;color:#333;background:rgba(255,255,255,.75);padding:0 4px;border-radius:3px;pointer-events:none}
 .tour{position:absolute;z-index:12;left:50%;top:16px;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:6px 8px;box-shadow:0 6px 24px rgba(0,0,0,.3);max-width:calc(100% - 32px)}
 .tour .btn{width:auto;margin:0;min-height:40px;padding:6px 14px;border-radius:20px}
-.tour span{font-size:14px;font-weight:600;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media(max-width:700px){.tour{top:52px}}
+.tour #tourLbl{font-size:14px;font-weight:600;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto}
+.tour .tendx{display:none}
+@media(max-width:700px){
+  .tour{top:52px;left:8px;right:8px;transform:none;max-width:none;gap:6px;padding:4px 6px}
+  .tour .btn{min-height:44px;min-width:44px;padding:4px 10px;flex:none;font-size:18px}
+  .tour #tourLbl{font-size:13px;padding:0 2px}
+  .tour .tend{display:none}.tour .tendx{display:inline}
+}
 .places{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .places button{border:1px solid var(--line);background:var(--bg);color:var(--ink);font:600 13px Archivo,sans-serif;border-radius:16px;padding:6px 12px;min-height:36px;cursor:pointer}
 .places button:hover{border-color:var(--brown)}
