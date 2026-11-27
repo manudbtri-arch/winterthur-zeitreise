@@ -1143,7 +1143,7 @@ function buildHouses(center){
   const [lon, lat] = center || centerLonLat();
   if (bldTs && bldTs.customShader) bldTs.customShader.setUniform('u_up', C.Ellipsoid.WGS84.geodeticSurfaceNormal(C.Cartesian3.fromDegrees(lon, lat), new C.Cartesian3()));
   world.forced = {pt: [lon, lat], cam: C.Cartesian3.clone(camera.position)};
-  $('bld').checked = false;
+  if (!present) $('bld').checked = false;   /* im Heute-Modus (z. B. Link mit mode=now) bleiben alle heutigen Gebäude an */
   buildingLayer().catch(() => {});
   schedTick();
 }

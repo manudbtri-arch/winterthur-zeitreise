@@ -128,6 +128,6 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Handy: im Querformat Zeitregler und Menü schmaler, damit mehr vom Bild sichtbar bleibt.
 
 ## 12. Nächste Runde
-- [ ] Bildtest prüfen: im Bild «3-winterthur-heute» (Stand 5557c5a) sind keine 3D-Gebäude zu sehen – Ladezeit im Test oder Fehler im Heute-Modus? Ursache finden und beheben.
+- [x] Bildtest prüfen: im Bild «3-winterthur-heute» (Stand 5557c5a) sind keine 3D-Gebäude zu sehen – Ladezeit im Test oder Fehler im Heute-Modus? Ursache finden und beheben. – Ursache: nach dem Laden des Geländes schaltete «Häuser bauen» die heutigen Gebäude wieder aus; behoben.
 - [ ] Museen: Kiosk mit eigener Story-Datei und Rundgang statt Rundflug (`?kiosk=1&stories=<name>`), Stationen wechseln im Leerlauf.
 - [ ] Forschung: Gebäudeliste um das Alter im gewählten Jahr ergänzen (nur bei genauem Baujahr), in der Methodik erklärt.

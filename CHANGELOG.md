@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Fehler behoben: ein Link mit `mode=now` (Heute) zeigte nach dem Laden des Geländes keine 3D-Gebäude, weil das Bauen die heutigen Gebäude wieder ausschaltete; gefunden im Bildtest.
 - Handy im Querformat: Menü schmal links, Zeitregler kompakt rechts unten, Infokarte rechts, Tastenhilfe und Minikarte ausgeblendet, damit mehr vom 3D-Bild sichtbar bleibt.
 - Unterrichtsseite: Auftrag 6 «Vorher und nachher» mit dem Vorher-Nachher-Bild (Veränderungen beschreiben, mit den Infokarten belegen, sichere Aussagen von Vermutungen trennen); druckbar mit Antwortlinien; Produktseite nennt sechs Aufträge.
 - Kiosk für jeden Ort: `flug-3d.html?kiosk=1` mit Ort im Link (z. B. aus «Link kopieren») kreist um diesen Ort statt um Winterthur, die Höhe kommt aus dem Gelände; Produktseite erklärt, wie man den Link baut.
