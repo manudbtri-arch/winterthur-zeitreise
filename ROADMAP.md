@@ -85,10 +85,10 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 8. Bundesdaten nutzen (Auftrag Manuel)
 - [x] Kartenstand pro Blatt der Siegfriedkarte unter dem Zeitregler (ch.swisstopo.hiks-siegfried.metadata).
-- [ ] Historische Verkehrswege IVS (ASTRA) als Thema mit Infokarte.
-- [ ] ISOS, schützenswerte Ortsbilder (BAK) als Thema mit Infokarte.
-- [ ] Kulturgüterschutz-Inventar KGS (BABS) als Thema mit Infokarte.
-- [ ] Luftbilder swisstopo (LUBIS): Aufnahmeorte als Thema mit Infokarte.
-- [ ] Ortsnamen swissNAMES3D als Thema.
-- [ ] Heutige Gewässer swissTLM3D als Thema (Vergleich mit der Karte).
-- [ ] Arealstatistik BFS als Thema mit Infokarte.
+- [x] Historische Verkehrswege IVS (ASTRA) als Thema mit Infokarte.
+- [x] ISOS, schützenswerte Ortsbilder (BAK) als Thema mit Infokarte.
+- [x] Kulturgüterschutz-Inventar KGS (BABS) als Thema mit Infokarte.
+- [x] Luftbilder swisstopo (LUBIS): Aufnahmeorte als Thema mit Infokarte.
+- [x] Ortsnamen swissNAMES3D als Thema.
+- [x] Heutige Gewässer swissTLM3D als Thema (Vergleich mit der Karte).
+- [x] Arealstatistik BFS als Thema mit Infokarte.

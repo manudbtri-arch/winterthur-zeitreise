@@ -243,6 +243,12 @@ body.kiosk .compass{display:none}
     <div><a href="methodik.html" target="_blank" rel="noopener">Wie das entsteht</a></div>
   </div>
 
+  <details class="more" id="themeBox">
+    <summary>Themen aus Bundesdaten</summary>
+    <div id="themeList"></div>
+    <p class="note" style="margin-top:6px">Klick ins Bild zeigt, was an dieser Stelle verzeichnet ist. Inventare und Daten nach heutigem Stand. <a href="methodik.html#themen" target="_blank" rel="noopener">Quellen</a></p>
+  </details>
+
   <details class="more">
     <summary>Einstellungen</summary>
     <label for="src">Kartengrund</label>
@@ -440,6 +446,7 @@ const tile = (key, year) => {
 };
 viewer.imageryLayers.addImageryProvider(tile('karte'));
 let top = null;
+let themeLayers = [];   /* eingeblendete Themen (Bundesdaten), bleiben über der Karte */
 
 /* Oberfläche & Jahr */
 $('src').innerHTML = Object.keys(SRC).map(k=>`<option value="${k}">${SRC[k].name}</option>`).join('');
@@ -471,6 +478,7 @@ function showLayer(){
   $('yBig').textContent = s.fixed ? (key==='dufour' ? '1850' : 'heute') : (key==='luft' && y===1928 ? 1927 : y);
   $('yLbl').textContent = s.name + (key === 'sieg' && sheet.txt ? ' · ' + sheet.txt : '');
   const next = viewer.imageryLayers.addImageryProvider(tile(key, y));
+  for (const l of themeLayers) viewer.imageryLayers.raiseToTop(l);
   const old = top; top = next;
   if (old) setTimeout(() => { if (old !== top) viewer.imageryLayers.remove(old, true); }, 1500);
 }
@@ -1707,7 +1715,7 @@ function showInfo(p){
   } else return false;
   $('iTitle').textContent = title; $('iText').textContent = text; $('iSrc').textContent = src;
   $('iBadge').textContent = badge; $('iBadge').classList.toggle('rec', rec);
-  $('iLink').hidden = !link; if (link) $('iLink').href = link;
+  $('iLink').hidden = !link; if (link) $('iLink').href = link; $('iLink').textContent = 'Quelle öffnen';
   infoStory = story; $('iShare').hidden = !story;
   $('info').hidden = false;
   clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, hold);
@@ -1718,8 +1726,78 @@ canvas.addEventListener('click', e => {
   if (meas.on) { measureAt(pos); return; }
   let hit = null; try { hit = scene.pick(pos); } catch (err) {}
   if (hit && showInfo(hit)) return;
+  /* Themen eingeschaltet: Klick auf den Boden fragt ab, was dort verzeichnet ist */
+  if (THEMES.some(t => t.on)) {
+    const ray = camera.getPickRay(pos), gp = ray && globe.pick(ray, scene);
+    if (gp) { const cg = C.Cartographic.fromCartesian(gp); themeInfo(C.Math.toDegrees(cg.longitude), C.Math.toDegrees(cg.latitude)); return; }
+  }
   if (!locked) try { canvas.requestPointerLock(); } catch (err) {}
 });
+
+/* ---------- Themen aus Bundesdaten: als Kartenebene über der Siegfriedkarte, Klick zeigt den Eintrag ---------- */
+const THEMES = [
+  {key: 'ivs', name: 'Historische Verkehrswege (IVS)', draw: ['ch.astra.ivs-nat', 'ch.astra.ivs-reg_loc', 'ch.astra.ivs-nat_wegbegleiter'], ask: ['ch.astra.ivs-nat', 'ch.astra.ivs-reg_loc'], src: 'Bundesamt für Strassen ASTRA, Inventar historischer Verkehrswege (IVS)'},
+  {key: 'isos', name: 'Schützenswerte Ortsbilder (ISOS)', draw: ['ch.bak.bundesinventar-schuetzenswerte-ortsbilder'], alpha: 0.7, src: 'Bundesamt für Kultur BAK, ISOS'},
+  {key: 'kgs', name: 'Kulturgüter (KGS-Inventar)', draw: ['ch.babs.kulturgueter'], src: 'Bundesamt für Bevölkerungsschutz BABS, KGS-Inventar'},
+  {key: 'lubis', name: 'Luftbilder swisstopo: Aufnahmeorte', draw: ['ch.swisstopo.lubis-luftbilder_schwarzweiss', 'ch.swisstopo.lubis-luftbilder_farbe'], time: '99991231', src: 'swisstopo, Luftbilder (LUBIS)'},
+  {key: 'names', name: 'Ortsnamen (swissNAMES3D)', draw: ['ch.swisstopo.swissnames3d'], src: 'swisstopo, swissNAMES3D'},
+  {key: 'gew', name: 'Heutige Gewässer (swissTLM3D)', draw: ['ch.swisstopo.swisstlm3d-gewaessernetz'], src: 'swisstopo, swissTLM3D Gewässernetz'},
+  {key: 'areal', name: 'Bodennutzung (Arealstatistik)', draw: ['ch.bfs.arealstatistik'], time: '2024', identTime: 2024, alpha: 0.6, src: 'Bundesamt für Statistik BFS, Arealstatistik'}
+];
+for (const t of THEMES) { t.on = false; t.imgs = []; if (!t.ask) t.ask = t.draw; }
+function setTheme(t, on){
+  t.on = on;
+  for (const l of t.imgs) { viewer.imageryLayers.remove(l, true); themeLayers = themeLayers.filter(x => x !== l); }
+  t.imgs = [];
+  if (on) for (const id of t.draw) {
+    const l = viewer.imageryLayers.addImageryProvider(new C.UrlTemplateImageryProvider({
+      url: `https://wmts.geo.admin.ch/1.0.0/${id}/default/${t.time || 'current'}/3857/{z}/{x}/{y}.png`,
+      tilingScheme: new C.WebMercatorTilingScheme(), maximumLevel: 18, credit: t.src}));
+    if (t.alpha) l.alpha = t.alpha;
+    t.imgs.push(l); themeLayers.push(l);
+  }
+}
+{
+  const box = $('themeList');
+  for (const t of THEMES) {
+    const lab = document.createElement('label'), cb = document.createElement('input');
+    lab.className = 'chk'; cb.type = 'checkbox';
+    cb.addEventListener('change', () => setTheme(t, cb.checked));
+    lab.append(cb, document.createTextNode(' ' + t.name));
+    box.appendChild(lab);
+  }
+}
+/* Jahreszahl in einem Eintrag (z. B. Aufnahmedatum eines Luftbilds) */
+function hitYear(r){
+  for (const [k, v] of Object.entries(r.attributes || {})) if (/date|datum|jahr|year/i.test(k)) { const m = String(v).match(/\b(1[89]\d\d|20\d\d)\b/); if (m) return m[1]; }
+  return '';
+}
+async function themeInfo(lon, lat){
+  const on = THEMES.filter(t => t.on);
+  $('iTitle').textContent = 'Abfrage läuft …'; $('iText').textContent = on.map(t => t.name).join(' · ');
+  $('iSrc').textContent = ''; $('iBadge').textContent = 'Bundesdaten'; $('iBadge').classList.remove('rec');
+  $('iLink').hidden = true; $('iShare').hidden = true; infoStory = null; $('info').hidden = false;
+  clearTimeout(infoTimer);
+  const res = await Promise.all(on.map(t => identifyAt(lon, lat, t.ask, t.identTime ? `&timeInstant=${t.identTime}` : '', 12).then(r => r.map(x => ({t, x})))));
+  const hits = res.flat();
+  const lines = [], seen = new Set();
+  for (const {t, x} of hits) {
+    const lb = hitLabel(x), yr = hitYear(x), line = `${t.name}: ${lb || 'Eintrag'}${yr && !lb.includes(yr) ? ` (${yr})` : ''}`;
+    if (!seen.has(line)) { seen.add(line); lines.push(line); }
+  }
+  const [E, N] = toLV95(lon, lat), ids = on.flatMap(t => t.draw).join(',');
+  if (!lines.length) {
+    $('iTitle').textContent = 'Hier nichts verzeichnet';
+    $('iText').textContent = `In den eingeschalteten Themen gibt es an dieser Stelle keinen Eintrag (Umkreis rund 12 m).`;
+  } else {
+    $('iTitle').textContent = lines[0];
+    $('iText').textContent = lines.slice(1, 6).join(' · ') + (lines.length > 6 ? ` · und ${lines.length - 6} weitere` : '');
+  }
+  $('iSrc').textContent = 'Quelle: ' + [...new Set(on.map(t => t.src))].join('; ') + ' · via geo.admin.ch';
+  $('iLink').href = `https://map.geo.admin.ch/#/map?lang=de&center=${E.toFixed(0)},${N.toFixed(0)}&z=10&layers=${ids}`;
+  $('iLink').textContent = 'Im Kartenportal des Bundes ansehen'; $('iLink').hidden = false;
+  infoTimer = setTimeout(() => { $('info').hidden = true; }, 25000);
+}
 
 /* ---------- Messen: zwei Punkte im 3D-Bild, Distanz und Höhenunterschied ---------- */
 const meas = {on: false, pts: [], ents: []};
