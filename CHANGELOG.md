@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- 3D-Flug: Infokarte einer Geschichte mit Link «Zeitraffer von oben» – zeigt die Entwicklung rund um die Geschichte in Luftbildern bis heute (nicht im Kiosk).
 - Zeitraffer mit eigener Story-Datei (`zeitraffer.html?stories=<name>`): die Geschichten der Datei erscheinen als Ausschnitte zum Anklicken (Text und Quelle in der Beschreibung), der erste wird gleich geladen; Link und «Im 3D-Flug» nehmen den Namen mit; in der Partner-Anleitung erklärt.
 - Zeitraffer: der Bildstreifen (PNG) nennt unter dem Titel zusätzlich die Mitte des Ausschnitts in LV95 und das Abrufdatum.
 - Zeitraffer: neuer Knopf «Liste der Stände (CSV)» speichert je gezeigtes Bild Jahr, Kartenwerk, Ebene, Zeitstand, Farbe und Bodenauflösung, Mitte in LV95, Ausschnittbreite, Abrufdatum und ob der Stand beim Dienst geprüft ist; in der Methodik erklärt.

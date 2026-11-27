@@ -183,3 +183,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Forschung: Zeitraffer speichert die Liste der gezeigten Stände als CSV (Jahr, Quelle, Ebene, Zeitstand, Farbe/Schwarzweiss, Bodenauflösung, Mitte in LV95, Ausschnittbreite, Abrufdatum), damit Bildreihen zitierbar sind.
 - [x] Forschung: Bildstreifen (PNG) nennt unten Abrufdatum und Mitte des Ausschnitts in LV95.
 - [x] Gemeinden: Zeitraffer lädt mit `?stories=<name>` die Geschichten einer Story-Datei als Sprungziele (wie 3D-Flug und 2D-Karte).
+
+## 23. Zeitraffer überall erreichbar
+- [x] Gemeinden und Museen: Infokarte einer Geschichte im 3D-Flug mit Link «Zeitraffer von oben» (Ausschnitt um die Geschichte).
+- [ ] 2D-Karte: «Ausschnitt als Zeitraffer von oben» nimmt die eigene Story-Datei und das gezeigte Jahr (`e=`) mit.
+- [ ] Barrierefreiheit: QR-Fenster im Zeitraffer hält den Tastaturfokus und gibt ihn beim Schliessen (auch mit Esc) an den Knopf zurück.

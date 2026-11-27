@@ -163,7 +163,7 @@
     <div class="row2"><button class="btn primary" id="helpClose">Schliessen</button></div>
   </div>
 </div>
-<div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small><a id="iLink" hidden target="_blank" rel="noopener">Quelle öffnen</a><button class="ishare nokiosk" id="iShare" type="button" hidden>Link zu dieser Geschichte kopieren</button><button class="ishare nokiosk" id="iQr" type="button" hidden title="Für eine Tafel am Ort">QR-Code zu dieser Geschichte</button><button class="iclose" id="iClose" type="button" aria-label="Infokarte schliessen" title="Schliessen (Esc)">✕</button></div>
+<div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small><a id="iLink" hidden target="_blank" rel="noopener">Quelle öffnen</a><button class="ishare nokiosk" id="iShare" type="button" hidden>Link zu dieser Geschichte kopieren</button><button class="ishare nokiosk" id="iQr" type="button" hidden title="Für eine Tafel am Ort">QR-Code zu dieser Geschichte</button><a class="ishare nokiosk" id="iTl" href="zeitraffer.html" hidden title="Entwicklung rund um diese Geschichte in Luftbildern und Karten">Zeitraffer von oben</a><button class="iclose" id="iClose" type="button" aria-label="Infokarte schliessen" title="Schliessen (Esc)">✕</button></div>
 
 <a class="pill openfull" id="openFull" href="flug-3d.html" target="_blank" rel="noopener" hidden>↗ Im Vollbild öffnen</a>
 <button class="pill" id="pill" hidden>☰ Menü <span style="color:var(--mute)">(Tab)</span></button>
@@ -1620,7 +1620,7 @@ function showInfo(p){
   $('iTitle').textContent = title; $('iText').textContent = text; $('iSrc').textContent = src;
   $('iBadge').textContent = badge; $('iBadge').classList.toggle('rec', rec);
   $('iLink').hidden = !link; if (link) $('iLink').href = link; $('iLink').textContent = linkTxt;
-  infoStory = story; $('iShare').hidden = $('iQr').hidden = !story;
+  infoStory = story; $('iShare').hidden = $('iQr').hidden = $('iTl').hidden = !story;
   $('info').hidden = false;
   clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, hold);
   return true;
@@ -1689,7 +1689,7 @@ async function themeInfo(lon, lat){
   const on = THEMES.filter(t => t.on);
   $('iTitle').textContent = 'Abfrage läuft …'; $('iText').textContent = on.map(t => t.name).join(' · ');
   $('iSrc').textContent = ''; $('iBadge').textContent = 'Bundesdaten'; $('iBadge').classList.remove('rec');
-  $('iLink').hidden = true; $('iShare').hidden = $('iQr').hidden = true; infoStory = null; $('info').hidden = false;
+  $('iLink').hidden = true; $('iShare').hidden = $('iQr').hidden = $('iTl').hidden = true; infoStory = null; $('info').hidden = false;
   clearTimeout(infoTimer);
   const res = await Promise.all(on.map(t => identifyAt(lon, lat, t.ask, t.identTime ? `&timeInstant=${t.identTime}` : '', 12).then(r => r.map(x => ({t, x})))));
   const hits = res.flat();
@@ -1745,7 +1745,7 @@ function measureAt(pos){
   $('iText').textContent = `waagrecht ${m(flat)} · Höhenunterschied ${dz >= 0 ? '+' : '−'}${Math.round(Math.abs(dz))} m${slope}`;
   $('iSrc').textContent = 'Gemessen im 3D-Bild (Gelände und Gebäude von swisstopo). Richtwert, keine amtliche Vermessung.';
   $('iBadge').textContent = 'Messung'; $('iBadge').classList.remove('rec');
-  $('iLink').hidden = true; $('iShare').hidden = $('iQr').hidden = true; infoStory = null; $('info').hidden = false;
+  $('iLink').hidden = true; $('iShare').hidden = $('iQr').hidden = $('iTl').hidden = true; infoStory = null; $('info').hidden = false;
   clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, 30000);
 }
 $('measBtn').addEventListener('click', () => setMeasure(!meas.on));
@@ -2251,6 +2251,15 @@ $('iQr').addEventListener('click', () => {
   clearTimeout(infoTimer);
   const t = $('iTitle').textContent, slug = infoStory.toLowerCase().replace(/[^a-z0-9-]+/g, '-');
   showQr(storyUrl(infoStory), t, `qr-geschichte-${slug}.png`, `Öffnet den 3D-Flug bei der Geschichte «${t}» mit Infokarte. Geeignet für eine Tafel am Ort oder einen Ausstellungstext.`);
+});
+/* Zeitraffer von oben rund um die Geschichte (Luftbilder bis heute) */
+$('iTl').addEventListener('click', () => {
+  const ent = infoStory && stories.find(e => e.story && e.story.id === infoStory);
+  if (!ent) return;
+  clearTimeout(infoTimer);
+  const q = new URLSearchParams({lat: ent.story.lat.toFixed(5), lon: ent.story.lon.toFixed(5), z: 16, mode: 'luft', name: $('iTitle').textContent.slice(0, 70)});
+  if (STORY_NAME) q.set('stories', STORY_NAME);
+  $('iTl').href = 'zeitraffer.html?' + q.toString();
 });
 loadStories(`stories/${STORY_NAME || 'winterthur'}.json`, !!STORY_NAME);
 
