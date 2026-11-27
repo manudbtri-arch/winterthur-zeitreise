@@ -7,7 +7,7 @@ Die Schweiz zwischen 1844 und heute: historische Karten und Luftbilder von swiss
 - `karte-2d.html` – Zeitregler, Zeitraffer, Wischvergleich, Ortssuche, Geschichten-Marker, Link und QR-Code zur Ansicht (Leaflet)
 - `zeitraffer.html` – Zeitraffer von oben für bestimmte Bereiche: 8 kuratierte Schweizer Entwicklungs-Orte (u. a. Sulzer-Areal Winterthur, Flughafen Zürich-Kloten, Zürich-West, Basel Rheinhafen, Grande Dixence, Grindelwald- und Aletschgletscher, Bern Wankdorf) sowie jeder beliebige Ausschnitt der Schweiz per Suche/Verschieben; echte Luftbild- und Karten-Epochen bis heute (automatisch über swisstopo-Releases/Flugjahre ohne leere Stände), Vorher/Jetzt-Wischvergleich, Epochen-Streifen, PNG- und WebM-Video-Export, Permalink und QR-Code
 - `methodik.html` – Datenquellen, Verfahren, Genauigkeit, bekannte Grenzen, Export-Spalten und Zitiervorschlag
-- `unterricht.html` – Unterrichtsvorschlag mit sieben Aufträgen für Schulen, druckbar als Arbeitsblatt
+- `unterricht.html` – Unterrichtsvorschlag mit acht Aufträgen für Schulen, druckbar als Arbeitsblatt
 - `stories/` – Belegte Geschichten an Orten (`winterthur.json`, `basel.json`, `grindelwald.json`), Partner-Anleitung (`README.md`) und Browser-Editor (`werkstatt.html`)
 - `fonts/` – Selbst gehostete Schriftart Archivo (WOFF2, SIL OFL 1.1), ohne Abruf bei Google Fonts
 - `tests/bildtest.mjs` – Automatischer Bildtest über GitHub Actions (`.github/workflows/bildtest.yml`)
