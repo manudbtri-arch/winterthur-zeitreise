@@ -140,7 +140,22 @@ footer a{color:var(--mute)}
   <li><b>Gebietsgrösse:</b> Gebaut wird ein Ausschnitt von rund 1,3 × 1,3 km; ausserhalb liegt nur die Karte auf dem Gelände.</li>
 </ul>
 
-<h2 id="zitieren">6. Zitiervorschlag</h2>
+<h2 id="statistik">6. Statistik der Bauepochen (CSV)</h2>
+<p>Im Analyse-Modus speichert der Knopf «Statistik als CSV» die angezeigte Zählung. Gezählt werden nur belegte Gebäude: solche, die heute noch stehen und im Gebäuderegister ein Baujahr oder eine Bauperiode haben, im gebauten Gebiet von rund 1,3 × 1,3 km und bis zum gewählten Jahr. Rekonstruierte Häuser sind nicht enthalten, weil ihr Baujahr unbekannt ist.</p>
+<div class="tbl"><table>
+  <thead><tr><th>Spalte</th><th>Bedeutung</th></tr></thead>
+  <tbody>
+    <tr><td>auswertung</td><td>«epoche» (nach Bauepoche) oder «neu» (Neu seit der letzten Kartenausgabe)</td></tr>
+    <tr><td>kategorie</td><td>Bauepoche bzw. Zeitraum; «vor 1919, Jahr unbekannt» = Bauperiode ohne genaues Jahr im Register</td></tr>
+    <tr><td>anzahl, anteil_prozent</td><td>Zahl der Gebäude und Anteil an allen belegten Gebäuden im Gebiet</td></tr>
+    <tr><td>stand_jahr</td><td>gewähltes Jahr am Zeitregler oder «heute»</td></tr>
+    <tr><td>ort, mitte_e_lv95, mitte_n_lv95</td><td>Ortsname und Mitte des gebauten Gebiets in LV95 (Näherungsformel)</td></tr>
+    <tr><td>quelle</td><td>Datenquelle der Zählung</td></tr>
+  </tbody>
+</table></div>
+<p>Die Zählung zeigt den heutigen Bestand nach Baualter, nicht den Bestand im gewählten Jahr: abgerissene Gebäude fehlen im Register.</p>
+
+<h2 id="zitieren">7. Zitiervorschlag</h2>
 <p>Bitte immer die zugrunde liegenden Daten mitnennen:</p>
 <div class="cite" id="cite">Zeitreise Schweiz: 3D-Ansicht [Ort], Kartenstand [Jahr].
 https://manudbtri-arch.github.io/winterthur-zeitreise/ (abgerufen am [Datum]).
