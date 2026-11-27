@@ -115,6 +115,8 @@ details.more[open] summary::after{content:"▴"}
 .iclose:hover{background:var(--line);color:var(--ink)}
 @media(pointer:coarse){.iclose{width:44px;height:44px}}
 .intro{position:absolute;z-index:20;inset:0;display:grid;place-items:center;padding:24px;background:linear-gradient(180deg,rgba(20,18,14,.55),rgba(20,18,14,.8));color:#f3eee3;transition:opacity .4s}
+.intro[hidden]{display:none}
+.intro a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .intro.off{opacity:0;pointer-events:none}
 body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timeline,body.intro-on .mini{visibility:hidden}
 .mini{position:absolute;z-index:10;left:16px;bottom:16px;width:180px;height:180px;border-radius:10px;overflow:hidden;border:2px solid var(--panel);box-shadow:0 6px 24px rgba(0,0,0,.3);background:#eee;cursor:pointer;display:none}

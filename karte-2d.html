@@ -6,8 +6,7 @@
 <title>Zeitreise Schweiz – 2D-Karte</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Crect width='30' height='30' rx='6' fill='%239a4a2c'/%3E%3Cpath d='M7 20h16v3H7zM9 13l4-4 4 4v7H9zM17 15l3-3 3 3v5h-6z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="fonts/archivo.css">
 <style>
 /* VOICE: ruhig, kartografisch, wie ein Kartenblatt mit Randlegende
    IDEA: der Blattrand einer Siegfriedkarte – Legende und Jahrzahl am Rand
@@ -336,6 +335,8 @@ async function loadStories(file){
       pl.appendChild(b);
     }
     $('placesLbl').textContent = (typeof data.ort === 'string' && data.ort.trim() ? data.ort.trim() + ': ' : '') + 'springen zu';
+    const sq = new URLSearchParams(location.search);
+    if (!sq.has('lat') && !sq.has('lon')) map.setView(jumps[0][1], 15);
   }
 }
 loadStories(`stories/${STORY_NAME || 'winterthur'}.json`);

@@ -1,0 +1,51 @@
+{
+  "ort": "Grindelwald",
+  "hinweis": "Nur belegte Angaben mit Quelle. Weichen Quellen voneinander ab, ist das im Text vermerkt.",
+  "geschichten": [
+    {
+      "id": "kirche",
+      "titel": "Reformierte Kirche",
+      "text": "Die heutige Saalkirche am östlichen Ortskern entstand 1793–1795 nach Plänen von Christian Friedrich Anneler unter Einbezug älterer Mauern; der Kirchturm erhielt 1875 seine heutige Form. Zusammen mit dem Pfarrhaus (1784–1789) und der Pfrundscheune bildet sie ein denkmalgeschütztes Ensemble.",
+      "von": 1795,
+      "bis": null,
+      "adresse": "Dorfstrasse 202, 3818 Grindelwald",
+      "lon": 8.045698,
+      "lat": 46.624870,
+      "quelle": "Bauinventar des Kantons Bern; Wikipedia, «Reformierte Kirche Grindelwald»",
+      "url": "https://de.wikipedia.org/wiki/Reformierte_Kirche_Grindelwald"
+    },
+    {
+      "id": "bahnhof",
+      "titel": "Bahnhof Grindelwald (BOB)",
+      "text": "Am 1. Juli 1890 nahm die meterspurige Berner Oberland-Bahn (BOB) von Interlaken Ost über Zweilütschinen nach Grindelwald und Lauterbrunnen den Betrieb auf; am 17. März 1914 wurde sie elektrifiziert. Auf der Siegfriedkarte erscheint die Bahnstrecke erst nach 1890.",
+      "von": 1890,
+      "bis": null,
+      "lon": 8.034457,
+      "lat": 46.624237,
+      "quelle": "Wikipedia, «Berner-Oberland-Bahn»",
+      "url": "https://de.wikipedia.org/wiki/Berner-Oberland-Bahn"
+    },
+    {
+      "id": "dorfbrand",
+      "titel": "Dorfbrand 1892 (Hotel Bär)",
+      "text": "Am 18. August 1892 brach im Föhnsturm im Hotel Bär ein Grossbrand aus, der innert zwei Stunden talauswärts 116 Gebäude zerstörte, darunter das neue Bahnhofsgebäude. Das anschliessend massiv neu errichtete Grandhotel Bär wurde kurz darauf eröffnet (Wikipedia: 1893; Grindelwaldgeschichten: 1894) und brannte 1941 erneut ab.",
+      "von": 1892,
+      "bis": 1941,
+      "lon": 8.035426,
+      "lat": 46.624275,
+      "quelle": "Peter Bernet, grindelwaldgeschichten.ch; Wikipedia, «Grindelwald»",
+      "url": "https://www.grindelwaldgeschichten.ch/zeitlupe/dorfbrand-grindelwald"
+    },
+    {
+      "id": "wengernalpbahn",
+      "titel": "Wengernalpbahn (Grund)",
+      "text": "Die 1893 eröffnete schmalspurige Zahnradbahn verbindet Grindelwald über die Kleine Scheidegg und Wengen mit Lauterbrunnen. Über die Talstation im Grund erschloss sie das Hochgebirge und prägte den frühen Alpentourismus.",
+      "von": 1893,
+      "bis": null,
+      "lon": 8.023329,
+      "lat": 46.622650,
+      "quelle": "Wikipedia, «Wengernalpbahn»",
+      "url": "https://de.wikipedia.org/wiki/Wengernalpbahn"
+    }
+  ]
+}

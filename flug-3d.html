@@ -8,7 +8,7 @@
 <script>window.CESIUM_BASE_URL = 'https://cdn.jsdelivr.net/npm/cesium@1.120.0/Build/Cesium/';</script>
 <link rel="preload" as="script" href="https://cdn.jsdelivr.net/npm/cesium@1.120.0/Build/Cesium/Cesium.js">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cesium@1.120.0/Build/Cesium/Widgets/widgets.css">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="fonts/archivo.css">
 <link rel="stylesheet" href="flug-3d.css">
 </head>
 <body class="intro-on">
@@ -96,6 +96,12 @@
     <label class="chk"><input type="checkbox" id="miniOn" checked> Minikarte (breiter Bildschirm)</label>
     <label class="chk"><input type="checkbox" id="storyOn" checked> Geschichten an Orten (Marker)</label>
 
+    <label>Qualität</label>
+    <div class="seg" role="group" aria-label="Darstellungsqualität">
+      <button id="qLow" type="button" aria-pressed="false">Niedrig</button>
+      <button id="qMid" type="button" aria-pressed="false">Mittel</button>
+      <button id="qHigh" type="button" aria-pressed="true">Hoch</button>
+    </div>
     <label>Bewegung</label>
     <div class="seg" role="group" aria-label="Bewegungsart">
       <button id="mFly" aria-pressed="true">Fliegen</button>
@@ -187,7 +193,7 @@
 <div class="intro" id="intro">
   <div class="card">
     <p class="kicker">Eine Zeitreise mit Karten von swisstopo</p>
-    <h2>Winterthur um 1880</h2>
+    <h2 id="introTitle">Winterthur um 1880</h2>
     <p>Die Altstadt, wie sie auf der Siegfriedkarte steht: echte Häuser, die heute noch stehen, und nachgebaute, die längst abgerissen sind. Geh durch die Gassen und zieh unten am Zeitregler bis 1940.</p>
     <div class="search intro-search"><input id="q2" type="search" placeholder="Oder einen Ort in der Schweiz suchen …" autocomplete="off" aria-label="Ort suchen"><ul id="qres2" hidden></ul></div>
     <div class="row">
@@ -199,11 +205,51 @@
   </div>
 </div>
 
+<div class="intro" id="noWebgl" hidden role="alertdialog" aria-labelledby="noWebglH" aria-describedby="noWebglTxt">
+  <div class="card">
+    <p class="kicker">Zeitreise Schweiz</p>
+    <h2 id="noWebglH">3D-Ansicht nicht verfügbar</h2>
+    <p id="noWebglTxt">Dieser Browser oder dieses Gerät unterstützt kein WebGL (3D-Grafik) oder die 3D-Engine konnte nicht geladen werden. Die 2D-Karte mit Zeitregler, Wischvergleich und allen Geschichten funktioniert ohne 3D-Grafik.</p>
+    <div class="row">
+      <a class="btn primary" id="noWebgl2d" href="karte-2d.html">Zur 2D-Karte wechseln</a>
+      <a class="btn ghost" href="./">Zur Übersicht</a>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/cesium@1.120.0/Build/Cesium/Cesium.js"></script>
 <script src="flug-3d-shader.js"></script>
 <script src="flug-3d-worker.js"></script>
 <script>
-{
+(() => {
+const $ = id => document.getElementById(id);
+const showNoWebgl = (msg) => {
+  const q = new URLSearchParams(location.search), out = new URLSearchParams({mode: 'time'});
+  const lon = Number(q.get('lon')), lat = Number(q.get('lat')), yr = Math.round(Number(q.get('year')));
+  if (lon > 5.5 && lon < 11 && lat > 45.5 && lat < 48) { out.set('lat', lat.toFixed(5)); out.set('lon', lon.toFixed(5)); out.set('z', '16'); }
+  if (yr >= 1870 && yr <= 1949) { out.set('t', 'sieg'); out.set('y', String(yr)); }
+  if (/^[a-z0-9-]{1,40}$/.test(q.get('stories') || '')) out.set('stories', q.get('stories'));
+  $('noWebgl2d').href = 'karte-2d.html?' + out.toString();
+  if (msg) $('noWebglTxt').textContent = msg;
+  $('intro').hidden = true;
+  document.body.classList.add('intro-on');
+  $('noWebgl').hidden = false;
+  $('noWebgl2d').focus();
+};
+if (typeof Cesium === 'undefined') {
+  showNoWebgl('Die 3D-Engine (CesiumJS) konnte nicht geladen werden – möglicherweise blockiert eine Firewall den Abruf oder die Verbindung fehlt. Die 2D-Karte funktioniert auch ohne 3D-Ansicht.');
+  return;
+}
+const hasWebgl = (() => {
+  try {
+    const cv = document.createElement('canvas');
+    const gl = cv.getContext('webgl2') || cv.getContext('webgl') || cv.getContext('experimental-webgl');
+    if (gl) { const ext = gl.getExtension('WEBGL_lose_context'); if (ext) ext.loseContext(); return true; }
+  } catch (e) {}
+  return false;
+})();
+if (!hasWebgl) { showNoWebgl(); return; }
+
 const EDITIONS_MARKS = [1880, 1900, 1920, 1940];
 const SRC = {
   sieg:  {name:'Siegfriedkarte', layer:'ch.swisstopo.hiks-siegfried', fmt:'png', min:1870, max:1949, ts:y=>String(y), nz:16, def:1880},
@@ -213,11 +259,11 @@ const SRC = {
   foto:  {name:'Heute: Luftbild', layer:'ch.swisstopo.swissimage', fmt:'jpeg', fixed:'current', nz:19},
   karte: {name:'Heute: Landeskarte', layer:'ch.swisstopo.pixelkarte-farbe', fmt:'jpeg', fixed:'current', nz:18}
 };
-const $ = id => document.getElementById(id);
 const KIOSK = new URLSearchParams(location.search).get('kiosk') === '1';
 const C = Cesium;
 /* Höhe über Ellipsoid: Winterthur liegt rund 500 m darüber, also 300 m über Boden */
 const HOME = {lon:8.7290, lat:47.4890, h:800, heading:15, pitch:-22};
+let WALK_HOME = [8.7300, 47.4995];
 /* «Bewegung reduzieren» im System: Kamerafahrten kurz statt lang */
 const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const flyDur = d => REDUCE ? Math.min(d, 0.3) : d;
@@ -240,12 +286,23 @@ const LINK = (() => {
     mode: ['fly', 'walk', 'now'].includes(q.get('mode')) ? q.get('mode') : 'fly'};
 })();
 
-const viewer = new C.Viewer('scene', {
-  baseLayer:false, geocoder:false, baseLayerPicker:false, timeline:false, animation:false,
-  homeButton:false, sceneModePicker:false, navigationHelpButton:false, fullscreenButton:false,
-  infoBox:false, selectionIndicator:false
-});
+let viewer;
+try {
+  viewer = new C.Viewer('scene', {
+    baseLayer:false, geocoder:false, baseLayerPicker:false, timeline:false, animation:false,
+    homeButton:false, sceneModePicker:false, navigationHelpButton:false, fullscreenButton:false,
+    infoBox:false, selectionIndicator:false
+  });
+} catch (err) {
+  console.error(err);
+  showNoWebgl();
+  return;
+}
 const scene = viewer.scene, camera = scene.camera, globe = scene.globe;
+viewer.canvas.addEventListener('webglcontextlost', e => {
+  e.preventDefault();
+  showNoWebgl('Die 3D-Grafik wurde vom Gerät unterbrochen (zu wenig Grafikspeicher). Lade die Seite neu oder wechsle auf die schnelle 2D-Karte.');
+});
 /* fester Sommervormittag, damit die Hauswände schön schattiert sind */
 viewer.clock.currentTime = C.JulianDate.fromIso8601('2026-06-21T13:30:00Z');   /* Sommernachmittag, warmes Licht aus Südwest */
 viewer.clock.shouldAnimate = false;
@@ -259,9 +316,10 @@ if (location.protocol === 'file:') {
 C.CesiumTerrainProvider.fromUrl('https://3d.geo.admin.ch/ch.swisstopo.terrain.3d/v1/', {requestVertexNormals:true})
   .then(tp => {
     viewer.terrainProvider = tp; terrainOk = true; globe.enableLighting = false;
-    buildHouses(LINK ? LINK.c : (KIOSK_TOUR && stories.length ? [stories[0].story.lon, stories[0].story.lat] : [8.7290, 47.4997]));
+    buildHouses(LINK ? LINK.c : (STORY_NAME && stories.length ? [stories[0].story.lon, stories[0].story.lat] : [8.7290, 47.4997]));
     bridgeLayer();
     if (KIOSK_TOUR && kiosk.auto && tourIdx >= 0 && stories[tourIdx] && !Number.isFinite(stories[tourIdx].story._gh)) tourGo(tourIdx, true, 0);
+    else if (STORY_NAME && !LINK && !KIOSK_TOUR && stories.length) centerStoryTown(stories[0].story);
   })
   .catch(err => {
     console.error(err);
@@ -284,14 +342,39 @@ scene.fog.enabled = true;
 scene.postProcessStages.fxaa.enabled = true;          /* Kanten glätten */
 if (scene.msaaSupported) scene.msaaSamples = 4;
 scene.highDynamicRange = false;
-/* Fernsicht (J): mehr Details in der Ferne gegen etwas weniger Bilder pro Sekunde */
-let farView = true;
+/* Fernsicht (J) und Qualitätsstufen (Niedrig / Mittel / Hoch) für schwächere Geräte */
+let farView = true, qual = PHONE ? 'mid' : 'high';
 function setFarView(on){
   farView = on;
-  globe.maximumScreenSpaceError = on ? 2 : 4;
-  scene.fog.density = (on ? (walk ? 2e-4 : 1.2e-4) : 6e-4) * (PHONE ? 2 : 1);   /* beim Gehen weniger Gelände am Horizont laden */
-  if (bldTs) bldTs.maximumScreenSpaceError = on ? 16 : 32;
+  globe.maximumScreenSpaceError = on ? 2 : (qual === 'low' ? 5 : 4);
+  scene.fog.density = (on ? (walk ? 2e-4 : 1.2e-4) : (qual === 'low' ? 9e-4 : 6e-4)) * (PHONE ? 2 : 1);   /* beim Gehen weniger Gelände am Horizont laden */
+  if (bldTs) bldTs.maximumScreenSpaceError = on ? 16 : (qual === 'low' ? 40 : 32);
 }
+function setQuality(q){
+  qual = q;
+  $('qLow').setAttribute('aria-pressed', q === 'low');
+  $('qMid').setAttribute('aria-pressed', q === 'mid');
+  $('qHigh').setAttribute('aria-pressed', q === 'high');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  if (q === 'low') {
+    viewer.shadows = false; $('shadowOn').checked = false;
+    scene.msaaSamples = 1;
+    viewer.resolutionScale = 0.75;
+    setFarView(false);
+  } else if (q === 'mid') {
+    viewer.shadows = false; $('shadowOn').checked = false;
+    scene.msaaSamples = 1;
+    viewer.resolutionScale = 1;
+    setFarView(false);
+  } else {
+    if (scene.msaaSupported) scene.msaaSamples = 4;
+    viewer.resolutionScale = dpr;
+    setFarView(true);
+  }
+}
+$('qLow').addEventListener('click', () => { setQuality('low'); toast('Qualität: Niedrig (schont Akku und Grafik)'); });
+$('qMid').addEventListener('click', () => { setQuality('mid'); toast('Qualität: Mittel'); });
+$('qHigh').addEventListener('click', () => { setQuality('high'); toast('Qualität: Hoch'); });
 let toastT;
 function toast(t, ms = 1600){ const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, ms); }
 
@@ -1470,8 +1553,8 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
 $('introWalk').addEventListener('click', async () => {
   closeIntro();
   /* noch nicht geladen: losgehen, sobald die ersten Häuser stehen */
-  if (!chunkReadyAt(8.7300, 47.4995)) { world.pendingWalk = [8.7300, 47.4995]; say('Gleich geht es los – die ersten Häuser laden …'); return; }
-  await spawn(densestStreet(8.7300, 47.4995));
+  if (!chunkReadyAt(WALK_HOME[0], WALK_HOME[1])) { world.pendingWalk = [...WALK_HOME]; say('Gleich geht es los – die ersten Häuser laden …'); return; }
+  await spawn(densestStreet(WALK_HOME[0], WALK_HOME[1]));
 });
 $('introFly').addEventListener('click', () => { closeIntro(); goHome(1.5); showHint('fly'); });
 
@@ -2066,11 +2149,25 @@ async function loadStories(file, check){
     b.addEventListener('click', () => { closeIntro(); if (storyPlace) placeName = storyPlace; tourGo(i, false); });
     pl.appendChild(b);
   });
-  /* Kiosk mit eigener Story-Datei: Ort auf erste Station legen */
-  if (KIOSK_TOUR && stories.length) {
+  /* Eigene Story-Datei ohne explizite Koordinaten: Ort, Startbildschirm, Kamera und Kacheln auf diesen Ort ausrichten */
+  if (STORY_NAME && stories.length && !LINK) {
     const s0 = stories[0].story;
-    if (!LINK) { if (storyPlace) placeName = storyPlace; if (terrainOk) buildHouses([s0.lon, s0.lat]); }
+    if (storyPlace) { placeName = storyPlace; $('introTitle').textContent = `${storyPlace} um 1880`; $('bStat').textContent = `Baue ${storyPlace} …`; }
+    WALK_HOME = [s0.lon, s0.lat];
+    if (terrainOk) buildHouses([s0.lon, s0.lat]);
+    if (!KIOSK_TOUR && !STORY_ID) centerStoryTown(s0);
   }
+}
+async function centerStoryTown(st){
+  let gh = 450;
+  if (terrainOk) {
+    try {
+      const [p] = await C.sampleTerrainMostDetailed(viewer.terrainProvider, [C.Cartographic.fromDegrees(st.lon, st.lat)]);
+      if (Number.isFinite(p.height) && p.height > 150 && p.height < 4800) gh = p.height;
+    } catch (e) {}
+  }
+  HOME.lon = st.lon; HOME.lat = st.lat - 0.008; HOME.h = Math.round(gh + 360); HOME.heading = 10; HOME.pitch = -24;
+  goHome(0);
 }
 /* Zeitraum einer Geschichte (von/bis) als kurzer Text und erste Kartenausgabe, in der sie gilt */
 const storyRange = st => st.von != null && st.bis != null ? `${st.von}–${st.bis}` : st.von != null ? `ab ${st.von}` : st.bis != null ? `bis ${st.bis}` : '';
@@ -2506,6 +2603,7 @@ if (KIOSK) {
   });
   kioskStart();
 }
+if (PHONE) setQuality('mid');
 if (LINK) {
   closeIntro();
   camera.setView({destination: C.Cartesian3.fromDegrees(LINK.lon, LINK.lat, LINK.h),
@@ -2514,7 +2612,7 @@ if (LINK) {
   if (LINK.mode === 'now') setPresent(true);
   if (LINK.mode === 'walk') { setMode(true); setPanel(false); }
 }
-}
+})();
 </script>
 </body>
 </html>

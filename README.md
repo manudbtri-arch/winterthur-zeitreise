@@ -2,12 +2,13 @@
 
 Die Schweiz zwischen 1844 und heute: historische Karten und Luftbilder von swisstopo, in 2D und als begehbare 3D-Welt.
 
-- `index.html` – Produkt- und Übersichtsseite mit eingebettetem 3D-Flug
-- `flug-3d.html` (mit `flug-3d.css`, `flug-3d-shader.js`, `flug-3d-worker.js`) – Siegfriedkarte auf dem 3D-Gelände von swisstopo in Kacheln rund um den Standort bis zum Horizont, Ego-Steuerung mit WASD/Maus bzw. Touch-Joystick (CesiumJS). Heute noch stehende Gebäude erscheinen als echte swissBUILDINGS3D-Modelle, gefiltert nach Baujahr aus dem Gebäuderegister (GWR, über `api3.geo.admin.ch`, Verknüpfung über EGID). Abgerissene Häuser werden im Browser aus den schwarzen Hausflächen der Siegfriedkarte rekonstruiert (Web Worker, Zwischenspeicher in IndexedDB) und mit Satteldächern (oder Stufendächern im Minecraft-Look) auf das Gelände gesetzt. Enthält Analyse nach Bauepoche, Themen aus Bundesdaten (IVS, ISOS, KGS, LUBIS, swissNAMES3D, Gewässer, Arealstatistik), Messwerkzeug, Bild-, Vorher-Nachher-, CSV- und GeoJSON-Export, QR-Codes (Ansicht und Geschichte), Übersicht der Tasten (H) sowie Kiosk- und Einbettungsmodus.
+- `index.html` – Produkt- und Übersichtsseite mit echtem 3D-Vorschaubild (`assets/`), Beispielorten, Open-Graph-Vorschau und eingebettetem 3D-Flug
+- `flug-3d.html` (mit `flug-3d.css`, `flug-3d-shader.js`, `flug-3d-worker.js`) – Siegfriedkarte auf dem 3D-Gelände von swisstopo in Kacheln rund um den Standort bis zum Horizont, Ego-Steuerung mit WASD/Maus bzw. Touch-Joystick (CesiumJS), WebGL-Fallback zur 2D-Karte und Qualitätsstufen (Niedrig/Mittel/Hoch). Heute noch stehende Gebäude erscheinen als echte swissBUILDINGS3D-Modelle, gefiltert nach Baujahr aus dem Gebäuderegister (GWR, über `api3.geo.admin.ch`, Verknüpfung über EGID). Abgerissene Häuser werden im Browser aus den schwarzen Hausflächen der Siegfriedkarte rekonstruiert (Web Worker, Zwischenspeicher in IndexedDB) und mit Satteldächern (oder Stufendächern im Minecraft-Look) auf das Gelände gesetzt. Enthält Analyse nach Bauepoche, Themen aus Bundesdaten (IVS, ISOS, KGS, LUBIS, swissNAMES3D, Gewässer, Arealstatistik), Messwerkzeug, Bild-, Vorher-Nachher-, CSV- und GeoJSON-Export, QR-Codes (Ansicht und Geschichte), Übersicht der Tasten (H) sowie Kiosk- und Einbettungsmodus.
 - `karte-2d.html` – Zeitregler, Zeitraffer, Wischvergleich, Ortssuche, Geschichten-Marker, Link und QR-Code zur Ansicht (Leaflet)
 - `methodik.html` – Datenquellen, Verfahren, Genauigkeit, bekannte Grenzen, Export-Spalten und Zitiervorschlag
 - `unterricht.html` – Unterrichtsvorschlag mit sieben Aufträgen für Schulen, druckbar als Arbeitsblatt
-- `stories/` – Belegte Geschichten an Orten (`winterthur.json`), Partner-Anleitung (`README.md`) und Browser-Editor (`werkstatt.html`)
+- `stories/` – Belegte Geschichten an Orten (`winterthur.json`, `basel.json`, `grindelwald.json`), Partner-Anleitung (`README.md`) und Browser-Editor (`werkstatt.html`)
+- `fonts/` – Selbst gehostete Schriftart Archivo (WOFF2, SIL OFL 1.1), ohne Abruf bei Google Fonts
 - `tests/bildtest.mjs` – Automatischer Bildtest über GitHub Actions (`.github/workflows/bildtest.yml`)
 
 Läuft über GitHub Pages. Lokal geöffnet (Doppelklick auf die Datei) lädt das 3D-Gelände nicht, weil der Browser von einer lokalen Datei aus keine Daten fremder Server nachladen darf.

@@ -1,6 +1,10 @@
 # Änderungen
 
 ## 2026-11-27
+- Produktseite: echtes 3D-Vorschaubild (`assets/vorschau.webp`) statt schematischem SVG, Open-Graph-/Social-Vorschau (`assets/og-vorschau.jpg`), Direktlinks zu drei Beispielorten mit Geschichten (Winterthur, Basel, Grindelwald), konkretere Angaben zu Aufwand und Rahmen von Pilotprojekten sowie einheitliche Ansprache ohne Du/Sie-Wechsel.
+- Zwei neue belegte Beispiel-Story-Dateien: `stories/basel.json` (Münster, Rathaus, Mittlere Rheinbrücke, Spalentor nach KGS) und `stories/grindelwald.json` (Reformierte Kirche, Bahnhof BOB, Dorfbrand 1892, Wengernalpbahn); beim Öffnen von `?stories=<name>` ohne Koordinaten richten sich 3D-Flug und 2D-Karte automatisch auf diesen Ort aus.
+- Datenschutz: Schriftart Archivo selbst gehostet (`fonts/`, WOFF2, SIL OFL 1.1) – keine Abrufe an `fonts.googleapis.com` oder `fonts.gstatic.com` mehr auf allen sechs Seiten.
+- 3D-Flug: sauberer WebGL- und Cesium-Fallback (`#noWebgl`, inkl. `webglcontextlost`) mit direktem Wechsel zur 2D-Karte am selben Ort/Jahr, sowie explizite Qualitätsstufen (Niedrig / Mittel / Hoch) in den Einstellungen für schwächere Geräte.
 - Barrierefreiheit im 3D-Flug: In den Fenstern «Einbetten», «QR-Code» und «Tasten und Gesten» bleibt der Tastaturfokus beim Tabben im Fenster; nach dem Schliessen steht er wieder auf dem Knopf, der das Fenster geöffnet hat.
 - Infokarte einer Geschichte nennt neben «Geschichte» den Zeitraum aus der Story-Datei («1869–1900», «ab 1869»).
 - Produktseite: «So setzen Sie es ein» nennt den QR-Code für Exponate im Museum und das QR-Druckblatt der Story-Werkstatt für Tafeln in der Gemeinde.
