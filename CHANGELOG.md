@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Kiosk-Rundgang: die Infokarte einer Geschichte bleibt stehen, bis die nächste Station sie ersetzt, statt kurz vorher zu verschwinden.
 - Story-Werkstatt nennt die Testlinks für 3D-Flug, 2D-Karte und Kiosk-Rundgang.
 - 2D-Karte mit eigener Story-Datei: die Sprungziele sind die Geschichten der Datei, überschrieben mit dem Ort aus der Datei, statt der Winterthurer Quartiere.
 - Unterrichtsseite: Auftrag 7 «Wie alt ist die Karte?» – Blatt und Kartenstand unter dem Zeitregler ablesen, mit dem gewählten Jahr und einem zweiten Ort vergleichen, die Abweichung mit der Methodik erklären; neues Lernziel; Produktseite nennt sieben Aufträge.

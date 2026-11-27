@@ -1406,7 +1406,7 @@ function showInfo(p){
   let title = '', text = '', badge = '', src = '', rec = false, link = '', linkTxt = 'Quelle öffnen', hold = 7000, story = null;
   if (p && p.id instanceof C.Entity && p.id.story) {
     const st = p.id.story;
-    title = st.titel; text = st.text; badge = 'Geschichte'; hold = 20000;
+    title = st.titel; text = st.text; badge = 'Geschichte'; hold = KIOSK ? 60000 : 20000;   /* im Kiosk-Rundgang bis zur nächsten Station */
     src = 'Quelle: ' + st.quelle;
     link = /^https:\/\//.test(st.url || '') ? st.url : '';
     story = STORY_ID_RE.test(String(st.id || '')) ? String(st.id) : null;
