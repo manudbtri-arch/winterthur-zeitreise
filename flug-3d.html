@@ -591,16 +591,20 @@ function wallBox(w, d, hgt, kind, cm){
   }
   return g;
 }
-/* Schräge Dachplatte: Box, deren obere Ecken auf die Dachhöhe zOf(q) gesenkt werden (q = Meter quer zum First);
+/* Schräge Dachplatte: Box, deren obere Ecken auf die Dachhöhe zOf(q) gesenkt werden (q = Meter quer zum First), Dachfläche mit Ziegelraster;
    axis 1 = quer ist Nord (y), 0 = quer ist Ost (x); slope = Höhenänderung pro Meter quer, für die Normale der Dachfläche */
-function gableBox(w, d, hgt, axis, zOf, slope){
+function gableBox(w, d, hgt, axis, zOf, slope, a0 = 0){
   const g = C.BoxGeometry.createGeometry(C.BoxGeometry.fromDimensions({dimensions: new C.Cartesian3(w, d, hgt), vertexFormat: C.VertexFormat.POSITION_NORMAL_AND_ST}));
   const P = g.attributes.position.values, Nn = g.attributes.normal.values, S = g.attributes.st.values;
   const len = Math.hypot(slope, 1), nq = -slope / len, nz = 1 / len;
   for (let i = 0, k = 0; k < S.length; i += 3, k += 2) {
     S[k] = 0; S[k + 1] = -10;
     if (P[i + 2] > 0) P[i + 2] = -hgt / 2 + zOf(axis ? P[i + 1] : P[i]);
-    if (Nn[i + 2] > 0.5) { Nn[i] = axis ? 0 : nq; Nn[i + 1] = axis ? nq : 0; Nn[i + 2] = nz; }
+    if (Nn[i + 2] > 0.5) {
+      Nn[i] = axis ? 0 : nq; Nn[i + 1] = axis ? nq : 0; Nn[i + 2] = nz;
+      /* Ziegelraster im Wand-Shader: längs ab a0 (Meter, für alle Reihen des Hauses gleich), quer aus der Dachhöhe, damit die Reihen über die Platten durchlaufen */
+      S[k] = a0 + (axis ? P[i] : P[i + 1]); S[k + 1] = -100 - (12 - zOf(axis ? P[i + 1] : P[i])) * len / Math.max(Math.abs(slope), 0.05);
+    }
   }
   return g;
 }
@@ -739,7 +743,7 @@ async function buildEdition(area, year, reg, token, emit, lite){
               const mr = {gen: year, floors: c.floors, hall: c.hall, far};
               inst.push(new C.GeometryInstance({
                 id: mr,
-                geometry: gableBox(sw, sd, hmax, alongX ? 1 : 0, q => gableH(c, tOf(q)), slope),
+                geometry: gableBox(sw, sd, hmax, alongX ? 1 : 0, q => gableH(c, tOf(q)), slope, (b + n / 2) * cm * (alongX ? 1 : -1)),
                 modelMatrix: C.Transforms.eastNorthUpToFixedFrame(C.Cartesian3.fromDegrees(alongX ? lonC : cellLon(tc), alongX ? cellLat(tc) : latC, c.base + c.h + hmax / 2)),
                 attributes: {color: C.ColorGeometryInstanceAttribute.fromColor(rc)}
               }));

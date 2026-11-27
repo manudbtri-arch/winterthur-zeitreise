@@ -109,7 +109,18 @@ void main() {
   nEC = faceforward(nEC, vec3(0.0, 0.0, 1.0), -nEC);
   vec3 base = czm_gammaCorrect(v_color).rgb;
   vec3 c = base;
-  if (v_st.y > -5.0) {
+  if (v_st.y < -50.0) {
+    /* Satteldach: Biberschwanz-Ziegel in versetzten Reihen (st.x = Meter längs, -100 - st.y = Meter quer zum First) */
+    float d = -100.0 - v_st.y, a = v_st.x;
+    float rowI = floor(d / 0.26), row = fract(d / 0.26);
+    float colI = floor(a / 0.17 + 0.5 * mod(rowI, 2.0)), colF = fract(a / 0.17 + 0.5 * mod(rowI, 2.0));
+    float tn = fract(sin(dot(vec2(colI, rowI), vec2(12.9898, 78.233))) * 43758.5453);
+    vec3 t = base * (0.86 + 0.22 * tn);
+    t *= 1.0 - 0.28 * smoothstep(0.72, 1.0, row);
+    t *= 1.0 - 0.10 * (step(colF, 0.05) + step(0.95, colF));
+    float fwR = max(fwidth(d / 0.26), fwidth(a / 0.17));
+    c = mix(t, base * 0.95, smoothstep(0.15, 0.5, fwR));
+  } else if (v_st.y > -5.0) {
     bool hall = v_st.y > 40.0;
     float fl = hall ? v_st.y - 50.0 : v_st.y;
     float fx = fract(v_st.x), fy = fract(fl);

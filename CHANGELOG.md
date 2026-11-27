@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-27
+- Die Satteldächer der nachgebauten Häuser tragen jetzt Biberschwanz-Ziegel in versetzten Reihen wie die echten Altbauten; die Reihen laufen über das ganze Dach durch und werden in der Ferne zu einer ruhigen Dachfarbe.
 - Wiederhergestellt, was bei der Übernahme der Kachel-Welt verloren ging: Link «Im Gebäuderegister prüfen» und Alter im gewählten Jahr in der Infokarte, System-Teilen auf dem Handy, Spalten `gwr_link` und `abgerufen_am` in Gebäudeliste, GeoJSON und Statistik-CSV. Neu steht in allen drei Exporten das Blatt der Siegfriedkarte mit Kartenstand (`siegfried_blatt`); in der Methodik erklärt.
 - 3D-Flug aufgeteilt, dritter Schritt: die Gestaltung (CSS) liegt in `flug-3d.css`.
 - 3D-Flug aufgeteilt, zweiter Schritt: die Auswertung der Kartenbilder liegt in `flug-3d-worker.js` und läuft direkt als Web Worker; startet er nicht, rechnet die Seite wie bisher selbst.
