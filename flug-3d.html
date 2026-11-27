@@ -370,6 +370,8 @@ const HOME = {lon:8.7290, lat:47.4890, h:800, heading:15, pitch:-22};
 /* «Bewegung reduzieren» im System: Kamerafahrten kurz statt lang */
 const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const flyDur = d => REDUCE ? Math.min(d, 0.3) : d;
+/* Handy (Touch, kleiner Bildschirm): kürzere Sichtweite, weniger Kacheln im Speicher, dichterer Dunst am Rand */
+const PHONE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 820;
 /* Permalink: ?lon=&lat=&h=&hdg=&pitch=&year=&mode=(fly|walk|now)&c=lon,lat (Mitte des gebauten Gebiets) */
 const LINK = (() => {
   const q = new URLSearchParams(location.search), num = k => (q.has(k) && q.get(k) !== '' ? Number(q.get(k)) : NaN);
@@ -430,7 +432,7 @@ let farView = true;
 function setFarView(on){
   farView = on;
   globe.maximumScreenSpaceError = on ? 2 : 4;
-  scene.fog.density = on ? (walk ? 2e-4 : 1.2e-4) : 6e-4;   /* beim Gehen weniger Gelände am Horizont laden */
+  scene.fog.density = (on ? (walk ? 2e-4 : 1.2e-4) : 6e-4) * (PHONE ? 2 : 1);   /* beim Gehen weniger Gelände am Horizont laden */
   if (bldTs) bldTs.maximumScreenSpaceError = on ? 16 : 32;
 }
 let toastT;
@@ -1413,7 +1415,7 @@ function currentFocus(){
 }
 const NEAR = 2;           /* rundherum volle Details (Fenster, Türen, Pflaster) */
 const MID = 5;            /* bis hier mit Gebäuderegister: echte Altbauten statt Klötzen */
-const MAX_CHUNKS = 320;   /* Obergrenze, damit der Speicher nicht vollläuft */
+const MAX_CHUNKS = PHONE ? 140 : 320;   /* Obergrenze, damit der Speicher nicht vollläuft (Handy: weniger) */
 const KM = 410;           /* eine Kachel in Metern (Zoomstufe 16, Schweiz) */
 function sayStatus(){
   if (present) return;
@@ -1423,7 +1425,7 @@ function sayStatus(){
 }
 /* Wie weit reicht der Blick? Strahl durch den oberen Bildrand bis zum Boden, sonst bis zur Obergrenze (Horizont) */
 function reach(){
-  const cap = walk ? 6000 : 8000;
+  const cap = PHONE ? (walk ? 2500 : 3500) : (walk ? 6000 : 8000);
   try {
     const ray = camera.getPickRay(new C.Cartesian2(canvas.clientWidth / 2, Math.max(2, canvas.clientHeight * 0.02)));
     const hit = ray && globe.pick(ray, scene);
@@ -1437,7 +1439,7 @@ function schedTick(){
   const f = currentFocus(); if (!f) return;
   world.focus = f;
   const cc = C.Cartographic.fromCartesian(camera.position), gh = globe.getHeight(cc);
-  const R = Math.max(NEAR + 1, reach() / KM), Rc = Math.ceil(R), Rkeep = Math.max(R, 8) + 1.5;
+  const R = Math.max(NEAR + 1, reach() / KM), Rc = Math.ceil(R), Rkeep = Math.max(R, PHONE ? 5 : 8) + 1.5;
   const fx = lon2x(f[0]) / CHUNK, fy = lat2y(f[1]) / CHUNK;
   const dOf = (tx, ty) => Math.hypot(tx + 0.5 - fx, ty + 0.5 - fy);
   /* im Bild? Kachel als Kugel auf Bodenhöhe gegen den Sichtkegel der Kamera prüfen */

@@ -98,7 +98,7 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [ ] Offene Fragen anhand der Testbilder klären (Kartenstand, Luftbild-Orte, Arealstatistik, Brücken, Seen). – zurückgestellt: der erste Bildtest lief am 27.11. noch, Zweig «bildtest» gab es noch nicht.
 - [x] Fenster der nachgebauten Häuser als Wandmuster statt Klötze.
 - [x] Heutige 3D-Gebäude nur einmal laden.
-- [ ] Handy: kleinere Sichtweite.
+- [x] Handy: kleinere Sichtweite.
 - [ ] Baujahre vorberechnet mitliefern (prüfen, ob machbar).
 - [ ] Satteldächer für nachgebaute Häuser (Minecraft-Look als Schalter).
 - [ ] Dunst auf fernen Häusern.
