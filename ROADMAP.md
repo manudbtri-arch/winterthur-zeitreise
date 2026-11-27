@@ -188,3 +188,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Gemeinden und Museen: Infokarte einer Geschichte im 3D-Flug mit Link «Zeitraffer von oben» (Ausschnitt um die Geschichte).
 - [x] 2D-Karte: «Ausschnitt als Zeitraffer von oben» nimmt die eigene Story-Datei und das gezeigte Jahr (`e=`) mit.
 - [x] Barrierefreiheit: QR-Fenster im Zeitraffer hält den Tastaturfokus und gibt ihn beim Schliessen (auch mit Esc) an den Knopf zurück.
+
+## 24. Zeitraffer zitieren und einsetzen
+- [x] Forschung: Methodik mit Zitiervorschlag für eine Bildreihe aus dem Zeitraffer (Ort, Stände, Ebene, Abrufdatum).
+- [ ] Produktseite: Karte «In der Forschung» nennt die Liste der Stände (CSV) aus dem Zeitraffer.
+- [ ] Schulen: Hinweise für Lehrpersonen nennen den Zeitraffer als Einstieg auf langsamen Geräten (ohne 3D).
