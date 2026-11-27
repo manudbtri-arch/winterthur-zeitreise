@@ -57,3 +57,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] 3D-Flug: Link «2D-Karte» öffnet die 2D-Karte am aktuellen Ort und im gewählten Jahr.
 - [x] 2D-Karte: Knopf «Im 3D-Flug ansehen» öffnet den 3D-Flug am Kartenmittelpunkt und baut dort die Häuser.
 - [x] Unterrichtsseite: in Auftrag 1 den Vergleich mit Wischregler in der 2D-Karte als Alternative für langsame Geräte nennen.
+
+## 7. Weitere Schritte
+- [ ] Forschung: Statistik der Bauepochen im Analyse-Modus als CSV herunterladen (Epoche, Anzahl, Anteil, Jahr, Ort, Quelle).
+- [ ] Handy: Kompass-Knopf im 3D-Flug zeigt die Blickrichtung; Antippen dreht den Blick nach Norden.
+- [ ] Gemeinden und Museen: «Story-Werkstatt» `stories/werkstatt.html` – Geschichten im Formular erfassen, Lage per Klick in der Karte, Pflichtfelder prüfen, JSON im richtigen Format herunterladen; verlinkt aus der Partner-Anleitung.
