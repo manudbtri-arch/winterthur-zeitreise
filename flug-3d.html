@@ -40,6 +40,7 @@
     <button class="btn nokiosk" id="geoMe" hidden title="Ihren Standort nur für diesen Sprung abfragen; er wird nicht gespeichert">Mein Standort</button>
     <button class="btn" id="tourBtn" disabled>Rundgang zu den Geschichten</button>
     <div class="places" id="places" aria-label="Bekannte Orte"></div>
+    <p class="sub nokiosk" id="storyTowns" style="margin:8px 0 0">Orte mit Geschichten: <a href="flug-3d.html" data-st="winterthur">Winterthur</a> · <a href="flug-3d.html?stories=basel" data-st="basel">Basel</a> · <a href="flug-3d.html?stories=grindelwald" data-st="grindelwald">Grindelwald</a></p>
     <button class="btn" id="measBtn" aria-pressed="false" title="Zwei Punkte im Bild anklicken">Messen (L)</button>
     <button class="btn" id="build">Hier neu bauen</button>
   </div>
@@ -2286,6 +2287,13 @@ async function loadStories(file, check){
     b.addEventListener('click', () => { closeIntro(); if (storyPlace) placeName = storyPlace; tourGo(i, false); });
     pl.appendChild(b);
   });
+  /* Orte mit Geschichten: aktuellen Ort markieren, im Einbettungsmodus mitgeben */
+  for (const a of $('storyTowns').querySelectorAll('a')) {
+    const cur = (STORY_NAME || 'winterthur') === a.dataset.st;
+    a.style.color = 'var(--blue)'; a.style.fontWeight = cur ? '700' : '';
+    if (cur) a.setAttribute('aria-current', 'page');
+    if (new URLSearchParams(location.search).get('embed') === '1') { const u = new URL(a.href); u.searchParams.set('embed', '1'); a.href = u.toString(); }
+  }
   /* Eigene Story-Datei ohne explizite Koordinaten: Ort, Startbildschirm, Kamera und Kacheln auf diesen Ort ausrichten */
   if (STORY_NAME && stories.length && !LINK) {
     const s0 = stories[0].story;

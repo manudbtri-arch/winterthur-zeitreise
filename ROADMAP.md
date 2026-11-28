@@ -271,5 +271,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 40. Zitieren, andere Orte, Unterricht
 - [x] Forschung und Gemeinden: Infokarte eines belegten Gebäudes mit Knopf «Angaben kopieren» (Adresse, EGID, Baujahr, Lage LV95, Link zum Gebäuderegister, Quelle und Abrufdatum) als Text für Bericht oder Inventar.
-- [ ] Gemeinden und Museen: Reiter «Ort» im 3D-Flug mit Auswahl «Orte mit Geschichten» (Winterthur, Basel, Grindelwald), die den Ort samt Story-Datei öffnet.
+- [x] Gemeinden und Museen: Reiter «Ort» im 3D-Flug mit Auswahl «Orte mit Geschichten» (Winterthur, Basel, Grindelwald), die den Ort samt Story-Datei öffnet.
 - [ ] Schulen: Unterrichtsseite nennt die drei Orte mit Geschichten als Wahl für Gruppenarbeit (Links mit `stories=`), damit Gruppen verschiedene Orte vergleichen.
