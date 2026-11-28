@@ -1763,7 +1763,7 @@ async function themeInfo(lon, lat){
 }
 
 /* ---------- Messen: zwei Punkte im 3D-Bild, Distanz und Höhenunterschied ---------- */
-const meas = {on: false, pts: [], ents: []};
+const meas = {on: false, pts: [], ents: [], seq: 0};
 const MEAS_C = C.Color.fromCssColorString('#c8803f');
 function measClear(){ for (const e of meas.ents) viewer.entities.remove(e); meas.ents = []; meas.pts = []; }
 function setMeasure(on){
@@ -1811,6 +1811,22 @@ function measureAt(pos){
     `Quelle: Gelände und Gebäude © swisstopo, gemessen im 3D-Bild am ${today()}; Richtwert, keine amtliche Vermessung`].join('\n');
   $('iCoord').hidden = !infoMeas; $('iCoord').textContent = 'Messung kopieren';
   clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, 30000);
+  /* Geländehöhe über Meer beider Punkte (Höhendienst geo.admin.ch, swissALTI3D); kommt nach, wenn verfügbar */
+  const seq = ++meas.seq, base = $('iSrc').textContent;
+  Promise.all(lv.map(([E, N]) => groundHeight(E, N))).then(hs => {
+    if (seq !== meas.seq || !meas.on || meas.pts.length !== 2 || hs.some(h => h === null)) return;
+    const hTxt = `Geländehöhe Punkt 1: ${Math.round(hs[0])} m ü. M. · Punkt 2: ${Math.round(hs[1])} m ü. M. (Höhendienst swisstopo, swissALTI3D)`;
+    $('iSrc').textContent = base.replace(' · Gemessen', ` · ${hTxt} · Gemessen`);
+    if (infoMeas) { const L4 = infoMeas.split('\n'); L4.splice(3, 0, hTxt); infoMeas = L4.join('\n'); }
+  });
+}
+async function groundHeight(E, N){
+  const ac = new AbortController(), t = setTimeout(() => ac.abort(), 4000);
+  try {
+    const j = await (await fetch(`https://api3.geo.admin.ch/rest/services/height?easting=${E.toFixed(1)}&northing=${N.toFixed(1)}&sr=2056`, {signal: ac.signal})).json();
+    const h = Number(j && j.height);
+    return Number.isFinite(h) && h > 150 && h < 4700 ? h : null;
+  } catch (e) { return null; } finally { clearTimeout(t); }
 }
 $('measBtn').addEventListener('click', () => setMeasure(!meas.on));
 $('measEnd').addEventListener('click', () => setMeasure(false));
