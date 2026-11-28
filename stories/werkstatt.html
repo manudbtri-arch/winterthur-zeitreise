@@ -35,6 +35,9 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 .hint{font-size:13px;color:var(--mute);margin:4px 0 0}
 .err{color:var(--warn);font-size:14px;margin:8px 0 0;white-space:pre-line}
 .okmsg{color:var(--ok);font-size:14px;margin:8px 0 0}
+.ipv{display:grid;gap:2px;margin-top:12px;background:var(--bg);border:1px solid var(--line);border-left:4px solid var(--brown);border-radius:10px;padding:10px 14px}
+.ipv em{font-style:normal;font-size:12px;font-weight:600;justify-self:start;padding:1px 8px;border-radius:9px;background:var(--line)}
+.ipv b{font-size:17px}.ipv span{font-size:14px;color:var(--mute);white-space:pre-wrap}.ipv small{font-size:12px;color:var(--mute)}
 #map{height:440px;border-radius:10px;border:1px solid var(--line)}
 @media(max-width:860px){#map{height:320px}}
 .leaflet-container{cursor:crosshair;font:14px Archivo,sans-serif}
@@ -106,6 +109,8 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
       <input type="text" id="quelle" placeholder="z. B. Historisches Lexikon der Schweiz, Artikel …">
       <label for="url">Link zur Quelle <small>(nur https://)</small></label>
       <input type="url" id="url" placeholder="https://…">
+      <p class="hint" style="margin-top:12px"><b>So erscheint die Infokarte</b> im 3D-Flug:</p>
+      <div class="ipv" id="infoPv" aria-label="Vorschau der Infokarte"><em id="pvBadge">Geschichte</em><b id="pvTitle"></b><span id="pvText"></span><small id="pvSrc"></small></div>
       <p class="hint" id="timeNote" role="status"></p>
       <p class="err" id="formErr" role="alert"></p>
       <p class="okmsg" id="formOk" role="status"></p>
@@ -208,6 +213,7 @@ function fillForm(st){
   $('formErr').textContent = ''; $('formOk').textContent = '';
   $('timeNote').textContent = st ? timeNote(st) : '';
   $('editLbl').textContent = edit >= 0 ? `– bearbeiten (${edit + 1})` : '– neu';
+  preview();
 }
 /* Umrechnung WGS84 ↔ LV95 (Näherungsformeln von swisstopo, Abweichung im Meterbereich) */
 function toLV95(lon, lat){
@@ -288,6 +294,17 @@ function render(){
   saveDraft();
 }
 
+/* Vorschau der Infokarte wie im 3D-Flug (Zeitraum, Titel, Text, Quelle), nur als Text */
+function preview(){
+  const v = yearOrNull($('von').value), b = yearOrNull($('bis').value);
+  const ok = x => Number.isInteger(x);
+  const rg = ok(v) && ok(b) ? `${v}–${b}` : ok(v) ? `ab ${v}` : ok(b) ? `bis ${b}` : '';
+  $('pvBadge').textContent = 'Geschichte' + (rg ? ' · ' + rg : '');
+  $('pvTitle').textContent = $('titel').value.trim() || '(Titel)';
+  $('pvText').textContent = $('text').value.trim() || '(Text)';
+  $('pvSrc').textContent = 'Quelle: ' + ($('quelle').value.trim() || '(Quelle)') + ($('url').value.trim() ? ' · mit Link «Quelle öffnen»' : '');
+}
+for (const id of ['titel', 'text', 'von', 'bis', 'quelle', 'url']) $(id).addEventListener('input', preview);
 $('text').addEventListener('input', () => { $('textCount').textContent = $('text').value.length; });
 const showTimeNote = () => { $('timeNote').textContent = timeNote({von: yearOrNull($('von').value), bis: yearOrNull($('bis').value)}); };
 $('von').addEventListener('input', showTimeNote); $('bis').addEventListener('input', showTimeNote);
