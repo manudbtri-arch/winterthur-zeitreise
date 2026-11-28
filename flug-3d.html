@@ -293,6 +293,13 @@ const LINK = (() => {
     mode: ['fly', 'walk', 'now'].includes(q.get('mode')) ? q.get('mode') : 'fly'};
 })();
 
+/* markierter Punkt aus dem Link (pin=<lat>,<lon>, z. B. aus dem Lage-Fenster der 2D-Karte) */
+const PIN = (() => {
+  const m = /^(4[5-8]\.\d{1,8}),(\d{1,2}\.\d{1,8})$/.exec(new URLSearchParams(location.search).get('pin') || '');
+  const lat = m ? Number(m[1]) : NaN, lon = m ? Number(m[2]) : NaN;
+  return lon > 5.5 && lon < 11 && lat > 45.5 && lat < 48 ? [lon, lat] : null;
+})();
+
 let viewer;
 try {
   viewer = new C.Viewer('scene', {
@@ -1620,6 +1627,10 @@ function showInfo(p, at){
     link = !KIOSK && /^https:\/\//.test(st.url || '') ? st.url : '';
     story = STORY_ID_RE.test(String(st.id || '')) ? String(st.id) : null;
     if (Number.isFinite(st.lon) && Number.isFinite(st.lat)) ll = [st.lon, st.lat];
+  } else if (p && p.id instanceof C.Entity && p.id.pin) {
+    title = 'Markierter Punkt'; badge = 'Punkt'; ll = p.id.pin; hold = 20000;
+    text = 'Dieser Punkt kommt aus dem Link (z. B. aus dem Lage-Fenster der 2D-Karte).';
+    src = 'Umrechnung mit der Näherungsformel von swisstopo, Abweichung im Meterbereich';
   } else if (p instanceof C.Cesium3DTileFeature && tlmTs && p.tileset === tlmTs) {
     title = isBridge(p) ? 'Brücke' : 'Bauwerk';
     text = 'Heutiger Stand aus dem Landschaftsmodell swissTLM3D. Ob es im gewählten Jahr schon stand, zeigt die Karte darunter.';
@@ -2157,6 +2168,18 @@ function faceNorth(){
 }
 $('compass').addEventListener('click', faceNorth);
 
+/* Markierung für den Punkt aus dem Link; Antippen zeigt die Lage in LV95 */
+if (PIN) {
+  const pe = viewer.entities.add({
+    position: C.Cartesian3.fromDegrees(PIN[0], PIN[1]),
+    point: {pixelSize: 16, color: C.Color.fromCssColorString('#1f5fa8'), outlineColor: C.Color.WHITE, outlineWidth: 3,
+      heightReference: C.HeightReference.CLAMP_TO_GROUND, disableDepthTestDistance: Number.POSITIVE_INFINITY},
+    label: {text: 'Markierter Punkt', font: '600 15px Archivo, sans-serif', fillColor: C.Color.WHITE, outlineColor: C.Color.BLACK, outlineWidth: 3,
+      style: C.LabelStyle.FILL_AND_OUTLINE, pixelOffset: new C.Cartesian2(0, -20), verticalOrigin: C.VerticalOrigin.BOTTOM,
+      heightReference: C.HeightReference.CLAMP_TO_GROUND, disableDepthTestDistance: Number.POSITIVE_INFINITY}
+  });
+  pe.pin = PIN;
+}
 /* ---------- Permalink: Ort, Jahr, Blick und Modus als Link ---------- */
 function permalink(){
   const c = C.Cartographic.fromCartesian(camera.position), r = (v, d) => Number(v.toFixed(d));
@@ -2167,6 +2190,7 @@ function permalink(){
   if (world.focus) q.set('c', world.focus.map(v => v.toFixed(5)).join(','));
   if (placeName && placeName !== 'Winterthur') q.set('ort', placeName);
   if (STORY_NAME) q.set('stories', STORY_NAME);
+  if (PIN) q.set('pin', PIN[1].toFixed(6) + ',' + PIN[0].toFixed(6));
   const th = THEMES.filter(t => t.on).map(t => t.key).join(','); if (th) q.set('themen', th);
   return location.origin + location.pathname + '?' + q.toString();
 }

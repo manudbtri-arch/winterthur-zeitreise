@@ -476,7 +476,7 @@ function showLV(ll){
     catch (e) { window.prompt('Link zu diesem Punkt:', url); }
   });
   const g3 = document.createElement('button'); g3.type = 'button'; g3.textContent = 'Diesen Punkt im 3D-Flug ansehen';
-  g3.addEventListener('click', () => go3d(ll, g3));
+  g3.addEventListener('click', () => go3d(ll, g3, true));
   box.append(b, p, q, c, document.createElement('br'), lk, document.createElement('br'), g3);
   const pop = L.popup({maxWidth: 300}).setLatLng(ll).setContent(box).openOn(map);
   /* Geländehöhe über Meer (Höhendienst geo.admin.ch, swissALTI3D), kommt nach, wenn verfügbar */
@@ -542,7 +542,7 @@ function measureAt(ll){
 $('measBtn').addEventListener('click', () => setMeasure(!meas.on));
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && meas.on && $('qrDlg').hidden) setMeasure(false); });
 /* Blick von Süden auf einen Punkt (Kartenmitte oder Punkt aus dem Lage-Fenster) im 3D-Flug */
-async function go3d(c, btn){
+async function go3d(c, btn, pin){
   const [E, N] = toLV95(c.lng, c.lat);
   let ground = 450;   /* Ersatzwert, falls die Höhenabfrage scheitert */
   btn.disabled = true;
@@ -557,6 +557,7 @@ async function go3d(c, btn){
     c: c.lng.toFixed(5) + ',' + c.lat.toFixed(5), mode: 'fly'});
   if ((key === 'sieg' || key === 'zeit') && y >= 1870 && y <= 1949) q.set('year', y);
   if (STORY_NAME) q.set('stories', STORY_NAME);
+  if (pin) q.set('pin', c.lat.toFixed(6) + ',' + c.lng.toFixed(6));
   location.href = 'flug-3d.html?' + q.toString();
 }
 $('to3d').addEventListener('click', () => go3d(map.getCenter(), $('to3d')));
