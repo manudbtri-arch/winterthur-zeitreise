@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 2D-Karte: Marker von Geschichten, die im gezeigten Jahr nicht gelten, erscheinen blass; der Hinweis beim Darüberfahren nennt ihren Zeitraum.
 - 2D-Karte: Das Fenster einer Geschichte hat den Link «Zeitraffer von oben» mit dem Ausschnitt um die Geschichte.
 - README und Methodik: Zeitraum, «Quelle öffnen» und Direktsprung in den 3D-Flug bei Geschichten im Zeitraffer beschrieben.
 - Zeitraffer von oben: Der Ausschnitt einer Geschichte nennt den Zeitraum aus der Story-Datei und hat den Link «Quelle öffnen».

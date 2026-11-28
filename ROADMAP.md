@@ -311,5 +311,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 48. Geschichten in der 2D-Karte im richtigen Jahr
 - [x] 2D-Karte: Fenster einer Geschichte mit Link «Zeitraffer von oben» (Ausschnitt um die Geschichte), wie im 3D-Flug.
-- [ ] 2D-Karte: Marker von Geschichten, die im gezeigten Jahr nicht gelten, erscheinen blass; der Hinweis beim Darüberfahren nennt den Zeitraum.
+- [x] 2D-Karte: Marker von Geschichten, die im gezeigten Jahr nicht gelten, erscheinen blass; der Hinweis beim Darüberfahren nennt den Zeitraum.
 - [ ] README nachführen: Zeitraum, «Angaben kopieren» und «Zeitraffer von oben» bei Geschichten in der 2D-Karte.

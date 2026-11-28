@@ -196,6 +196,18 @@ const tKeys = ['zeit','sieg','luft'];
 fill($('tSrc'), tKeys, 'zeit');
 setRange($('tYear'),'zeit',1900);
 
+/* Geschichten, die im gezeigten Jahr nicht gelten, blass zeigen (wie der 3D-Flug sie ausblendet); im Vergleich und bei der Dufourkarte alle normal */
+const storyMarks = [];
+function updateStoryMarks(){
+  const key = $('tSrc').value, s = SRC[key];
+  const y = !$('pCmp').hidden || key === 'dufour' ? null : s.fixed ? new Date().getFullYear() : +$('tYear').value;
+  for (const sm of storyMarks) {
+    const fits = y == null || ((sm.von == null || sm.von <= y) && (sm.bis == null || sm.bis >= y));
+    sm.m.setStyle({opacity: fits ? 1 : .55, fillOpacity: fits ? 1 : .3});
+    sm.m.setTooltipContent(document.createTextNode(fits ? sm.titel : `${sm.titel} (${sm.span}, nicht im Jahr ${y})`));
+  }
+}
+
 function showTime(after){
   const key = $('tSrc').value, y = +$('tYear').value, s = SRC[key];
   $('yBig').textContent = (key==='luft' && y===1928) ? '1927' : y;
@@ -203,10 +215,11 @@ function showTime(after){
   const l = mk(key,y); l.setOpacity(1 - $('tOp').value/100);
   swap(hist, l, after);
   updateSheetD();
+  updateStoryMarks();
 }
 const showTimeD = debounce(()=>showTime(),180);
 $('tSrc').addEventListener('change', () => { setRange($('tYear'),$('tSrc').value,$('tYear').value); showTime(); });
-$('tYear').addEventListener('input', () => { $('yBig').textContent = $('tYear').value; showTimeD(); });
+$('tYear').addEventListener('input', () => { $('yBig').textContent = $('tYear').value; showTimeD(); updateStoryMarks(); });
 $('tOp').addEventListener('input', () => { $('opV').textContent = $('tOp').value+' %'; hist.cur && hist.cur.setOpacity(1 - $('tOp').value/100); });
 const step = d => { const i = $('tYear'); const v = Math.min(+i.max, Math.max(+i.min, +i.value + d)); if (v === +i.value) return false; i.value = v; return true; };
 $('prev').addEventListener('click', () => { if (step(-1)) showTime(); });
@@ -280,7 +293,7 @@ function mode(cmp){
   [dv,$('tagL'),$('tagR')].forEach(el => el.hidden = !cmp);
   if (cmp){
     map.removeLayer(base); if (hist.cur) { map.removeLayer(hist.cur); hist.cur = null; }
-    showSide('l'); showSide('r'); clip();
+    showSide('l'); showSide('r'); clip(); updateStoryMarks();
   } else {
     [L_,R_].forEach(h => { if (h.cur) { map.removeLayer(h.cur); h.cur = null; } });
     base.addTo(map); showTime();
@@ -352,10 +365,12 @@ async function loadStories(file){
       catch (e) { window.prompt('Angaben zur Geschichte:', txt.replace(/\n/g, ' · ')); }
     });
     box.append(document.createElement('br'), cb);
-    L.circleMarker(ll, {radius: 8, color: '#fff', weight: 2, fillColor: '#c8803f', fillOpacity: 1})
+    const m = L.circleMarker(ll, {radius: 8, color: '#fff', weight: 2, fillColor: '#c8803f', fillOpacity: 1})
       .bindTooltip(document.createTextNode(st.titel)).bindPopup(box, {maxWidth: 300}).addTo(storyLayer);
+    if (span) storyMarks.push({m, von, bis, span, titel: st.titel});
     n++; jumps.push([st.titel, ll]);
   }
+  updateStoryMarks();
   if (STORY_NAME) $('linkMsg').textContent = `${n} Geschichten aus ${file} geladen.`;
   /* bei eigener Story-Datei: Sprungziele aus der Datei statt der Winterthurer Quartiere; Namen nur als Text */
   if (STORY_NAME && jumps.length) {
