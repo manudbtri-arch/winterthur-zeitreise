@@ -453,6 +453,7 @@ function toLV95(lon, lat){
           1200147.07 + 308807.95*p + 3745.25*l*l + 76.63*p*p - 194.56*l*l*p + 119.79*p*p*p];
 }
 /* Lage eines Punkts in LV95 (Rechtsklick, Alt-Klick oder langes Drücken), mit Kopieren – für GIS und Berichte */
+let pinLL = null, pinPop = null;   /* markierter Punkt: kommt in den Link, solange sein Fenster offen ist */
 function showLV(ll){
   const [E, N] = toLV95(ll.lng, ll.lat).map(Math.round), t = `${E}, ${N}`;
   const box = document.createElement('div'); box.className = 'story';
@@ -464,9 +465,19 @@ function showLV(ll){
     try { await navigator.clipboard.writeText(t); c.textContent = 'Kopiert: ' + t; }
     catch (e) { window.prompt('Koordinaten LV95 (E, N):', t); }
   });
-  box.append(b, p, q, c);
-  L.popup({maxWidth: 300}).setLatLng(ll).setContent(box).openOn(map);
+  const lk = document.createElement('button'); lk.type = 'button'; lk.textContent = 'Link zu diesem Punkt';
+  lk.addEventListener('click', async () => {
+    pinLL = ll; pinPop = pop;
+    const url = permalink();
+    if (SHARE) { try { await navigator.share({title: `Zeitreise Schweiz – Punkt LV95 ${t}`, url}); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+    try { await navigator.clipboard.writeText(url); lk.textContent = 'Link kopiert'; }
+    catch (e) { window.prompt('Link zu diesem Punkt:', url); }
+  });
+  box.append(b, p, q, c, document.createElement('br'), lk);
+  const pop = L.popup({maxWidth: 300}).setLatLng(ll).setContent(box).openOn(map);
+  return pop;
 }
+map.on('popupclose', e => { if (e.popup === pinPop) { pinLL = null; pinPop = null; } });
 map.on('contextmenu', e => showLV(e.latlng));
 map.on('click', e => { if (e.originalEvent && e.originalEvent.altKey) showLV(e.latlng); });
 $('to3d').addEventListener('click', async () => {
@@ -506,6 +517,7 @@ function permalink(){
   if (cmp) { q.set('l', $('lSrc').value); q.set('ly', $('lYear').value); q.set('r', $('rSrc').value); q.set('ry', $('rYear').value); }
   else { q.set('t', $('tSrc').value); q.set('y', $('tYear').value); q.set('op', $('tOp').value); }
   if (STORY_NAME) q.set('stories', STORY_NAME);
+  if (pinLL) q.set('pin', pinLL.lat.toFixed(6) + ',' + pinLL.lng.toFixed(6));
   return location.origin + location.pathname + '?' + q.toString();
 }
 /* auf Touch-Geräten mit Teilen-Funktion: System-Teilen (Nachricht, Mail), sonst kopieren */
@@ -594,6 +606,13 @@ const Q = new URLSearchParams(location.search), qn = k => (Q.get(k) !== null && 
 {
   const lat = qn('lat'), lon = qn('lon'), z = qn('z');
   if (lat > 45.5 && lat < 48 && lon > 5.5 && lon < 11) map.setView([lat, lon], Number.isFinite(z) ? Math.min(19, Math.max(12, Math.round(z))) : 15);
+  /* markierter Punkt aus dem Link (pin=<lat>,<lon>): Fenster mit der Lage öffnen */
+  const pm = /^(4[5-8]\.\d{1,8}),(\d{1,2}\.\d{1,8})$/.exec(Q.get('pin') || '');
+  if (pm && +pm[2] > 5.5 && +pm[2] < 11) {
+    const ll = L.latLng(+pm[1], +pm[2]);
+    if (!(lat > 45.5 && lat < 48)) map.setView(ll, 17);
+    pinLL = ll; pinPop = showLV(ll);
+  }
   if (tKeys.includes(Q.get('t'))) { $('tSrc').value = Q.get('t'); setRange($('tYear'), Q.get('t'), qn('y')); }
   else if (Number.isFinite(qn('y'))) setRange($('tYear'), $('tSrc').value, qn('y'));
   if (qn('op') >= 0 && qn('op') <= 100) { $('tOp').value = Math.round(qn('op')); $('opV').textContent = $('tOp').value + ' %'; }

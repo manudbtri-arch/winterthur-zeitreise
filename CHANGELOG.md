@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 2D-Karte: Im Lage-Fenster (Rechtsklick/langes Drücken) gibt es den Knopf «Link zu diesem Punkt». Der Link (`pin=<lat>,<lon>`) öffnet die Karte mit demselben Fenster am Punkt; auf dem Handy über das System-Teilen.
 - Produktseite: «Auf der Gemeinde-Website» nennt das Erfassen von Geschichten vor Ort mit dem Handy und die Übernahme von LV95-Koordinaten aus dem GIS (auch als Tabelle).
 - 3D-Flug: Übersicht «Tasten und Gesten» nennt «Mein Standort» und die Lage in LV95 zum Kopieren in der Infokarte.
 - Story-Werkstatt: CSV-Import übernimmt die Lage auch aus den Spalten `e_lv95` und `n_lv95`, wenn `lon`/`lat` fehlen; in Formularhinweis und Partner-Anleitung erklärt.
