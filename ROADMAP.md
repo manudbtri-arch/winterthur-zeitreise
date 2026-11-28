@@ -245,6 +245,6 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] README und Produktseite nachführen: Messen in der 2D-Karte, Link zu einer Messung, Geländehöhe, Story-Tabelle.
 
 ## 35. Richtige Höhen, Vorschau, Unterricht
-- [ ] Vertrauen in die Daten: Koordinatenanzeige (F3) nennt die Höhe über Meer aus dem Höhendienst von swisstopo (Gelände am Standort plus Höhe über Boden) statt der Höhe über dem Ellipsoid des 3D-Geländes (in der Schweiz rund 50 m mehr).
+- [x] Vertrauen in die Daten: Koordinatenanzeige (F3) nennt die Höhe über Meer aus dem Höhendienst von swisstopo (Gelände am Standort plus Höhe über Boden) statt der Höhe über dem Ellipsoid des 3D-Geländes (in der Schweiz rund 50 m mehr).
 - [ ] Gemeinden: Story-Werkstatt zeigt beim Bearbeiten eine Vorschau «So erscheint die Infokarte» (Zeitraum, Titel, Text, Quelle).
 - [ ] Schulen: Auftrag 4 der Unterrichtsseite – Geländehöhen beider Punkte mit dem gemessenen Höhenunterschied vergleichen (Dach oder Boden?).

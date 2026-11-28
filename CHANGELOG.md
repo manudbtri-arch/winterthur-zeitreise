@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 3D-Flug: Die Koordinatenanzeige (F3) nennt die Höhe über Meer (Geländehöhe vom Höhendienst swisstopo plus Höhe über Boden) statt der rund 50 m höheren Höhe über dem Ellipsoid; ohne Dienst steht «über Ellipsoid» da. In der Methodik erklärt.
 - README und Produktseite: Messen in der 2D-Karte mit Link, Geländehöhe in der Messung und der Export der Story-Werkstatt als Tabelle sind aufgeführt.
 - 2D-Karte: Das Lage-Fenster (Rechtsklick, Alt-Klick, langes Drücken) nennt zusätzlich die Geländehöhe über Meer aus dem Höhendienst von swisstopo (swissALTI3D).
 - Story-Werkstatt: Knopf «Tabelle (CSV)» speichert die erfassten Geschichten mit den Spalten der Anleitung (dazu `id`, `e_lv95`, `n_lv95`) zum Weiterbearbeiten in Excel; die Datei lässt sich wieder öffnen.

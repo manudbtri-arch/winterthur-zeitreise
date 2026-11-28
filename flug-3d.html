@@ -1764,6 +1764,7 @@ async function themeInfo(lon, lat){
 
 /* ---------- Messen: zwei Punkte im 3D-Bild, Distanz und Höhenunterschied ---------- */
 const meas = {on: false, pts: [], ents: [], seq: 0};
+const f3H = {E: 0, N: 0, off: null, busy: false};   /* Höhe über Meer für F3: Abstand Ellipsoid → Höhendienst */
 const MEAS_C = C.Color.fromCssColorString('#c8803f');
 function measClear(){ for (const e of meas.ents) viewer.entities.remove(e); meas.ents = []; meas.pts = []; }
 function setMeasure(on){
@@ -2118,7 +2119,14 @@ scene.preRender.addEventListener(() => {
     const lon = C.Math.toDegrees(_carto.longitude), lat = C.Math.toDegrees(_carto.latitude);
     const [E, N] = toLV95(lon, lat);
     const hdg = (C.Math.toDegrees(camera.heading) + 360) % 360;
-    $('f3').textContent = `E ${fmt(E)}   N ${fmt(N)}\nHöhe ${Math.round(_carto.height)} m ü. M. · ${Math.round(agl)} m über Boden\nBlick ${DIRS[Math.round(hdg / 45) % 8]} (${Math.round(hdg)}°) · Tempo ${speed.toFixed(1)} m/s\n${Math.round(fps)} Bilder/s · Fernsicht ${farView ? 'an' : 'aus'}`;
+    /* Höhe über Meer: das 3D-Gelände rechnet über dem Ellipsoid (in der Schweiz rund 50 m mehr);
+       Abstand einmal je 100 m beim Höhendienst von swisstopo abfragen und hier abziehen */
+    if (g2 !== undefined && !f3H.busy && (f3H.off === null || Math.hypot(E - f3H.E, N - f3H.N) > 100)) {
+      f3H.busy = true; const qE = E, qN = N, qG = g2;
+      groundHeight(qE, qN).then(h => { f3H.busy = false; f3H.E = qE; f3H.N = qN; if (h !== null) f3H.off = h - qG; });
+    }
+    const hTxt = f3H.off !== null && Math.abs(f3H.off) < 120 ? `Höhe ${Math.round(_carto.height + f3H.off)} m ü. M.` : `Höhe ${Math.round(_carto.height)} m über Ellipsoid`;
+    $('f3').textContent = `E ${fmt(E)}   N ${fmt(N)}\n${hTxt} · ${Math.round(agl)} m über Boden\nBlick ${DIRS[Math.round(hdg / 45) % 8]} (${Math.round(hdg)}°) · Tempo ${speed.toFixed(1)} m/s\n${Math.round(fps)} Bilder/s · Fernsicht ${farView ? 'an' : 'aus'}`;
   }
 });
 
