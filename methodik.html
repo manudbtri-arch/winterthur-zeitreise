@@ -46,6 +46,23 @@ li{margin:5px 0}
 .cite{font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;white-space:pre-wrap;overflow-wrap:anywhere}
 footer{margin-top:56px;padding:28px 0 44px;border-top:1px solid var(--line);font-size:15px;color:var(--mute)}
 footer a{color:var(--mute)}
+/* Druckansicht: schwarz auf weiss, ohne Navigation, Links mit Adresse – zum Beilegen als PDF */
+@media print{
+  :root{color-scheme:light;--bg:#fff;--card:#fff;--ink:#000;--mute:#333;--line:#bbb;--blue:#000;--brick:#000}
+  body{font-size:11pt;line-height:1.5}
+  nav,.toc{display:none}
+  .wrap{max-width:none;padding:0}
+  header{padding-top:0}
+  h1{font-size:22pt}
+  h2{font-size:15pt;margin-top:20pt;break-after:avoid}
+  h3{break-after:avoid}
+  .tbl{overflow:visible;border-radius:0}
+  table,.box,.cite{break-inside:avoid}
+  .box,.cite{border-radius:0}
+  code{background:#eee}
+  main a[href^="http"]::after{content:" (" attr(href) ")";font-size:9pt;overflow-wrap:anywhere}
+  footer{margin-top:20pt;padding:10pt 0 0}
+}
 </style>
 </head>
 <body>
@@ -68,6 +85,8 @@ footer a{color:var(--mute)}
       <li><a href="#rekonstruiert">Rekonstruierte Häuser: aus der Siegfriedkarte</a></li>
       <li><a href="#genauigkeit">Genauigkeit</a></li>
       <li><a href="#grenzen">Bekannte Grenzen</a></li>
+      <li><a href="#themen">Themen aus Bundesdaten</a></li>
+      <li><a href="#statistik">Statistik der Bauepochen (CSV)</a></li>
       <li><a href="#zeitraffer">Zeitraffer von oben</a></li>
       <li><a href="#zitieren">Zitiervorschlag</a></li>
     </ol>
@@ -145,7 +164,7 @@ footer a{color:var(--mute)}
   <li><b>Kacheln und Detailstufen:</b> Gebaut wird in Kacheln von rund 400 × 400 m rund um den Standort und im Blickfeld bis zum Horizont (beim Gehen bis rund 6 km, beim Fliegen bis rund 8 km; auf dem Handy bis rund 2,5 bzw. 3,5 km, damit es flüssig bleibt). Bis rund 1 km mit allen Details (Türen, Pflaster), bis rund 2,3 km mit Gebäuderegister. Die Fenster der nachgebauten Häuser sind ein schematisches Wandmuster (ein Fenster pro Block und Geschoss), das in der Ferne zu einer ruhigen Wandfarbe verschwimmt. Weiter entfernt werden alle Häuser der Karte als einfache Klötze gezeigt, auch solche, die heute noch stehen; erst beim Näherkommen werden sie in belegt und rekonstruiert unterschieden.</li>
 </ul>
 
-<h2 id="themen">Themen aus Bundesdaten</h2>
+<h2 id="themen">6. Themen aus Bundesdaten</h2>
 <p>Im 3D-Flug lassen sich im Reiter «Themen» weitere offene Daten über die Karte legen. Ein Klick ins Bild fragt bei geo.admin.ch ab, was an dieser Stelle verzeichnet ist, und verlinkt ins Kartenportal des Bundes. Solange ein Thema aktiv ist, werden Pflaster und Gärten vorübergehend ausgeblendet, damit Inventare und Linien auch in der Altstadt gut sichtbar bleiben. Alle Themen zeigen den heutigen Stand der Inventare, nicht den Zustand im gewählten Jahr.</p>
 <ul>
   <li><b>Historische Verkehrswege (IVS):</b> Bundesamt für Strassen ASTRA; Wege von nationaler, regionaler und lokaler Bedeutung sowie Wegbegleiter wie Brücken, Mauern oder Wegkreuze.</li>
@@ -157,7 +176,7 @@ footer a{color:var(--mute)}
   <li><b>Bodennutzung (Arealstatistik):</b> Bundesamt für Statistik BFS, Erhebung 2024 (soweit verfügbar).</li>
 </ul>
 
-<h2 id="statistik">6. Statistik der Bauepochen (CSV)</h2>
+<h2 id="statistik">7. Statistik der Bauepochen (CSV)</h2>
 <p>Im Analyse-Modus speichert der Knopf «Statistik als CSV» die angezeigte Zählung. Gezählt werden nur belegte Gebäude: solche, die heute noch stehen und im Gebäuderegister ein Baujahr oder eine Bauperiode haben, in den gerade geladenen Kacheln mit Gebäuderegister (rund 2,3 km um den Standort) und bis zum gewählten Jahr. Rekonstruierte Häuser sind nicht enthalten, weil ihr Baujahr unbekannt ist.</p>
 <div class="tbl"><table>
   <thead><tr><th>Spalte</th><th>Bedeutung</th></tr></thead>
@@ -175,7 +194,7 @@ footer a{color:var(--mute)}
 <p>Die Zählung zeigt den heutigen Bestand nach Baualter, nicht den Bestand im gewählten Jahr: abgerissene Gebäude fehlen im Register.</p>
 <p>Die Gebäudeliste («Liste CSV» und «GeoJSON») enthält pro Gebäude Status (belegt oder rekonstruiert), EGID, Adresse, Baujahr oder Bauperiode, Kartenstand, Koordinaten und Quelle. Die Spalte <code>alter_im_jahr</code> nennt bei genauem Baujahr das Alter des Gebäudes im gewählten Jahr (Jahr minus Baujahr); bei Bauperiode «vor 1919» und bei rekonstruierten Häusern bleibt sie leer. Die Spalte <code>gwr_link</code> führt bei belegten Gebäuden zu map.geo.admin.ch mit der Ebene des Gebäuderegisters an der Lage des Gebäudes; so lässt sich jede Zeile in der Quelle nachprüfen. Bei rekonstruierten Häusern bleibt sie leer, weil sie im Register nicht vorkommen.</p>
 
-<h2 id="zeitraffer">7. Zeitraffer von oben</h2>
+<h2 id="zeitraffer">8. Zeitraffer von oben</h2>
 <p>Der <a href="zeitraffer.html">Zeitraffer</a> zeigt einen gerahmten Ausschnitt nacheinander in allen Ständen, die swisstopo für diese Stelle anbietet. Gezeigt werden die Originalbilder der Dienste; es wird nichts nachgebaut oder geschätzt.</p>
 <ul>
   <li><b>Luftbilder:</b> Die Jahre stammen aus der Abfrage der Bildflüge an der Mitte des Rahmens (<code>ch.swisstopo.swissimage-product.metadata</code>, Felder Flugjahr, Farbe/Schwarzweiss und Bodenauflösung). Gezeigt wird das zugehörige Luftbild aus <code>ch.swisstopo.swissimage-product</code>; am Schluss steht das aktuelle SWISSIMAGE.</li>
@@ -185,7 +204,7 @@ footer a{color:var(--mute)}
 </ul>
 <div class="box">Grenzen: Nicht jedes Jahr wurde beflogen, und ein Bildflug deckt den Rahmen nicht immer ganz ab – fehlende Teile bleiben grau. Die Jahre gelten für die Mitte des Rahmens; am Rand kann ein anderes Kartenblatt mit anderem Stand liegen. Antwortet der Dienst nicht, verwendet der Zeitraffer eine feste Liste üblicher Kartenstände, die an dieser Stelle nicht geprüft ist. Die Jahrzahl nennt das Flugjahr bzw. den Kartenstand, nicht das Jahr, in dem eine Veränderung tatsächlich geschah.</div>
 
-<h2 id="zitieren">8. Zitiervorschlag</h2>
+<h2 id="zitieren">9. Zitiervorschlag</h2>
 <p>Bitte immer die zugrunde liegenden Daten mitnennen:</p>
 <div class="cite" id="cite">Zeitreise Schweiz: 3D-Ansicht [Ort], Kartenstand [Jahr].
 https://manudbtri-arch.github.io/winterthur-zeitreise/ (abgerufen am [Datum]).
@@ -196,6 +215,7 @@ Bundesamt für Statistik, Eidg. Gebäude- und Wohnungsregister (GWR).</div>
 https://manudbtri-arch.github.io/winterthur-zeitreise/zeitraffer.html (abgerufen am [Datum]).
 Daten: © swisstopo (SWISSIMAGE Zeitreise, ch.swisstopo.swissimage-product; Landeskarte-Zeitreihe, ch.swisstopo.zeitreihen).</div>
 <p>Die einzelnen Stände mit Ebene und Zeitstand liefert der Knopf «Liste der Stände (CSV)»; sie gehört in den Anhang einer Arbeit.</p>
+<p>Diese Seite lässt sich als Beilage drucken oder als PDF speichern (Drucken im Browser): Die Druckansicht lässt die Navigation weg und schreibt bei Links die Adresse aus.</p>
 <p>Änderungen am Verfahren stehen im <a href="https://github.com/manudbtri-arch/winterthur-zeitreise/blob/main/CHANGELOG.md">Änderungsprotokoll</a>; der Quelltext ist auf <a href="https://github.com/manudbtri-arch/winterthur-zeitreise">GitHub</a> einsehbar.</p>
 </main>
 

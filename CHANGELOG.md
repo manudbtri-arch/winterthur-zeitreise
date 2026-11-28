@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- Methodik: Das Inhaltsverzeichnis nennt alle Abschnitte (neu «Themen aus Bundesdaten» und «Statistik der Bauepochen», Nummern stimmen); eine Druckansicht ohne Navigation und mit ausgeschriebenen Link-Adressen macht die Seite zur PDF-Beilage einer Arbeit.
 - Unterrichtsseite: Auftrag 4 hat einen Schritt zu den Geländehöhen – Differenz der beiden Höhen über Meer mit dem gemessenen Höhenunterschied vergleichen und prüfen, ob ein Punkt auf einem Dach lag.
 - Story-Werkstatt: Unter dem Formular zeigt eine Vorschau «So erscheint die Infokarte» Zeitraum, Titel, Text und Quelle so, wie sie im 3D-Flug erscheinen.
 - 3D-Flug: Die Koordinatenanzeige (F3) nennt die Höhe über Meer (Geländehöhe vom Höhendienst swisstopo plus Höhe über Boden) statt der rund 50 m höheren Höhe über dem Ellipsoid; ohne Dienst steht «über Ellipsoid» da. In der Methodik erklärt.
