@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 2D-Karte: Das Fenster einer Geschichte nennt den Zeitraum und hat «Angaben kopieren» (auf dem Handy «Angaben teilen») mit Titel, Text, Quelle, Lage in LV95, Direktlink in den 3D-Flug und Abrufdatum.
 - 3D-Flug und README: Die Übersicht «Tasten und Gesten» und das README nennen «Angaben kopieren» bei Geschichten und «Koordinaten teilen» auf dem Handy.
 - 3D-Flug und 2D-Karte (Handy): «Koordinaten teilen» schickt die Lage in LV95 über das System-Teilen (Nachricht, Mail, Notizen); am Computer bleibt «Koordinaten kopieren».
 - 3D-Flug: Die Infokarte einer Geschichte hat den Knopf «Angaben kopieren» (auf dem Handy «Angaben teilen») – Titel, Zeitraum, Text, Quelle, Lage in LV95, Direktlink und Abrufdatum als Text für Bericht oder Arbeitsblatt.

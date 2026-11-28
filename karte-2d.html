@@ -317,16 +317,35 @@ async function loadStories(file){
     const t = document.createElement('b'); t.textContent = st.titel;
     const p = document.createElement('p'); p.textContent = st.text;
     const q = document.createElement('small'); q.textContent = 'Quelle: ' + st.quelle;
-    box.append(t, p, q);
-    if (/^https:\/\//.test(st.url || '')) {
+    /* Zeitraum aus der Story-Datei, wie im 3D-Flug («1869–1900», «ab 1869») */
+    const von = Number.isFinite(st.von) ? st.von : null, bis = Number.isFinite(st.bis) ? st.bis : null;
+    const span = von != null && bis != null ? `${von}–${bis}` : von != null ? `ab ${von}` : bis != null ? `bis ${bis}` : '';
+    if (span) { const z = document.createElement('small'); z.textContent = 'Zeitraum: ' + span; box.append(t, z, p, q); }
+    else box.append(t, p, q);
+    const hasUrl = /^https:\/\//.test(st.url || '');
+    if (hasUrl) {
       const a = document.createElement('a'); a.href = st.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Quelle öffnen';
       box.appendChild(a);
     }
     /* Direktlink in den 3D-Flug: fliegt zur Geschichte und öffnet ihre Infokarte */
+    let direct = '';
     if (/^[A-Za-z0-9_-]{1,60}$/.test(String(st.id || ''))) {
       const a3 = document.createElement('a'); a3.href = 'flug-3d.html?story=' + encodeURIComponent(st.id) + (STORY_NAME ? '&stories=' + encodeURIComponent(STORY_NAME) : ''); a3.textContent = 'Im 3D-Flug ansehen';
-      box.appendChild(a3);
+      box.appendChild(a3); direct = a3.href;
     }
+    /* «Angaben kopieren»: Titel, Zeitraum, Text, Quelle, Lage LV95, Direktlink und Abrufdatum für Bericht oder Arbeitsblatt */
+    const cb = document.createElement('button'); cb.type = 'button'; cb.textContent = SHARE ? 'Angaben teilen' : 'Angaben kopieren';
+    cb.addEventListener('click', async () => {
+      const [E, N] = toLV95(ll[1], ll[0]).map(Math.round), d = new Date();
+      const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const txt = [st.titel, span ? `Zeitraum: ${span}` : '', st.text, 'Quelle: ' + st.quelle, hasUrl ? `Nachprüfen: ${st.url}` : '',
+        `Lage LV95: E ${E}, N ${N} (Näherungsformel swisstopo, gerundet auf 1 m)`, direct ? `Direktlink: ${direct}` : '',
+        `Abgerufen am ${day} über Zeitreise Schweiz`].filter(Boolean).join('\n');
+      if (SHARE) { try { await navigator.share({title: 'Zeitreise Schweiz – ' + st.titel, text: txt}); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+      try { await navigator.clipboard.writeText(txt); cb.textContent = 'Angaben kopiert'; }
+      catch (e) { window.prompt('Angaben zur Geschichte:', txt.replace(/\n/g, ' · ')); }
+    });
+    box.append(document.createElement('br'), cb);
     L.circleMarker(ll, {radius: 8, color: '#fff', weight: 2, fillColor: '#c8803f', fillOpacity: 1})
       .bindTooltip(document.createTextNode(st.titel)).bindPopup(box, {maxWidth: 300}).addTo(storyLayer);
     n++; jumps.push([st.titel, ll]);

@@ -298,3 +298,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Forschung und Schulen: Infokarte einer Geschichte mit «Angaben kopieren» (Titel, Zeitraum, Text, Quelle, Lage LV95, Direktlink, Abrufdatum), wie bei belegten Gebäuden.
 - [x] Handy: «Koordinaten kopieren» (Infokarte im 3D-Flug, Lage-Fenster der 2D-Karte) öffnet auf Touch-Geräten das System-Teilen, sonst wie bisher kopieren.
 - [x] Bedienung und README nachführen: «Angaben kopieren» bei Geschichten, «Koordinaten teilen» auf dem Handy.
+
+## 46. Geschichten belegen in 2D und im Unterricht
+- [x] 2D-Karte: Geschichte im Fenster nennt den Zeitraum und hat «Angaben kopieren» (auf dem Handy «teilen») wie im 3D-Flug.
+- [ ] Produktseite und Methodik: «Angaben kopieren» bei Geschichten aufführen; Methodik erklärt, was der kopierte Text enthält.
+- [ ] Schulen: Unterrichtsseite nennt «Angaben kopieren» bei Geschichten als Quellenbeleg fürs Arbeitsblatt.
