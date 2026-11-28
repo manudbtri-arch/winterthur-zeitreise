@@ -313,3 +313,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] 2D-Karte: Fenster einer Geschichte mit Link «Zeitraffer von oben» (Ausschnitt um die Geschichte), wie im 3D-Flug.
 - [x] 2D-Karte: Marker von Geschichten, die im gezeigten Jahr nicht gelten, erscheinen blass; der Hinweis beim Darüberfahren nennt den Zeitraum.
 - [x] README nachführen: Zeitraum, «Angaben kopieren» und «Zeitraffer von oben» bei Geschichten in der 2D-Karte.
+
+## 49. Zeitraum der Geschichten erklären
+- [x] Methodik: Abschnitt «Geschichten an Orten» erklärt den Zeitraum (von/bis) und wie er wirkt (3D-Flug blendet aus, 2D-Karte zeigt blass, Zeitraffer nennt ihn).
+- [ ] Produktseite: Funktion «Zeitraffer von oben» nennt Zeitraum, Quelle und Direktsprung bei Geschichten.
+- [ ] Schulen: Unterrichtsseite – Hinweis, dass blasse Marker in der 2D-Karte Geschichten ausserhalb des gezeigten Jahres sind (Zeitregler verschieben und beobachten).
