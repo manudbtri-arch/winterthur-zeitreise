@@ -193,3 +193,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Forschung: Methodik mit Zitiervorschlag für eine Bildreihe aus dem Zeitraffer (Ort, Stände, Ebene, Abrufdatum).
 - [x] Produktseite: Karte «In der Forschung» nennt die Liste der Stände (CSV) aus dem Zeitraffer.
 - [x] Schulen: Hinweise für Lehrpersonen nennen den Zeitraffer als Einstieg auf langsamen Geräten (ohne 3D).
+
+## 25. Vor Ort mit dem Handy
+- [x] Handy: Knopf «Mein Standort» im 3D-Flug (Reiter «Ort») – fragt den Standort nur auf Knopfdruck ab, nur innerhalb der Schweiz, nichts wird gespeichert; setzt einen dorthin und baut die Häuser.
+- [ ] Handy: «Mein Standort» auch in der 2D-Karte und im Zeitraffer von oben.
+- [ ] Forschung: Infokarte eines Gebäudes nennt die Lage in LV95 (E/N, gerundet auf 1 m) mit Knopf «Koordinaten kopieren».

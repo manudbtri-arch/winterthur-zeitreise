@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2026-11-28
+- 3D-Flug: Knopf «Mein Standort» im Reiter «Ort» springt an den eigenen Standort (nur auf Knopfdruck, nur in der Schweiz, nichts wird gespeichert) und baut dort die Häuser; im Kiosk ausgeblendet.
+
 ## 2026-11-27
 - Unterrichtsseite: Hinweise für Lehrpersonen nennen Zeitraffer und 2D-Karte als Weg für langsame Geräte ohne 3D-Grafik.
 - Produktseite: «In der Forschung» nennt die Liste der Stände (CSV) aus dem Zeitraffer zum Zitieren von Bildreihen.

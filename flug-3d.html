@@ -37,6 +37,7 @@
       <button class="btn" id="mapBtn">Karte (M)</button>
       <button class="btn" id="fullBtn">Vollbild</button>
     </div>
+    <button class="btn nokiosk" id="geoMe" hidden title="Ihren Standort nur für diesen Sprung abfragen; er wird nicht gespeichert">Mein Standort</button>
     <button class="btn" id="tourBtn" disabled>Rundgang zu den Geschichten</button>
     <div class="places" id="places" aria-label="Bekannte Orte"></div>
     <button class="btn" id="measBtn" aria-pressed="false" title="Zwei Punkte im Bild anklicken">Messen (L)</button>
@@ -1383,6 +1384,27 @@ function goPlace(it){
 }
 attachSearch($('q'), $('qres'), goPlace);
 attachSearch($('q2'), $('qres2'), goPlace);
+
+/* «Mein Standort»: einmalig abfragen (nur auf Knopfdruck), nur innerhalb der Schweiz, nichts wird gespeichert oder übermittelt */
+if (navigator.geolocation && window.isSecureContext && !KIOSK) {
+  $('geoMe').hidden = false;
+  $('geoMe').addEventListener('click', () => {
+    const b = $('geoMe'); b.disabled = true; b.textContent = 'Standort wird abgefragt …';
+    const done = () => { b.disabled = false; b.textContent = 'Mein Standort'; };
+    navigator.geolocation.getCurrentPosition(pos => {
+      done();
+      const lon = pos.coords.longitude, lat = pos.coords.latitude;
+      if (!(lon > 5.95 && lon < 10.5 && lat > 45.8 && lat < 47.82)) { toast('Ihr Standort liegt ausserhalb der Schweiz.', 3000); return; }
+      closeIntro && closeIntro();
+      if (present) { camera.flyTo({destination: C.Cartesian3.fromDegrees(lon, lat - 0.0055, 1050), orientation: {heading: 0, pitch: C.Math.toRadians(-38), roll: 0}, duration: flyDur(2.5)}); resolvePlace(lon, lat); }
+      else teleport(lon, lat);
+      toast('Ihr Standort' + (pos.coords.accuracy > 200 ? ` (ungenau, ± ${Math.round(pos.coords.accuracy)} m)` : ''), 3000);
+    }, err => {
+      done();
+      toast(err.code === 1 ? 'Standort nicht freigegeben – bitte im Browser erlauben.' : 'Standort nicht verfügbar.', 3500);
+    }, {enableHighAccuracy: true, timeout: 15000, maximumAge: 60000});
+  });
+}
 
 /* ---------- «Heute»: saubere Gegenwart mit Luftbild, allen Gebäuden und Bäumen ---------- */
 let present = false, savedYear = 1880;
