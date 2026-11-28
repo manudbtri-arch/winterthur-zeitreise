@@ -317,4 +317,4 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 ## 49. Zeitraum der Geschichten erklären
 - [x] Methodik: Abschnitt «Geschichten an Orten» erklärt den Zeitraum (von/bis) und wie er wirkt (3D-Flug blendet aus, 2D-Karte zeigt blass, Zeitraffer nennt ihn).
 - [x] Produktseite: Funktion «Zeitraffer von oben» nennt Zeitraum, Quelle und Direktsprung bei Geschichten.
-- [ ] Schulen: Unterrichtsseite – Hinweis, dass blasse Marker in der 2D-Karte Geschichten ausserhalb des gezeigten Jahres sind (Zeitregler verschieben und beobachten).
+- [x] Schulen: Unterrichtsseite – Hinweis, dass blasse Marker in der 2D-Karte Geschichten ausserhalb des gezeigten Jahres sind (Zeitregler verschieben und beobachten).

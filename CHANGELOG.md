@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- Unterrichtsseite: Die Gruppenarbeit erklärt die blassen Marker der 2D-Karte (Geschichten ausserhalb des gezeigten Jahres) und lädt ein, mit dem Zeitregler zu beobachten.
 - Produktseite: Die Funktion «Zeitraffer von oben» nennt Zeitraum, Link zur Quelle und Sprung in den 3D-Flug bei Geschichten.
 - Methodik: Der Abschnitt «Geschichten an Orten» erklärt den Zeitraum (von/bis) und wie 3D-Flug, 2D-Karte und Zeitraffer ihn zeigen.
 - README: Zeitraum, «Angaben kopieren», «Zeitraffer von oben» und blasse Marker bei Geschichten in der 2D-Karte aufgeführt.
