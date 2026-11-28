@@ -1,0 +1,92 @@
+[
+ {
+  "ort": "1-winterthur-oben-1880",
+  "link": "lon=8.7290&lat=47.4890&h=800&hdg=15&pitch=-22&year=1880",
+  "sekunden": 61,
+  "bilder_pro_s": 0.7,
+  "anzeige": "Fliegen 5× · 310 m über Boden",
+  "karte": "Siegfriedkarte · Blatt Winterthur, Stand 1880",
+  "status": "1880: 808 echte Altbauten und 801 nachgebaute Häuser (Karte 1880) in der Umgebung. Zieh am Jahr-Regler für den Zeitsprung.",
+  "fehler": []
+ },
+ {
+  "ort": "2-winterthur-gasse-1880",
+  "link": "lon=8.7298&lat=47.4996&h=500&hdg=90&pitch=0&year=1880&mode=walk",
+  "sekunden": 70,
+  "bilder_pro_s": 0.2,
+  "anzeige": "Gehen",
+  "karte": "Siegfriedkarte · Blatt Winterthur, Stand 1880",
+  "status": "1880: 860 echte Altbauten und 726 nachgebaute Häuser (Karte 1880) in der Umgebung. Zieh am Jahr-Regler für den Zeitsprung.",
+  "fehler": []
+ },
+ {
+  "ort": "3-winterthur-heute",
+  "link": "lon=8.7290&lat=47.4890&h=800&hdg=15&pitch=-22&mode=now",
+  "sekunden": 50,
+  "bilder_pro_s": 1.2,
+  "anzeige": "Fliegen 5× · 310 m über Boden",
+  "karte": "Luftbild und 3D-Gebäude von swisstopo",
+  "status": "Heute: Luftbild, alle 3D-Gebäude und Bäume von swisstopo.",
+  "fehler": []
+ },
+ {
+  "ort": "4-zuerichsee-rapperswil-1900",
+  "link": "lon=8.8350&lat=47.2050&h=1300&hdg=300&pitch=-25&year=1900",
+  "sekunden": 71,
+  "bilder_pro_s": 0.2,
+  "anzeige": "Fliegen 5× · 1015 m über Boden",
+  "karte": "Siegfriedkarte · Blatt Lachen, Stand 1900",
+  "status": "1900: 14 echte Altbauten und 18 nachgebaute Häuser (Karte 1900) in der Umgebung. Zieh am Jahr-Regler für den Zeitsprung.",
+  "fehler": []
+ },
+ {
+  "ort": "5-bergdorf-grindelwald-1900",
+  "link": "lon=8.0330&lat=46.6020&h=2400&hdg=10&pitch=-28&year=1900",
+  "sekunden": 65,
+  "bilder_pro_s": 0.1,
+  "anzeige": "Fliegen 5× · 585 m über Boden",
+  "karte": "Siegfriedkarte · Blatt Grindelwald, Stand 1900",
+  "status": "1900: 189 echte Altbauten und 750 nachgebaute Häuser (Karte 1900) in der Umgebung. Zieh am Jahr-Regler für den Zeitsprung.",
+  "fehler": []
+ },
+ {
+  "ort": "6-basel-rheinbruecke-1900",
+  "link": "lon=7.5930&lat=47.5545&h=600&hdg=330&pitch=-30&year=1900",
+  "sekunden": 64,
+  "bilder_pro_s": 0.4,
+  "anzeige": "Fliegen 5× · 330 m über Boden",
+  "karte": "Siegfriedkarte · Blatt Basel-Riehen, Stand 1900",
+  "status": "1900: 3019 echte Altbauten und 949 nachgebaute Häuser (Karte 1900) in der Umgebung. Zieh am Jahr-Regler für den Zeitsprung.",
+  "fehler": []
+ },
+ {
+  "ort": "7-winterthur-themen-isos-ivs",
+  "link": "lon=8.7290&lat=47.4890&h=800&hdg=15&pitch=-22&year=1880&themen=isos,ivs",
+  "sekunden": 51,
+  "bilder_pro_s": 1,
+  "anzeige": "Fliegen 5× · 310 m über Boden",
+  "karte": "Siegfriedkarte · Blatt Winterthur, Stand 1880",
+  "status": "1880: 808 echte Altbauten und 801 nachgebaute Häuser (Karte 1880) in der Umgebung. Zieh am Jahr-Regler für den Zeitsprung.",
+  "fehler": []
+ },
+ {
+  "ort": "8-winterthur-themen-luftbild-areal-gewaesser",
+  "link": "lon=8.7290&lat=47.4890&h=800&hdg=15&pitch=-22&year=1880&themen=lubis,areal,gew",
+  "sekunden": 51,
+  "bilder_pro_s": 0.9,
+  "anzeige": "Fliegen 5× · 310 m über Boden",
+  "karte": "Siegfriedkarte · Blatt Winterthur, Stand 1880",
+  "status": "1880: 808 echte Altbauten und 801 nachgebaute Häuser (Karte 1880) in der Umgebung. Zieh am Jahr-Regler für den Zeitsprung.",
+  "fehler": []
+ },
+ {
+  "ort": "9-toessbruecke-1900",
+  "link": "lon=8.7105&lat=47.4880&h=700&hdg=0&pitch=-35&year=1900",
+  "sekunden": 56,
+  "bilder_pro_s": 0.5,
+  "anzeige": "Fliegen 5× · 260 m über Boden",
+  "karte": "Siegfriedkarte · Blatt Winterthur, Stand 1900",
+  "status": "1900: 581 echte Altbauten und 418 nachgebaute Häuser (Karte 1900) in der Umgebung. Zieh am Jahr-Regler für den Zeitsprung.",
+  "fehler": []
+ }
+]
