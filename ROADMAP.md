@@ -258,3 +258,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Gemeinden: 3D-Flug – ein Link nur mit `pin=<lat>,<lon>` (ohne Blickangaben, z. B. von Hand aus dem GIS) blickt von Süden auf den Punkt, Höhe aus dem Gelände, und baut dort die Häuser.
 - [x] Schulen: Hinweise für Lehrpersonen – einen Punkt in der 2D-Karte markieren und als Link oder QR-Code verteilen; die Klasse sieht ihn im 3D-Flug als Markierung.
 - [x] README und Produktseite nachführen: markierter Punkt (2D-Karte → 3D-Flug), Druckansicht der Methodik.
+
+## 38. Punkte übernehmen und weiterverfolgen
+- [x] Gemeinden: Story-Werkstatt übernimmt die Lage aus einem eingefügten Link der 2D-Karte oder des 3D-Flugs (markierter Punkt `pin=`, sonst Mitte `c=`, sonst `lat`/`lon`).
+- [ ] Gemeinden und Forschung: Infokarte des markierten Punkts im 3D-Flug mit «Zeitraffer von oben» (Ausschnitt um den Punkt), wie bei Geschichten.
+- [ ] Methodik: Abschnitt Genauigkeit nennt den markierten Punkt (Link mit 6 Nachkommastellen, LV95 über die Näherungsformel) und die Übernahme aus einem Link in der Story-Werkstatt.

@@ -101,8 +101,8 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
       <label for="adresse">Adresse <small>(Strasse Nr, PLZ Ort – oder Punkt in der Karte setzen)</small></label>
       <div class="search"><input type="search" id="adresse" autocomplete="off" aria-label="Adresse suchen"><ul id="adrRes" hidden role="listbox"></ul></div>
       <p class="coord" id="coordLbl">Noch keine Lage gesetzt.</p>
-      <label for="lvIn">Oder Landeskoordinaten LV95 <small>(E, N in Metern, z. B. aus dem GIS: 2697123, 1261845)</small></label>
-      <div class="two" style="grid-template-columns:minmax(0,1fr) auto"><input type="text" id="lvIn" inputmode="decimal" autocomplete="off" placeholder="2697123, 1261845"><button class="btn" id="lvSet" type="button">Lage setzen</button></div>
+      <label for="lvIn">Oder Landeskoordinaten LV95 <small>(E, N in Metern, z. B. aus dem GIS: 2697123, 1261845) – oder einen Link aus 2D-Karte oder 3D-Flug einfügen</small></label>
+      <div class="two" style="grid-template-columns:minmax(0,1fr) auto"><input type="text" id="lvIn" autocomplete="off" placeholder="2697123, 1261845"><button class="btn" id="lvSet" type="button">Lage setzen</button></div>
       <button class="btn" id="geoMe" type="button" hidden title="Für das Erfassen vor Ort: setzt die Lage an Ihren Standort; er wird nur in diese Geschichte übernommen">Lage = mein Standort</button>
       <button class="btn" id="view3d" type="button" disabled title="Öffnet den 3D-Flug in einem neuen Fenster">Lage im 3D-Flug ansehen</button>
       <label for="quelle">Quelle <small>(überprüfbar, in Worten)</small></label>
@@ -528,7 +528,25 @@ if (window.L) {
   $('map').textContent = 'Die Karte konnte nicht geladen werden. Die Lage lässt sich über die Adresse setzen.';
 }
 /* Lage aus LV95-Koordinaten setzen */
+/* Lage aus einem Link der 2D-Karte oder des 3D-Flugs: markierter Punkt (pin), sonst Mitte (c), sonst lat/lon */
+function llFromLink(t){
+  let q;
+  try { q = new URL(String(t || '').trim()).searchParams; } catch (e) { return null; }
+  const ok = (lon, lat) => lon > 5.5 && lon < 11 && lat > 45.5 && lat < 48;
+  const pin = String(q.get('pin') || '').split(',').map(Number);
+  if (pin.length === 2 && ok(pin[1], pin[0])) return [pin[1], pin[0]];
+  const c = String(q.get('c') || '').split(',').map(Number);
+  if (c.length === 2 && ok(c[0], c[1])) return c;
+  const lon = Number(q.get('lon')), lat = Number(q.get('lat'));
+  return q.get('lon') && q.get('lat') && ok(lon, lat) ? [lon, lat] : null;
+}
 function setFromLV(){
+  if (/^\s*https?:\/\//i.test($('lvIn').value)) {
+    const ll = llFromLink($('lvIn').value);
+    if (ll) setPos([+ll[0].toFixed(6), +ll[1].toFixed(6)], true);
+    else $('coordLbl').textContent = 'Im Link keine Lage gefunden. Am genausten ist «Link zu diesem Punkt» aus dem Lage-Fenster der 2D-Karte (Rechtsklick bzw. langes Drücken).';
+    return;
+  }
   const en = parseLV($('lvIn').value);
   if (!en) { $('coordLbl').textContent = 'Koordinaten nicht erkannt: zwei Zahlen E, N in LV95 (z. B. 2697123, 1261845) innerhalb der Schweiz.'; return; }
   setPos(fromLV95(en[0], en[1]), true);

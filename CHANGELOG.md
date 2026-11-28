@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- Story-Werkstatt: Im Feld für die Landeskoordinaten lässt sich auch ein Link der 2D-Karte oder des 3D-Flugs einfügen – die Lage kommt aus dem markierten Punkt (`pin=`), sonst aus der Mitte (`c=`) oder `lat`/`lon`.
 - README und Produktseite: markierter Punkt (2D-Karte → 3D-Flug, Link mit `pin=`) und Druckansicht der Methodik aufgeführt.
 - Unterrichtsseite: Hinweis «Punkt zeigen» – einen Punkt in der 2D-Karte wählen, als Link oder QR-Code verteilen und im 3D-Flug als Markierung wiederfinden.
 - 3D-Flug: Ein Link nur mit `pin=<lat>,<lon>` (z. B. von Hand aus dem GIS) blickt von Süden auf den Punkt, 600 m über dem Gelände, und baut dort die Häuser; ohne 3D-Grafik zeigt die 2D-Karte den Punkt.
