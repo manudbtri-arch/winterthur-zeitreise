@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 2D-Karte: Rechtsklick, Alt-Klick oder langes Drücken zeigt die Lage des Punkts in LV95 (und WGS84) mit Knopf «Koordinaten kopieren».
 - Story-Werkstatt: Knopf «Lage = mein Standort» setzt die Lage einer Geschichte beim Erfassen vor Ort an den eigenen Standort (nur in der Schweiz, mit Hinweis bei ungenauer Ortung); in der Partner-Anleitung erwähnt.
 - 3D-Flug: Startbildschirm mit Knopf «Mein Standort» neben «Von oben ansehen»; Hinweise erscheinen dort, solange er offen ist.
 - 3D-Flug: Infokarte eines rekonstruierten Hauses (auch in der Fernsicht) nennt die Lage des angeklickten Punkts in LV95 und bietet «Koordinaten kopieren».
