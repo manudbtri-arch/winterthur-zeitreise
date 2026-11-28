@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 3D-Flug und README: Die Übersicht «Tasten und Gesten» und das README nennen «Angaben kopieren» bei Geschichten und «Koordinaten teilen» auf dem Handy.
 - 3D-Flug und 2D-Karte (Handy): «Koordinaten teilen» schickt die Lage in LV95 über das System-Teilen (Nachricht, Mail, Notizen); am Computer bleibt «Koordinaten kopieren».
 - 3D-Flug: Die Infokarte einer Geschichte hat den Knopf «Angaben kopieren» (auf dem Handy «Angaben teilen») – Titel, Zeitraum, Text, Quelle, Lage in LV95, Direktlink und Abrufdatum als Text für Bericht oder Arbeitsblatt.
 - Barrierefreiheit: Die Zeile «Orte mit Geschichten» in 3D-Flug, 2D-Karte und Zeitraffer ist als Navigation benannt, Bildschirmleser sagen sie als Ortswahl an.

@@ -297,4 +297,4 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 ## 45. Geschichten zitieren, Koordinaten teilen
 - [x] Forschung und Schulen: Infokarte einer Geschichte mit «Angaben kopieren» (Titel, Zeitraum, Text, Quelle, Lage LV95, Direktlink, Abrufdatum), wie bei belegten Gebäuden.
 - [x] Handy: «Koordinaten kopieren» (Infokarte im 3D-Flug, Lage-Fenster der 2D-Karte) öffnet auf Touch-Geräten das System-Teilen, sonst wie bisher kopieren.
-- [ ] Bedienung und README nachführen: «Angaben kopieren» bei Geschichten, «Koordinaten teilen» auf dem Handy.
+- [x] Bedienung und README nachführen: «Angaben kopieren» bei Geschichten, «Koordinaten teilen» auf dem Handy.
