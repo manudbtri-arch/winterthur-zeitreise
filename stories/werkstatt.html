@@ -76,7 +76,7 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
         <div><label for="ort">Ort</label><input type="text" id="ort" placeholder="z. B. Winterthur" autocomplete="off"></div>
         <div><label for="fname">Dateiname <small>(ohne .json)</small></label><input type="text" id="fname" placeholder="winterthur" autocomplete="off" pattern="[a-z0-9-]{1,40}"></div>
       </div>
-      <p class="hint">Dateiname nur Kleinbuchstaben, Ziffern und Bindestrich. Eine bestehende JSON-Datei können Sie zum Bearbeiten öffnen. Eine Tabelle (CSV aus Excel o. Ä.) mit den Spalten titel, text, von, bis, adresse, lon, lat, quelle, url wird an die Liste angehängt.</p>
+      <p class="hint">Dateiname nur Kleinbuchstaben, Ziffern und Bindestrich. Eine bestehende JSON-Datei können Sie zum Bearbeiten öffnen. Eine Tabelle (CSV aus Excel o. Ä.) mit den Spalten titel, text, von, bis, adresse, lon, lat, quelle, url wird an die Liste angehängt; statt lon und lat gehen auch e_lv95 und n_lv95 (Landeskoordinaten).</p>
       <div class="row">
         <label class="btn" for="importFile" style="margin:0;display:inline-flex;align-items:center">Datei öffnen …</label>
         <input type="file" id="importFile" accept=".json,.csv,.txt,application/json,text/csv" hidden>
@@ -356,6 +356,10 @@ function importCsv(raw){
     if (get(r, 'adresse')) st.adresse = get(r, 'adresse');
     const lon = dec(get(r, 'lon')), lat = dec(get(r, 'lat'));
     if (lon !== undefined && lat !== undefined) { st.lon = lon; st.lat = lat; }
+    else if (get(r, 'e_lv95') && get(r, 'n_lv95')) {        /* Landeskoordinaten, z. B. aus dem GIS oder der Gebäudeliste des 3D-Flugs */
+      const en = parseLV(get(r, 'e_lv95') + ' ' + get(r, 'n_lv95'));
+      if (en) { const ll = fromLV95(en[0], en[1]); st.lon = +ll[0].toFixed(6); st.lat = +ll[1].toFixed(6); }
+    }
     if (get(r, 'url')) st.url = get(r, 'url');
     doc.geschichten.push(st); n++;
   }

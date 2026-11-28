@@ -38,7 +38,7 @@ Eine Datei pro Ort, z. B. `stories/winterthur.json`, in UTF-8:
 
 ## Ohne Programmierkenntnisse: Story-Werkstatt
 
-Die [Story-Werkstatt](https://manudbtri-arch.github.io/winterthur-zeitreise/stories/werkstatt.html) erfasst Geschichten im Formular, setzt die Lage per Adresse, Klick in die Karte oder vor Ort mit dem Handy («Lage = mein Standort»), prüft die Pflichtfelder und speichert die Datei in genau diesem Format. Eine bestehende Datei lässt sich dort zum Bearbeiten öffnen; eine Tabelle (CSV, z. B. aus Excel) mit den Spalten `titel`, `text`, `von`, `bis`, `adresse`, `lon`, `lat`, `quelle`, `url` wird übernommen und lässt sich dort ergänzen. Die Angaben bleiben im eigenen Browser, bis Sie die Datei weitergeben.
+Die [Story-Werkstatt](https://manudbtri-arch.github.io/winterthur-zeitreise/stories/werkstatt.html) erfasst Geschichten im Formular, setzt die Lage per Adresse, Klick in die Karte oder vor Ort mit dem Handy («Lage = mein Standort»), prüft die Pflichtfelder und speichert die Datei in genau diesem Format. Eine bestehende Datei lässt sich dort zum Bearbeiten öffnen; eine Tabelle (CSV, z. B. aus Excel) mit den Spalten `titel`, `text`, `von`, `bis`, `adresse`, `lon`, `lat`, `quelle`, `url` (statt `lon`/`lat` auch `e_lv95`/`n_lv95` in Landeskoordinaten) wird übernommen und lässt sich dort ergänzen. Die Angaben bleiben im eigenen Browser, bis Sie die Datei weitergeben.
 
 ## Regeln für den Inhalt
 
