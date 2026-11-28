@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- Unterrichtsseite: Auftrag 4 hat einen neuen Schritt mit Landeskoordinaten: Lage zweier Häuser aus der Infokarte notieren, die Distanz mit dem Satz des Pythagoras nachrechnen und mit der Messung vergleichen.
 - Methodik: Unter «Genauigkeit» steht, wie die Koordinaten an allen Stellen entstehen: Herkunft der Lage je Infokarte, Rundung auf 1 m, Näherungsformel und LV03-Erkennung der Story-Werkstatt.
 - 2D-Karte: Im Lage-Fenster (Rechtsklick/langes Drücken) gibt es den Knopf «Link zu diesem Punkt». Der Link (`pin=<lat>,<lon>`) öffnet die Karte mit demselben Fenster am Punkt; auf dem Handy über das System-Teilen.
 - Produktseite: «Auf der Gemeinde-Website» nennt das Erfassen von Geschichten vor Ort mit dem Handy und die Übernahme von LV95-Koordinaten aus dem GIS (auch als Tabelle).
