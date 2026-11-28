@@ -248,3 +248,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Vertrauen in die Daten: Koordinatenanzeige (F3) nennt die Höhe über Meer aus dem Höhendienst von swisstopo (Gelände am Standort plus Höhe über Boden) statt der Höhe über dem Ellipsoid des 3D-Geländes (in der Schweiz rund 50 m mehr).
 - [x] Gemeinden: Story-Werkstatt zeigt beim Bearbeiten eine Vorschau «So erscheint die Infokarte» (Zeitraum, Titel, Text, Quelle).
 - [x] Schulen: Auftrag 4 der Unterrichtsseite – Geländehöhen beider Punkte mit dem gemessenen Höhenunterschied vergleichen (Dach oder Boden?).
+
+## 36. Punkte weitergeben, Methodik drucken
+- [ ] Forschung: Methodik-Seite – Inhaltsverzeichnis vollständig (Themen aus Bundesdaten und Statistik fehlen, Nummern stimmen nicht) und Druckansicht, damit die Seite sauber als PDF einer Arbeit beiliegt.
+- [ ] Gemeinden und Schulen: Lage-Fenster der 2D-Karte mit Knopf «Diesen Punkt im 3D-Flug ansehen» (Blick von Süden auf den Punkt statt auf die Kartenmitte; auch auf dem Handy nach langem Drücken).
+- [ ] Forschung: 3D-Flug zeigt einen Punkt aus dem Link (`pin=<lat>,<lon>`, z. B. aus der 2D-Karte) als Markierung mit Lage in LV95.
