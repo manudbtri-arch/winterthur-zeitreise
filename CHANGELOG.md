@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- Produktseite: Die Funktion «Zeitraffer von oben» nennt Zeitraum, Link zur Quelle und Sprung in den 3D-Flug bei Geschichten.
 - Methodik: Der Abschnitt «Geschichten an Orten» erklärt den Zeitraum (von/bis) und wie 3D-Flug, 2D-Karte und Zeitraffer ihn zeigen.
 - README: Zeitraum, «Angaben kopieren», «Zeitraffer von oben» und blasse Marker bei Geschichten in der 2D-Karte aufgeführt.
 - 2D-Karte: Marker von Geschichten, die im gezeigten Jahr nicht gelten, erscheinen blass; der Hinweis beim Darüberfahren nennt ihren Zeitraum.
