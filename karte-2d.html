@@ -461,7 +461,7 @@ function showLV(ll){
   const box = document.createElement('div'); box.className = 'story';
   const b = document.createElement('b'); b.textContent = 'Lage (LV95)';
   const p = document.createElement('p'); p.textContent = `E ${E} · N ${N}`;
-  const q = document.createElement('small'); q.textContent = `WGS84: ${ll.lat.toFixed(5)} N, ${ll.lng.toFixed(5)} O · Umrechnung mit der Näherungsformel von swisstopo, Abweichung im Meterbereich`;
+  const q = document.createElement('small'); q.textContent = `WGS84: ${ll.lat.toFixed(5)} N, ${ll.lng.toFixed(5)} O · Umrechnung mit der Näherungsformel von swisstopo, Abweichung im Meterbereich · Höhe: Höhendienst swisstopo (swissALTI3D)`;
   const c = document.createElement('button'); c.type = 'button'; c.textContent = 'Koordinaten kopieren';
   c.addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(t); c.textContent = 'Kopiert: ' + t; }
@@ -477,6 +477,15 @@ function showLV(ll){
   });
   box.append(b, p, q, c, document.createElement('br'), lk);
   const pop = L.popup({maxWidth: 300}).setLatLng(ll).setContent(box).openOn(map);
+  /* Geländehöhe über Meer (Höhendienst geo.admin.ch, swissALTI3D), kommt nach, wenn verfügbar */
+  (async () => {
+    const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 4000);
+    try {
+      const j = await (await fetch(`https://api3.geo.admin.ch/rest/services/height?easting=${E}&northing=${N}&sr=2056`, {signal: ac.signal})).json();
+      const h = Number(j && j.height);
+      if (Number.isFinite(h) && h > 150 && h < 4700) p.textContent += ` · Gelände ${Math.round(h)} m ü. M.`;
+    } catch (e) {} finally { clearTimeout(tm); }
+  })();
   return pop;
 }
 map.on('popupclose', e => { if (e.popup === pinPop) { pinLL = null; pinPop = null; } });
