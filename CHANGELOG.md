@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 3D-Flug: Die Infokarte einer Geschichte hat den Knopf «Angaben kopieren» (auf dem Handy «Angaben teilen») – Titel, Zeitraum, Text, Quelle, Lage in LV95, Direktlink und Abrufdatum als Text für Bericht oder Arbeitsblatt.
 - Barrierefreiheit: Die Zeile «Orte mit Geschichten» in 3D-Flug, 2D-Karte und Zeitraffer ist als Navigation benannt, Bildschirmleser sagen sie als Ortswahl an.
 - Zeitraffer von oben (Handy): «Koordinaten teilen» schickt Ort und Mitte des Ausschnitts in LV95 über das System-Teilen; am Computer bleibt «Koordinaten kopieren».
 - Produktseite: Die Funktionsliste nennt die Geschichten im Zeitraffer und «Messung teilen» auf dem Handy.

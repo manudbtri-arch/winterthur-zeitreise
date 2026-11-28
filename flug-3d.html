@@ -1632,7 +1632,7 @@ $('go').addEventListener('click', () => { try { canvas.requestPointerLock(); } c
 /* Klick auf ein Haus: Infokarte. Mit übernommener Maus zählt das Fadenkreuz. */
 let infoTimer, infoStory = null, infoLV = null, infoMeas = null, infoPin = null, infoCite = null;
 function showInfo(p, at){
-  let title = '', text = '', badge = '', src = '', rec = false, link = '', linkTxt = 'Quelle öffnen', hold = 7000, story = null, ll = null, pin = null, cite = null;
+  let title = '', text = '', badge = '', src = '', rec = false, link = '', linkTxt = 'Quelle öffnen', hold = 7000, story = null, ll = null, pin = null, cite = null, citeSrc = '';
   if (p && p.id instanceof C.Entity && p.id.story) {
     const st = p.id.story;
     title = st.titel; text = st.text; badge = 'Geschichte' + (storyRange(st) ? ' · ' + storyRange(st) : ''); hold = KIOSK ? 60000 : 20000;   /* im Kiosk-Rundgang bis zur nächsten Station */
@@ -1640,6 +1640,9 @@ function showInfo(p, at){
     link = !KIOSK && /^https:\/\//.test(st.url || '') ? st.url : '';
     story = STORY_ID_RE.test(String(st.id || '')) ? String(st.id) : null;
     if (Number.isFinite(st.lon) && Number.isFinite(st.lat)) ll = [st.lon, st.lat];
+    /* «Angaben kopieren»: Geschichte mit Zeitraum, Quelle und Direktlink für Bericht oder Arbeitsblatt */
+    cite = [title, storyRange(st) ? `Zeitraum: ${storyRange(st)}` : '', text, src, story ? `Direktlink: ${storyUrl(story)}` : ''];
+    citeSrc = `Abgerufen am ${today()} über Zeitreise Schweiz`;
   } else if (p && p.id instanceof C.Entity && p.id.pin) {
     title = 'Markierter Punkt'; badge = 'Punkt'; ll = pin = p.id.pin; hold = 20000;
     text = 'Dieser Punkt kommt aus dem Link (z. B. aus dem Lage-Fenster der 2D-Karte).';
@@ -1682,8 +1685,9 @@ function showInfo(p, at){
   infoLV = ll && !KIOSK ? toLV95(ll[0], ll[1]).map(Math.round) : null;
   if (infoLV) src += ` · Lage LV95: E ${infoLV[0]}, N ${infoLV[1]}`;
   infoCite = cite && !KIOSK ? [...cite, infoLV ? `Lage LV95: E ${infoLV[0]}, N ${infoLV[1]} (Näherungsformel swisstopo, gerundet auf 1 m)` : '',
-    link ? `Nachprüfen: ${link}` : '', `Quelle: swissBUILDINGS3D (swisstopo), Gebäuderegister GWR (BFS); abgerufen am ${today()} über Zeitreise Schweiz`].filter(Boolean).join('\n') : null;
+    link ? `Nachprüfen: ${link}` : '', citeSrc || `Quelle: swissBUILDINGS3D (swisstopo), Gebäuderegister GWR (BFS); abgerufen am ${today()} über Zeitreise Schweiz`].filter(Boolean).join('\n') : null;
   $('iCite').hidden = !infoCite; $('iCite').textContent = CAN_SHARE ? 'Angaben teilen' : 'Angaben kopieren';
+  $('iCite').title = story ? 'Titel, Zeitraum, Text, Quelle, Lage und Direktlink als Text für Bericht oder Arbeitsblatt' : 'Adresse, EGID, Baujahr, Lage und Quelle als Text für Bericht oder Inventar';
   $('iTitle').textContent = title; $('iText').textContent = text; $('iSrc').textContent = src;
   $('iBadge').textContent = badge; $('iBadge').classList.toggle('rec', rec);
   $('iLink').hidden = !link; if (link) $('iLink').href = link; $('iLink').textContent = linkTxt;
@@ -2408,7 +2412,7 @@ $('iCoord').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(t); $('iCoord').textContent = 'Kopiert: ' + t + ' (LV95)'; }
   catch (e) { window.prompt('Koordinaten LV95 (E, N):', t); }
 });
-/* Angaben eines belegten Gebäudes (Adresse, EGID, Baujahr, Lage, Quelle, Abrufdatum) als Text */
+/* Angaben eines belegten Gebäudes (Adresse, EGID, Baujahr, Lage, Quelle, Abrufdatum) bzw. einer Geschichte als Text */
 $('iCite').addEventListener('click', async () => {
   clearTimeout(infoTimer);
   if (!infoCite) return;
@@ -2418,7 +2422,7 @@ $('iCite').addEventListener('click', async () => {
     catch (e) { if (e && e.name === 'AbortError') return; }
   }
   try { await navigator.clipboard.writeText(infoCite); $('iCite').textContent = 'Angaben kopiert'; }
-  catch (e) { window.prompt('Angaben zum Gebäude:', infoCite.replace(/\n/g, ' · ')); }
+  catch (e) { window.prompt(infoStory ? 'Angaben zur Geschichte:' : 'Angaben zum Gebäude:', infoCite.replace(/\n/g, ' · ')); }
 });
 /* QR-Code zur Geschichte, z. B. für eine Tafel am Ort: öffnet den 3D-Flug dort mit Infokarte */
 $('iQr').addEventListener('click', () => {
