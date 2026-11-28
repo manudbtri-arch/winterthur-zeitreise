@@ -236,5 +236,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 33. Messen im Feld und im Unterricht
 - [x] Handy: 2D-Karte klappt beim Start des Messens auf schmalen Bildschirmen die Seitenleiste ein, damit die Karte frei ist; der Knopf zum Aufklappen nennt «Messen läuft».
-- [ ] Schulen: Unterrichtsseite – Lehrperson bereitet eine Messung in der 2D-Karte als Link oder QR-Code vor, die Klasse prüft sie im 3D-Flug nach (Hinweise für Lehrpersonen).
+- [x] Schulen: Unterrichtsseite – Lehrperson bereitet eine Messung in der 2D-Karte als Link oder QR-Code vor, die Klasse prüft sie im 3D-Flug nach (Hinweise für Lehrpersonen).
 - [ ] Forschung: Messung im 3D-Flug nennt die Geländehöhe über Meer beider Punkte (Höhendienst geo.admin.ch, LHN95), auch in «Messung kopieren».

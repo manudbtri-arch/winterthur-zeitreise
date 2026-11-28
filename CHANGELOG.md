@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- Unterrichtsseite: Hinweis «Messung vorbereiten» – Strecke in der 2D-Karte setzen, als Link oder QR-Code verteilen, die Klasse prüft sie im 3D-Flug nach.
 - 2D-Karte (Handy): Beim Start des Messens klappt die Seitenleiste ein, damit die Karte frei ist; der Knopf zum Aufklappen zeigt «Messen läuft».
 - 2D-Karte: Knopf «Link zu dieser Messung» – der Link (`mess=<lat>,<lon>;<lat>,<lon>`) öffnet die Karte mit derselben Messung; auf dem Handy über das System-Teilen.
 - 3D-Flug: Während des Messens zeigt oben eine Leiste «Messen · Punkt x von 2» mit Knopf «Beenden» – auch auf Touch-Geräten ohne Taste L oder Esc.
