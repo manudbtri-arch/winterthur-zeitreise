@@ -291,5 +291,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 44. Produktseite, Teilen, Zugänglichkeit
 - [x] Produktseite: Funktionsliste nennt die Geschichten im Zeitraffer («Orte mit Geschichten») und «Messung teilen» auf dem Handy.
-- [ ] Handy: «Koordinaten kopieren» im Zeitraffer öffnet auf Touch-Geräten das System-Teilen, sonst wie bisher kopieren.
+- [x] Handy: «Koordinaten kopieren» im Zeitraffer öffnet auf Touch-Geräten das System-Teilen, sonst wie bisher kopieren.
 - [ ] Barrierefreiheit: Zeile «Orte mit Geschichten» (3D-Flug, 2D-Karte, Zeitraffer) als benannte Navigation, damit Bildschirmleser sie als Ortswahl ansagen.

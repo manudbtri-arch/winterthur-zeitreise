@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- Zeitraffer von oben (Handy): «Koordinaten teilen» schickt Ort und Mitte des Ausschnitts in LV95 über das System-Teilen; am Computer bleibt «Koordinaten kopieren».
 - Produktseite: Die Funktionsliste nennt die Geschichten im Zeitraffer und «Messung teilen» auf dem Handy.
 - README und Unterrichtsseite: «Orte mit Geschichten» im Zeitraffer und «Messung teilen» auf Tablet und Handy aufgeführt.
 - 3D-Flug und 2D-Karte (Handy): «Messung teilen» öffnet das System-Teilen mit allen Messwerten (Nachricht, Mail, Notizen); am Computer bleibt «Messung kopieren».

@@ -1058,10 +1058,16 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
       $('placeMeta').appendChild(s);
     }
     /* Mitte in Landeskoordinaten kopieren, z. B. für Bildlegende oder GIS (Näherungsformel swisstopo) */
-    const cb = document.createElement('button'); cb.type = 'button'; cb.textContent = 'Koordinaten kopieren';
+    const share = matchMedia('(pointer:coarse)').matches && !!navigator.share;
+    const cb = document.createElement('button'); cb.type = 'button'; cb.textContent = share ? 'Koordinaten teilen' : 'Koordinaten kopieren';
     cb.style.cssText = 'font:600 13px Archivo,sans-serif;color:inherit;background:none;border:0;padding:0;min-height:28px;cursor:pointer;text-decoration:underline';
     cb.addEventListener('click', async () => {
       const t = `${E}, ${N}`;
+      /* Handy: System-Teilen (Nachricht, Mail, Notizen), sonst Zwischenablage */
+      if (share) {
+        try { await navigator.share({title: 'Zeitraffer von oben – ' + st.title, text: `${st.title}: Mitte LV95 E ${E}, N ${N}`}); return; }
+        catch (e) { if (e && e.name === 'AbortError') return; }
+      }
       try { await navigator.clipboard.writeText(t); cb.textContent = 'Kopiert: ' + t; }
       catch (e) { window.prompt('Mitte des Ausschnitts, LV95 (E, N):', t); }
     });
