@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- Unterrichtsseite: Hinweis «Punkt zeigen» – einen Punkt in der 2D-Karte wählen, als Link oder QR-Code verteilen und im 3D-Flug als Markierung wiederfinden.
 - 3D-Flug: Ein Link nur mit `pin=<lat>,<lon>` (z. B. von Hand aus dem GIS) blickt von Süden auf den Punkt, 600 m über dem Gelände, und baut dort die Häuser; ohne 3D-Grafik zeigt die 2D-Karte den Punkt.
 - 3D-Flug: Ein Punkt aus dem Link (`pin=<lat>,<lon>`) erscheint als blaue Markierung «Markierter Punkt»; Antippen zeigt die Lage in LV95 mit «Koordinaten kopieren», und «Link kopieren» behält den Punkt. «Diesen Punkt im 3D-Flug ansehen» in der 2D-Karte gibt ihn mit.
 - 2D-Karte: Das Lage-Fenster (Rechtsklick, Alt-Klick, langes Drücken) hat den Knopf «Diesen Punkt im 3D-Flug ansehen» – der 3D-Flug blickt von Süden auf diesen Punkt statt auf die Kartenmitte, im gezeigten Jahr.
