@@ -213,3 +213,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Gemeinden: Story-Werkstatt nimmt die Lage auch als LV95-Koordinaten an (Feld «E, N», z. B. aus dem GIS der Gemeinde) und zeigt die gesetzte Lage zusätzlich in LV95.
 - [x] Gemeinden: Story-Werkstatt übernimmt beim CSV-Import auch die Spalten `e_lv95` und `n_lv95`, wenn `lon`/`lat` fehlen; in der Partner-Anleitung erklärt.
 - [x] Bedienung: Übersicht «Tasten und Gesten» im 3D-Flug nennt «Mein Standort» und «Koordinaten kopieren».
+
+## 29. Punkte teilen und erklären
+- [x] Produktseite: «So setzen Sie es ein» nennt für Gemeinden das Erfassen vor Ort («Lage = mein Standort») und die Übernahme von Koordinaten aus dem GIS (LV95, CSV).
+- [ ] Forschung: 2D-Karte – im Lage-Fenster Knopf «Link zu diesem Punkt» (`pin=<lat>,<lon>` im Link setzt beim Öffnen eine Markierung).
+- [ ] Methodik: Genauigkeit der Koordinaten an allen Stellen erklären (Infokarte, 2D-Karte, Story-Werkstatt; Näherungsformel, LV03-Erkennung).
