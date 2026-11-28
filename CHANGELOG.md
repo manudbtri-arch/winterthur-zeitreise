@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 3D-Flug: Die Infokarte des markierten Punkts hat den Knopf «Link zu diesem Punkt» (aktueller Blick samt Markierung); auf dem Handy öffnet er das System-Teilen.
 - 2D-Karte: Knopf «Lage der Kartenmitte (LV95)» öffnet das Lage-Fenster ohne Rechtsklick – mit Tastatur und Bildschirmleser bedienbar, auf dem Handy klappt die Seitenleiste dafür ein.
 - Methodik: Die Tabelle «Genauigkeit» erklärt den markierten Punkt (Link mit `pin=`, sechs Nachkommastellen, Umrechnung in LV95) und wie die Story-Werkstatt die Lage aus einem Link übernimmt.
 - 3D-Flug: Die Infokarte des markierten Punkts hat den Link «Zeitraffer von oben» (Luftbilder und Karten rund um den Punkt), wie bei Geschichten.

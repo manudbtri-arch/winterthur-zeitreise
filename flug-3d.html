@@ -1680,7 +1680,9 @@ function showInfo(p, at){
   $('iTitle').textContent = title; $('iText').textContent = text; $('iSrc').textContent = src;
   $('iBadge').textContent = badge; $('iBadge').classList.toggle('rec', rec);
   $('iLink').hidden = !link; if (link) $('iLink').href = link; $('iLink').textContent = linkTxt;
-  infoStory = story; infoPin = KIOSK ? null : pin; $('iShare').hidden = $('iQr').hidden = !story; $('iTl').hidden = !story && !infoPin;
+  infoStory = story; infoPin = KIOSK ? null : pin; $('iQr').hidden = !story; $('iShare').hidden = $('iTl').hidden = !story && !infoPin;
+  const verb = matchMedia('(pointer:coarse)').matches && navigator.share ? 'teilen' : 'kopieren';
+  $('iShare').textContent = `Link zu ${story ? 'dieser Geschichte' : 'diesem Punkt'} ${verb}`;
   $('iTl').title = story ? 'Entwicklung rund um diese Geschichte in Luftbildern und Karten' : 'Entwicklung rund um diesen Punkt in Luftbildern und Karten';
   $('iCoord').hidden = !infoLV; $('iCoord').textContent = 'Koordinaten kopieren';
   $('info').hidden = false;
@@ -2370,9 +2372,9 @@ const STORY_ID = STORY_ID_RE.test(new URLSearchParams(location.search).get('stor
 /* Link zu einer Geschichte: öffnet den 3D-Flug direkt dort, mit Infokarte */
 const storyUrl = id => { const q = new URLSearchParams({story: id}); if (STORY_NAME) q.set('stories', STORY_NAME); return location.origin + location.pathname + '?' + q.toString(); };
 $('iShare').addEventListener('click', async () => {
-  if (!infoStory) return;
   clearTimeout(infoTimer);
-  shareLink(storyUrl(infoStory), `Zeitreise Schweiz – ${$('iTitle').textContent}`, 'Link zur Geschichte');
+  if (infoStory) shareLink(storyUrl(infoStory), `Zeitreise Schweiz – ${$('iTitle').textContent}`, 'Link zur Geschichte');
+  else if (infoPin) shareLink(permalink(), 'Zeitreise Schweiz – Markierter Punkt', 'Link zum Punkt');   /* aktueller Blick samt Markierung */
 });
 /* Koordinaten (LV95, E/N in Metern) in die Zwischenablage, z. B. für QGIS oder einen Bericht */
 $('iCoord').addEventListener('click', async () => {
