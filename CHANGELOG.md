@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- README: «Angaben kopieren», «Orte mit Geschichten» (3D-Flug, 2D-Karte) und die Beispiel-Vorlagen der Story-Werkstatt aufgeführt.
 - 3D-Flug: Die Übersicht «Tasten und Gesten» nennt «Angaben kopieren» bzw. «Angaben teilen» und die Zeile «Orte mit Geschichten».
 - 3D-Flug (Handy): «Angaben teilen» in der Infokarte eines belegten Gebäudes öffnet das System-Teilen (Nachricht, Mail, Notizen); am Computer bleibt «Angaben kopieren».
 - Story-Werkstatt: «Beispiel öffnen» lädt die Datei von Winterthur, Basel oder Grindelwald als Vorlage, um Aufbau und Quellenangaben anzusehen und anzupassen; in der Partner-Anleitung erwähnt.
