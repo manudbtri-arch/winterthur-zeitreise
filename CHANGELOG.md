@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- Methodik: Die Tabelle «Genauigkeit» erklärt den markierten Punkt (Link mit `pin=`, sechs Nachkommastellen, Umrechnung in LV95) und wie die Story-Werkstatt die Lage aus einem Link übernimmt.
 - 3D-Flug: Die Infokarte des markierten Punkts hat den Link «Zeitraffer von oben» (Luftbilder und Karten rund um den Punkt), wie bei Geschichten.
 - Story-Werkstatt: Im Feld für die Landeskoordinaten lässt sich auch ein Link der 2D-Karte oder des 3D-Flugs einfügen – die Lage kommt aus dem markierten Punkt (`pin=`), sonst aus der Mitte (`c=`) oder `lat`/`lon`.
 - README und Produktseite: markierter Punkt (2D-Karte → 3D-Flug, Link mit `pin=`) und Druckansicht der Methodik aufgeführt.
