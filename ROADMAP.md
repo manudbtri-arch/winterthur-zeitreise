@@ -283,3 +283,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Handy: «Angaben kopieren» öffnet auf Touch-Geräten das System-Teilen (Nachricht, Mail, Notizen), sonst wie bisher kopieren.
 - [x] Bedienung: Übersicht «Tasten und Gesten» nennt «Angaben kopieren» und «Orte mit Geschichten».
 - [x] README nachführen: «Angaben kopieren», «Orte mit Geschichten» (3D-Flug, 2D-Karte) und Beispiel-Vorlage der Story-Werkstatt.
+
+## 43. Orte im Zeitraffer, Teilen auf dem Handy
+- [ ] Gemeinden: Zeitraffer von oben mit der Zeile «Orte mit Geschichten» (Winterthur, Basel, Grindelwald) wie im 3D-Flug und in der 2D-Karte.
+- [ ] Handy: «Messung kopieren» (3D-Flug und 2D-Karte) öffnet auf Touch-Geräten das System-Teilen mit dem Text, sonst wie bisher kopieren.
+- [ ] README und Unterrichtsseite nachführen: «Orte mit Geschichten» im Zeitraffer, Teilen der Messung auf dem Handy.
