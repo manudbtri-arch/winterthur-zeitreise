@@ -223,3 +223,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Schulen: Auftrag 4 der Unterrichtsseite um Landeskoordinaten ergänzen (Lage zweier Orte aus der Infokarte notieren, Distanz mit dem Satz des Pythagoras nachrechnen, mit der Messung vergleichen).
 - [x] Handy: Koordinatenanzeige (sonst F3) auch ohne Tastatur – Häkchen «Koordinaten anzeigen» in den Einstellungen.
 - [x] Forschung: Zeitraffer nennt die Mitte des Ausschnitts in LV95 bei der Beschreibung, mit «Koordinaten kopieren».
+
+## 31. Messen und belegen
+- [ ] Forschung und Schulen: Messung im 3D-Flug nennt die Lage beider Punkte in LV95; Knopf «Messung kopieren» gibt Distanz, Höhenunterschied, Punkte, Ort, Jahr, Quelle und Datum als Text für Bericht oder Arbeitsblatt.
+- [ ] Schulen (langsame Geräte): 2D-Karte mit Messwerkzeug – zwei Punkte anklicken, Linie und waagrechte Distanz in der Karte, mit Lage in LV95.
+- [ ] Schulen: Auftrag 4 der Unterrichtsseite nennt das Messwerkzeug der 2D-Karte als Weg ohne 3D und «Messung kopieren» zum Festhalten der Werte.
