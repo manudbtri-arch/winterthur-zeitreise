@@ -1843,7 +1843,7 @@ function measureAt(pos){
     `Messung Zeitreise Schweiz – ${placeName}, ${present ? 'heute' : 'Jahr ' + (+$('yr').value || 1880)}`,
     `Distanz ${m(d3)} · ${$('iText').textContent}`, lvTxt,
     `Quelle: Gelände und Gebäude © swisstopo, gemessen im 3D-Bild am ${today()}; Richtwert, keine amtliche Vermessung`].join('\n');
-  $('iCoord').hidden = !infoMeas; $('iCoord').textContent = 'Messung kopieren';
+  $('iCoord').hidden = !infoMeas; $('iCoord').textContent = CAN_SHARE ? 'Messung teilen' : 'Messung kopieren';
   clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, 30000);
   /* Geländehöhe über Meer beider Punkte (Höhendienst geo.admin.ch, swissALTI3D); kommt nach, wenn verfügbar */
   const seq = ++meas.seq, base = $('iSrc').textContent;
@@ -2394,6 +2394,11 @@ $('iShare').addEventListener('click', async () => {
 $('iCoord').addEventListener('click', async () => {
   clearTimeout(infoTimer);
   if (infoMeas) {
+    /* Handy: System-Teilen (Nachricht, Mail, Notizen), sonst Zwischenablage */
+    if (CAN_SHARE) {
+      try { await navigator.share({title: 'Zeitreise Schweiz – Messung', text: infoMeas}); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
     try { await navigator.clipboard.writeText(infoMeas); $('iCoord').textContent = 'Messung kopiert'; }
     catch (e) { window.prompt('Messung:', infoMeas.replace(/\n/g, ' · ')); }
     return;

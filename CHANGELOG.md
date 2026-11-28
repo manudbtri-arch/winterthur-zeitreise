@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 3D-Flug und 2D-Karte (Handy): «Messung teilen» öffnet das System-Teilen mit allen Messwerten (Nachricht, Mail, Notizen); am Computer bleibt «Messung kopieren».
 - Zeitraffer von oben: Die Zeile «Orte mit Geschichten» führt zu den Geschichten von Winterthur, Basel und Grindelwald als Ausschnitte oder zurück zu den ausgewählten Orten; der aktuelle Ort ist hervorgehoben.
 - README: «Angaben kopieren», «Orte mit Geschichten» (3D-Flug, 2D-Karte) und die Beispiel-Vorlagen der Story-Werkstatt aufgeführt.
 - 3D-Flug: Die Übersicht «Tasten und Gesten» nennt «Angaben kopieren» bzw. «Angaben teilen» und die Zeile «Orte mit Geschichten».

@@ -286,5 +286,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 43. Orte im Zeitraffer, Teilen auf dem Handy
 - [x] Gemeinden: Zeitraffer von oben mit der Zeile «Orte mit Geschichten» (Winterthur, Basel, Grindelwald) wie im 3D-Flug und in der 2D-Karte.
-- [ ] Handy: «Messung kopieren» (3D-Flug und 2D-Karte) öffnet auf Touch-Geräten das System-Teilen mit dem Text, sonst wie bisher kopieren.
+- [x] Handy: «Messung kopieren» (3D-Flug und 2D-Karte) öffnet auf Touch-Geräten das System-Teilen mit dem Text, sonst wie bisher kopieren.
 - [ ] README und Unterrichtsseite nachführen: «Orte mit Geschichten» im Zeitraffer, Teilen der Messung auf dem Handy.

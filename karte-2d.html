@@ -533,8 +533,10 @@ function measureAt(ll){
   const t = document.createElement('b'); t.textContent = fmtM(d) + ' waagrecht';
   const p = document.createElement('p'); p.textContent = lvTxt;
   const q = document.createElement('small'); q.textContent = 'Gemessen auf der Karte (ohne Höhenunterschied). Richtwert, keine amtliche Vermessung. Nächster Klick: neue Messung.';
-  const c = document.createElement('button'); c.type = 'button'; c.textContent = 'Messung kopieren';
+  const c = document.createElement('button'); c.type = 'button'; c.textContent = SHARE ? 'Messung teilen' : 'Messung kopieren';
   c.addEventListener('click', async () => {
+    /* Handy: System-Teilen (Nachricht, Mail, Notizen), sonst Zwischenablage */
+    if (SHARE) { try { await navigator.share({title: `Zeitreise Schweiz – Messung ${fmtM(d)}`, text: txt}); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
     try { await navigator.clipboard.writeText(txt); c.textContent = 'Messung kopiert'; }
     catch (e) { window.prompt('Messung:', txt.replace(/\n/g, ' · ')); }
   });
