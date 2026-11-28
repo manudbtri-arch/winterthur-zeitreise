@@ -212,4 +212,4 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 ## 28. Landeskoordinaten für Gemeinden
 - [x] Gemeinden: Story-Werkstatt nimmt die Lage auch als LV95-Koordinaten an (Feld «E, N», z. B. aus dem GIS der Gemeinde) und zeigt die gesetzte Lage zusätzlich in LV95.
 - [x] Gemeinden: Story-Werkstatt übernimmt beim CSV-Import auch die Spalten `e_lv95` und `n_lv95`, wenn `lon`/`lat` fehlen; in der Partner-Anleitung erklärt.
-- [ ] Bedienung: Übersicht «Tasten und Gesten» im 3D-Flug nennt «Mein Standort» und «Koordinaten kopieren».
+- [x] Bedienung: Übersicht «Tasten und Gesten» im 3D-Flug nennt «Mein Standort» und «Koordinaten kopieren».

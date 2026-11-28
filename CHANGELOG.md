@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 3D-Flug: Übersicht «Tasten und Gesten» nennt «Mein Standort» und die Lage in LV95 zum Kopieren in der Infokarte.
 - Story-Werkstatt: CSV-Import übernimmt die Lage auch aus den Spalten `e_lv95` und `n_lv95`, wenn `lon`/`lat` fehlen; in Formularhinweis und Partner-Anleitung erklärt.
 - Story-Werkstatt: Lage auch als Landeskoordinaten eingeben (Feld «E, N» in LV95, z. B. aus dem GIS der Gemeinde; LV03 wird erkannt); die gesetzte Lage steht zusätzlich in LV95 da.
 - 2D-Karte: Rechtsklick, Alt-Klick oder langes Drücken zeigt die Lage des Punkts in LV95 (und WGS84) mit Knopf «Koordinaten kopieren».
