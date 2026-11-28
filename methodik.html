@@ -126,7 +126,8 @@ footer a{color:var(--mute)}
     <tr><td>Höhe rekonstruierter Häuser</td><td>Schätzung, keine Messung</td></tr>
     <tr><td>Koordinaten (F3, Infokarte, Lage-Fenster der 2D-Karte, Story-Werkstatt)</td><td>Umrechnung WGS84 ↔ LV95 mit den Näherungsformeln von swisstopo, Abweichung im Meterbereich; angezeigt auf 1 m gerundet. In der Infokarte gilt bei belegten Häusern die Lage aus dem Gebäuderegister, bei Geschichten die Lage aus der Story-Datei, bei rekonstruierten Häusern der angeklickte Punkt. Die Story-Werkstatt erkennt sechsstellige LV03-Werte und rechnet sie in LV95 um (+2 000 000 / +1 000 000 m).</td></tr>
     <tr><td>Gelände</td><td>heutiges Geländemodell</td></tr>
-    <tr><td>Messwerkzeug (L)</td><td>Richtwert aus dem 3D-Bild: so genau wie Gelände und Gebäude an den angeklickten Punkten; an rekonstruierten Häusern gilt die Ungenauigkeit ihres Grundrisses</td></tr>
+    <tr><td>Messwerkzeug im 3D-Flug (L)</td><td>Richtwert aus dem 3D-Bild: so genau wie Gelände und Gebäude an den angeklickten Punkten; an rekonstruierten Häusern gilt die Ungenauigkeit ihres Grundrisses. Angezeigt werden die schräge Distanz (gerade Linie zwischen den Punkten), die waagrechte Distanz auf dem Ellipsoid, der Höhenunterschied und die Steigung. «Messung kopieren» gibt dazu die Lage beider Punkte in LV95 (Näherungsformel, auf 1 m gerundet), Ort, Jahr, Quelle und Datum als Text.</td></tr>
+    <tr><td>Messwerkzeug der 2D-Karte</td><td>nur waagrechte Distanz (Grosskreis auf der Kugel, Leaflet), ohne Höhenunterschied; so genau, wie man den Punkt auf der Karte trifft – bei hohem Zoom im Meterbereich. Lage beider Punkte in LV95 wie oben. Auf historischen Karten kommt die Lageungenauigkeit der Karte hinzu.</td></tr>
   </tbody>
 </table></div>
 
