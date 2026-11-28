@@ -201,5 +201,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 26. Standort und Lage weiterführen
 - [x] Produktseite: «Mein Standort» und «Koordinaten kopieren» in der Funktionsliste; Einbettungscode erlaubt den Standort (`allow="fullscreen; geolocation"`), damit «Mein Standort» auch auf Partner-Websites funktioniert.
-- [ ] Schulen: Unterrichtsseite nennt «Mein Standort» für Exkursionen (vor Ort nachsehen, was hier im gewählten Jahr stand).
+- [x] Schulen: Unterrichtsseite nennt «Mein Standort» für Exkursionen (vor Ort nachsehen, was hier im gewählten Jahr stand).
 - [ ] Forschung: Infokarte eines rekonstruierten Hauses nennt ebenfalls die Lage in LV95 (Klickpunkt) mit «Koordinaten kopieren».
