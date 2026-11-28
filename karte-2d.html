@@ -475,7 +475,9 @@ function showLV(ll){
     try { await navigator.clipboard.writeText(url); lk.textContent = 'Link kopiert'; }
     catch (e) { window.prompt('Link zu diesem Punkt:', url); }
   });
-  box.append(b, p, q, c, document.createElement('br'), lk);
+  const g3 = document.createElement('button'); g3.type = 'button'; g3.textContent = 'Diesen Punkt im 3D-Flug ansehen';
+  g3.addEventListener('click', () => go3d(ll, g3));
+  box.append(b, p, q, c, document.createElement('br'), lk, document.createElement('br'), g3);
   const pop = L.popup({maxWidth: 300}).setLatLng(ll).setContent(box).openOn(map);
   /* Geländehöhe über Meer (Höhendienst geo.admin.ch, swissALTI3D), kommt nach, wenn verfügbar */
   (async () => {
@@ -539,10 +541,11 @@ function measureAt(ll){
 }
 $('measBtn').addEventListener('click', () => setMeasure(!meas.on));
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && meas.on && $('qrDlg').hidden) setMeasure(false); });
-$('to3d').addEventListener('click', async () => {
-  const c = map.getCenter(), [E, N] = toLV95(c.lng, c.lat);
+/* Blick von Süden auf einen Punkt (Kartenmitte oder Punkt aus dem Lage-Fenster) im 3D-Flug */
+async function go3d(c, btn){
+  const [E, N] = toLV95(c.lng, c.lat);
   let ground = 450;   /* Ersatzwert, falls die Höhenabfrage scheitert */
-  $('to3d').disabled = true;
+  btn.disabled = true;
   try {
     const ac = new AbortController(), t = setTimeout(() => ac.abort(), 3000);
     const j = await (await fetch(`https://api3.geo.admin.ch/rest/services/height?easting=${E.toFixed(1)}&northing=${N.toFixed(1)}&sr=2056`, {signal: ac.signal})).json();
@@ -555,8 +558,9 @@ $('to3d').addEventListener('click', async () => {
   if ((key === 'sieg' || key === 'zeit') && y >= 1870 && y <= 1949) q.set('year', y);
   if (STORY_NAME) q.set('stories', STORY_NAME);
   location.href = 'flug-3d.html?' + q.toString();
-});
-window.addEventListener('pageshow', () => { $('to3d').disabled = false; });   /* nach «Zurück» wieder bereit */
+}
+$('to3d').addEventListener('click', () => go3d(map.getCenter(), $('to3d')));
+window.addEventListener('pageshow', () => { $('to3d').disabled = false; document.querySelectorAll('.leaflet-popup button').forEach(b => { b.disabled = false; }); });   /* nach «Zurück» wieder bereit */
 $('toTimelapse').addEventListener('click', () => {
   const c = map.getCenter(), z = Math.max(13, Math.min(17, map.getZoom()));
   const cmp = !$('pCmp').hidden, src = cmp ? $('lSrc').value : $('tSrc').value;
