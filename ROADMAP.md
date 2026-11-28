@@ -233,3 +233,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Produktseite und Methodik: Messen in der 2D-Karte und «Messung kopieren» aufführen; Methodik erklärt, wie gemessen wird (3D-Bild bzw. Karte, waagrecht und schräg) und wie genau das ist.
 - [x] Handy: Während des Messens im 3D-Flug eine Leiste «Messen · Punkt x von 2» mit Knopf «Beenden», da es auf Touch-Geräten keine Taste L oder Esc gibt.
 - [x] Schulen und Forschung: 2D-Karte – Knopf «Link zu dieser Messung» (`mess=<lat>,<lon>;<lat>,<lon>` im Link zeigt die Messung beim Öffnen wieder an).
+
+## 33. Messen im Feld und im Unterricht
+- [ ] Handy: 2D-Karte klappt beim Start des Messens auf schmalen Bildschirmen die Seitenleiste ein, damit die Karte frei ist; der Knopf zum Aufklappen nennt «Messen läuft».
+- [ ] Schulen: Unterrichtsseite – Lehrperson bereitet eine Messung in der 2D-Karte als Link oder QR-Code vor, die Klasse prüft sie im 3D-Flug nach (Hinweise für Lehrpersonen).
+- [ ] Forschung: Messung im 3D-Flug nennt die Geländehöhe über Meer beider Punkte (Höhendienst geo.admin.ch, LHN95), auch in «Messung kopieren».
