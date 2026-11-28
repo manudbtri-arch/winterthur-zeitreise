@@ -240,6 +240,6 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Forschung: Messung im 3D-Flug nennt die Geländehöhe über Meer beider Punkte (Höhendienst geo.admin.ch, swissALTI3D), auch in «Messung kopieren».
 
 ## 34. Tabellen, Höhen, Übersicht
-- [ ] Gemeinden: Story-Werkstatt speichert die Geschichten auch als Tabelle (CSV mit den Spalten der Anleitung), damit sie in Excel weiterbearbeitet und wieder importiert werden können.
+- [x] Gemeinden: Story-Werkstatt speichert die Geschichten auch als Tabelle (CSV mit den Spalten der Anleitung), damit sie in Excel weiterbearbeitet und wieder importiert werden können.
 - [ ] Forschung: Lage-Fenster der 2D-Karte (Rechtsklick/langes Drücken) nennt die Geländehöhe über Meer (Höhendienst geo.admin.ch, swissALTI3D).
 - [ ] README und Produktseite nachführen: Messen in der 2D-Karte, Link zu einer Messung, Geländehöhe, Story-Tabelle.

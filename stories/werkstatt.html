@@ -76,7 +76,7 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
         <div><label for="ort">Ort</label><input type="text" id="ort" placeholder="z. B. Winterthur" autocomplete="off"></div>
         <div><label for="fname">Dateiname <small>(ohne .json)</small></label><input type="text" id="fname" placeholder="winterthur" autocomplete="off" pattern="[a-z0-9-]{1,40}"></div>
       </div>
-      <p class="hint">Dateiname nur Kleinbuchstaben, Ziffern und Bindestrich. Eine bestehende JSON-Datei können Sie zum Bearbeiten öffnen. Eine Tabelle (CSV aus Excel o. Ä.) mit den Spalten titel, text, von, bis, adresse, lon, lat, quelle, url wird an die Liste angehängt; statt lon und lat gehen auch e_lv95 und n_lv95 (Landeskoordinaten).</p>
+      <p class="hint">Dateiname nur Kleinbuchstaben, Ziffern und Bindestrich. Eine bestehende JSON-Datei können Sie zum Bearbeiten öffnen. Eine Tabelle (CSV aus Excel o. Ä.) mit den Spalten titel, text, von, bis, adresse, lon, lat, quelle, url wird an die Liste angehängt; statt lon und lat gehen auch e_lv95 und n_lv95 (Landeskoordinaten). «Tabelle (CSV)» speichert die Liste in diesem Format zum Weiterbearbeiten.</p>
       <div class="row">
         <label class="btn" for="importFile" style="margin:0;display:inline-flex;align-items:center">Datei öffnen …</label>
         <input type="file" id="importFile" accept=".json,.csv,.txt,application/json,text/csv" hidden>
@@ -131,6 +131,7 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
       <div class="row">
         <button class="btn primary" id="dlBtn" type="button" disabled>JSON herunterladen</button>
         <button class="btn" id="copyBtn" type="button" disabled>JSON kopieren</button>
+        <button class="btn" id="csvBtn" type="button" disabled title="Zum Weiterbearbeiten in Excel; lässt sich hier wieder öffnen">Tabelle (CSV)</button>
         <button class="btn" id="qrBtn" type="button" disabled title="Ein Blatt mit einem QR-Code je Geschichte, z. B. für Tafeln am Ort">QR-Codes drucken</button>
       </div>
       <p class="hint" id="testHint"></p>
@@ -279,7 +280,7 @@ function render(){
   });
   const n = doc.geschichten.length;
   $('nStories').textContent = n; $('emptyHint').hidden = n > 0;
-  $('dlBtn').disabled = $('copyBtn').disabled = $('qrBtn').disabled = !n;
+  $('dlBtn').disabled = $('copyBtn').disabled = $('qrBtn').disabled = $('csvBtn').disabled = !n;
   $('preview').textContent = JSON.stringify(output(), null, 2);
   const fn = $('fname').value.trim();
   $('testHint').textContent = (nBad ? `${nBad} Geschichte(n) noch unvollständig – sie würden beim Laden übersprungen. ` : '') +
@@ -375,6 +376,21 @@ $('dlBtn').addEventListener('click', () => {
   a.href = URL.createObjectURL(new Blob([JSON.stringify(output(), null, 2) + '\n'], {type: 'application/json'}));
   a.download = name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+});
+/* Tabelle (CSV, Semikolon, UTF-8 mit BOM für Excel) mit den Spalten der Anleitung und zusätzlich e_lv95/n_lv95; lässt sich wieder öffnen */
+$('csvBtn').addEventListener('click', () => {
+  const cols = ['id', 'titel', 'text', 'von', 'bis', 'adresse', 'lon', 'lat', 'e_lv95', 'n_lv95', 'quelle', 'url'];
+  const esc = v => { const t = v == null ? '' : String(v); return /[;"\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+  const rows = output().geschichten.map(o => {
+    const lv = Number.isFinite(o.lon) && Number.isFinite(o.lat) ? toLV95(o.lon, o.lat).map(Math.round) : ['', ''];
+    return cols.map(k => esc(k === 'e_lv95' ? lv[0] : k === 'n_lv95' ? lv[1] : o[k])).join(';');
+  });
+  const name = (/^[a-z0-9-]{1,40}$/.test($('fname').value.trim()) ? $('fname').value.trim() : slug(doc.ort) || 'geschichten') + '.csv';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\ufeff' + [cols.join(';'), ...rows].join('\r\n') + '\r\n'], {type: 'text/csv;charset=utf-8'}));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  $('testHint').textContent = `Tabelle ${name} gespeichert. Zum erneuten Einlesen nach dem Bearbeiten zuerst «Alles leeren», sonst werden die Zeilen angehängt.`;
 });
 $('copyBtn').addEventListener('click', async () => {
   const t = JSON.stringify(output(), null, 2);

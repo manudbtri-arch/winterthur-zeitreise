@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- Story-Werkstatt: Knopf «Tabelle (CSV)» speichert die erfassten Geschichten mit den Spalten der Anleitung (dazu `id`, `e_lv95`, `n_lv95`) zum Weiterbearbeiten in Excel; die Datei lässt sich wieder öffnen.
 - 3D-Flug: Die Messung nennt die Geländehöhe über Meer beider Punkte (Höhendienst swisstopo, swissALTI3D), auch in «Messung kopieren»; die Methodik erklärt den Unterschied zum angeklickten Punkt auf einem Dach.
 - Unterrichtsseite: Hinweis «Messung vorbereiten» – Strecke in der 2D-Karte setzen, als Link oder QR-Code verteilen, die Klasse prüft sie im 3D-Flug nach.
 - 2D-Karte (Handy): Beim Start des Messens klappt die Seitenleiste ein, damit die Karte frei ist; der Knopf zum Aufklappen zeigt «Messen läuft».
