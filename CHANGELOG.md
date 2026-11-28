@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 2D-Karte: Knopf «Messen» – zwei Punkte anklicken, Linie und waagrechte Distanz in der Karte, Lage beider Punkte in LV95 und «Messung kopieren» (auch ohne 3D-Grafik nutzbar).
 - 3D-Flug: Die Messung nennt die Lage beider Punkte in LV95; der Knopf «Messung kopieren» gibt Distanz, Höhenunterschied, Punkte, Ort, Jahr, Quelle und Datum als Text für Bericht oder Arbeitsblatt.
 - Zeitraffer von oben: Bei der Beschreibung des Ausschnitts steht die Mitte in LV95, mit Knopf «Koordinaten kopieren» für Bildlegende oder GIS.
 - 3D-Flug: Ein Häkchen in den Einstellungen («Koordinaten und Höhe anzeigen (F3)») blendet die Koordinatenanzeige auch ohne Tastatur ein; auf Touch-Geräten steht sie über dem Joystick.

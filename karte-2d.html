@@ -124,13 +124,14 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
   <label id="placesLbl">Winterthur: springen zu</label>
   <div class="places" id="places"></div>
   <label class="chk"><input type="checkbox" id="storyOn" checked> Geschichten an Orten (Marker)</label>
+  <button class="btn" id="measBtn" type="button" aria-pressed="false" style="width:100%;margin-top:12px" title="Zwei Punkte in der Karte anklicken">Messen (zwei Punkte anklicken)</button>
   <button class="btn primary" id="to3d" style="width:100%;margin-top:12px">Hier im 3D-Flug ansehen</button>
   <button class="btn" id="toTimelapse" style="width:100%;margin-top:8px">Ausschnitt als Zeitraffer von oben</button>
   <button class="btn" id="linkBtn" style="width:100%;margin-top:8px">Link zu dieser Ansicht kopieren</button>
   <button class="btn" id="qrBtn" style="width:100%;margin-top:8px" title="Link als QR-Code zum Aushängen oder Ausdrucken">QR-Code zu dieser Ansicht</button>
   <p class="sub" id="linkMsg" aria-live="polite" style="margin:6px 0 0"></p>
 
-  <p class="note">Luftbilder gibt es nicht für jedes Jahr: Ist die Karte leer, wurde der Ort in diesem Jahr nicht beflogen. Die Zeitreihe zeigt jeweils den Kartenstand am 31. Dezember. Bei der Siegfriedkarte steht das Blatt am Kartenmittelpunkt mit seinem tatsächlichen Kartenstand dabei. Rechtsklick, Alt-Klick oder langes Drücken in die Karte zeigt die Lage in Landeskoordinaten (LV95).<br>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a></p>
+  <p class="note">Luftbilder gibt es nicht für jedes Jahr: Ist die Karte leer, wurde der Ort in diesem Jahr nicht beflogen. Die Zeitreihe zeigt jeweils den Kartenstand am 31. Dezember. Bei der Siegfriedkarte steht das Blatt am Kartenmittelpunkt mit seinem tatsächlichen Kartenstand dabei. Rechtsklick, Alt-Klick oder langes Drücken in die Karte zeigt die Lage in Landeskoordinaten (LV95); «Messen» gibt die waagrechte Distanz zwischen zwei Punkten.<br>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a></p>
 </aside>
 
 <div class="dlg" id="qrDlg" hidden role="dialog" aria-modal="true" aria-labelledby="qrH">
@@ -479,7 +480,45 @@ function showLV(ll){
 }
 map.on('popupclose', e => { if (e.popup === pinPop) { pinLL = null; pinPop = null; } });
 map.on('contextmenu', e => showLV(e.latlng));
-map.on('click', e => { if (e.originalEvent && e.originalEvent.altKey) showLV(e.latlng); });
+map.on('click', e => { if (e.originalEvent && e.originalEvent.altKey) showLV(e.latlng); else if (meas.on) measureAt(e.latlng); });
+
+/* ---------- Messen: zwei Punkte anklicken, waagrechte Distanz und Lage in LV95 (auch ohne 3D, für Schulen) ---------- */
+const meas = {on: false, pts: [], layer: L.layerGroup().addTo(map)};
+const fmtM = v => v >= 1000 ? (v / 1000).toFixed(2).replace('.', ',') + ' km' : Math.round(v) + ' m';
+function setMeasure(on){
+  meas.on = on; meas.pts = []; meas.layer.clearLayers();
+  $('measBtn').setAttribute('aria-pressed', on);
+  $('measBtn').textContent = on ? 'Messen beenden' : 'Messen (zwei Punkte anklicken)';
+  $('map').style.cursor = on ? 'crosshair' : '';
+  $('linkMsg').textContent = on ? 'Messen: ersten Punkt in der Karte anklicken.' : '';
+}
+function measureAt(ll){
+  if (meas.pts.length >= 2) { meas.pts = []; meas.layer.clearLayers(); }
+  meas.pts.push(ll);
+  L.circleMarker(ll, {radius: 6, color: '#fff', weight: 2, fillColor: '#c8803f', fillOpacity: 1, interactive: false}).addTo(meas.layer);
+  if (meas.pts.length < 2) { $('linkMsg').textContent = 'Erster Punkt gesetzt – jetzt den zweiten anklicken.'; return; }
+  const [a, b] = meas.pts, d = map.distance(a, b);
+  L.polyline([a, b], {color: '#c8803f', weight: 3, interactive: false}).addTo(meas.layer);
+  const lv = [a, b].map(x => toLV95(x.lng, x.lat).map(Math.round));
+  const lvTxt = `Punkt 1: E ${lv[0][0]}, N ${lv[0][1]} · Punkt 2: E ${lv[1][0]}, N ${lv[1][1]} (LV95)`;
+  const cmp = !$('pCmp').hidden, shown = cmp ? $('tagL').textContent + ' / ' + $('tagR').textContent : $('yLbl').textContent + ' ' + $('yBig').textContent;
+  const txt = [`Messung Zeitreise Schweiz (2D-Karte) – ${shown}`, `Distanz waagrecht ${fmtM(d)}`, lvTxt,
+    `Quelle: Karten © swisstopo, gemessen am ${new Date().toISOString().slice(0, 10)}; Richtwert, keine amtliche Vermessung`].join('\n');
+  const box = document.createElement('div'); box.className = 'story';
+  const t = document.createElement('b'); t.textContent = fmtM(d) + ' waagrecht';
+  const p = document.createElement('p'); p.textContent = lvTxt;
+  const q = document.createElement('small'); q.textContent = 'Gemessen auf der Karte (ohne Höhenunterschied). Richtwert, keine amtliche Vermessung. Nächster Klick: neue Messung.';
+  const c = document.createElement('button'); c.type = 'button'; c.textContent = 'Messung kopieren';
+  c.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(txt); c.textContent = 'Messung kopiert'; }
+    catch (e) { window.prompt('Messung:', txt.replace(/\n/g, ' · ')); }
+  });
+  box.append(t, p, q, c);
+  L.popup({maxWidth: 300, autoClose: false, closeOnClick: false}).setLatLng(b).setContent(box).addTo(meas.layer);
+  $('linkMsg').textContent = `Distanz waagrecht ${fmtM(d)}.`;
+}
+$('measBtn').addEventListener('click', () => setMeasure(!meas.on));
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && meas.on && $('qrDlg').hidden) setMeasure(false); });
 $('to3d').addEventListener('click', async () => {
   const c = map.getCenter(), [E, N] = toLV95(c.lng, c.lat);
   let ground = 450;   /* Ersatzwert, falls die Höhenabfrage scheitert */
