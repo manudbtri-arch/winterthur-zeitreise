@@ -98,6 +98,7 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
       <label for="adresse">Adresse <small>(Strasse Nr, PLZ Ort – oder Punkt in der Karte setzen)</small></label>
       <div class="search"><input type="search" id="adresse" autocomplete="off" aria-label="Adresse suchen"><ul id="adrRes" hidden role="listbox"></ul></div>
       <p class="coord" id="coordLbl">Noch keine Lage gesetzt.</p>
+      <button class="btn" id="geoMe" type="button" hidden title="Für das Erfassen vor Ort: setzt die Lage an Ihren Standort; er wird nur in diese Geschichte übernommen">Lage = mein Standort</button>
       <button class="btn" id="view3d" type="button" disabled title="Öffnet den 3D-Flug in einem neuen Fenster">Lage im 3D-Flug ansehen</button>
       <label for="quelle">Quelle <small>(überprüfbar, in Worten)</small></label>
       <input type="text" id="quelle" placeholder="z. B. Historisches Lexikon der Schweiz, Artikel …">
@@ -465,6 +466,24 @@ if (window.L) {
   map.on('click', e => setPos([e.latlng.lng, e.latlng.lat], false));
 } else {
   $('map').textContent = 'Die Karte konnte nicht geladen werden. Die Lage lässt sich über die Adresse setzen.';
+}
+/* «Lage = mein Standort»: vor Ort mit dem Handy erfassen; nur auf Knopfdruck, nur in der Schweiz */
+if (navigator.geolocation && window.isSecureContext) {
+  $('geoMe').hidden = false;
+  $('geoMe').addEventListener('click', () => {
+    const b = $('geoMe'); b.disabled = true; b.textContent = 'Standort wird abgefragt …';
+    const done = () => { b.disabled = false; b.textContent = 'Lage = mein Standort'; };
+    navigator.geolocation.getCurrentPosition(p => {
+      done();
+      const lon = p.coords.longitude, lat = p.coords.latitude, acc = Math.round(p.coords.accuracy || 0);
+      if (!(lon > 5.95 && lon < 10.5 && lat > 45.8 && lat < 47.82)) { $('coordLbl').textContent = 'Ihr Standort liegt ausserhalb der Schweiz – Lage nicht gesetzt.'; return; }
+      setPos([lon, lat], true);
+      if (acc > 30) $('coordLbl').textContent += ` · ungenau (± ${acc} m), bitte in der Karte prüfen`;
+    }, err => {
+      done();
+      $('coordLbl').textContent = err.code === 1 ? 'Standort nicht freigegeben – bitte im Browser erlauben oder Punkt in der Karte setzen.' : 'Standort nicht verfügbar – bitte Punkt in der Karte setzen.';
+    }, {enableHighAccuracy: true, timeout: 20000, maximumAge: 0});
+  });
 }
 loadDraft(); fillForm(null); render();
 const pts0 = doc.geschichten.filter(s => Number.isFinite(s.lon)).map(s => [s.lat, s.lon]);

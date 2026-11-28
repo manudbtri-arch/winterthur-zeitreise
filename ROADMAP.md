@@ -206,5 +206,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 27. Vor Ort erfassen und nachschlagen
 - [x] Handy: Knopf «Mein Standort» auch auf dem Startbildschirm des 3D-Flugs, damit man vor Ort ohne Menü direkt hinkommt.
-- [ ] Gemeinden: Story-Werkstatt setzt die Lage einer Geschichte auf Wunsch an den eigenen Standort (Erfassen vor Ort mit dem Handy).
+- [x] Gemeinden: Story-Werkstatt setzt die Lage einer Geschichte auf Wunsch an den eigenen Standort (Erfassen vor Ort mit dem Handy).
 - [ ] Forschung: 2D-Karte zeigt nach Klick mit gedrückter Alt-Taste bzw. langem Drücken die Lage in LV95 mit «Koordinaten kopieren».
