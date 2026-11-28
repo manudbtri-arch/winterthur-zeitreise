@@ -1629,9 +1629,9 @@ $('mFly').addEventListener('click', () => setMode(false));
 $('mWalk').addEventListener('click', () => setMode(true));
 $('go').addEventListener('click', () => { try { canvas.requestPointerLock(); } catch(e){} });
 /* Klick auf ein Haus: Infokarte. Mit übernommener Maus zählt das Fadenkreuz. */
-let infoTimer, infoStory = null, infoLV = null, infoMeas = null;
+let infoTimer, infoStory = null, infoLV = null, infoMeas = null, infoPin = null;
 function showInfo(p, at){
-  let title = '', text = '', badge = '', src = '', rec = false, link = '', linkTxt = 'Quelle öffnen', hold = 7000, story = null, ll = null;
+  let title = '', text = '', badge = '', src = '', rec = false, link = '', linkTxt = 'Quelle öffnen', hold = 7000, story = null, ll = null, pin = null;
   if (p && p.id instanceof C.Entity && p.id.story) {
     const st = p.id.story;
     title = st.titel; text = st.text; badge = 'Geschichte' + (storyRange(st) ? ' · ' + storyRange(st) : ''); hold = KIOSK ? 60000 : 20000;   /* im Kiosk-Rundgang bis zur nächsten Station */
@@ -1640,7 +1640,7 @@ function showInfo(p, at){
     story = STORY_ID_RE.test(String(st.id || '')) ? String(st.id) : null;
     if (Number.isFinite(st.lon) && Number.isFinite(st.lat)) ll = [st.lon, st.lat];
   } else if (p && p.id instanceof C.Entity && p.id.pin) {
-    title = 'Markierter Punkt'; badge = 'Punkt'; ll = p.id.pin; hold = 20000;
+    title = 'Markierter Punkt'; badge = 'Punkt'; ll = pin = p.id.pin; hold = 20000;
     text = 'Dieser Punkt kommt aus dem Link (z. B. aus dem Lage-Fenster der 2D-Karte).';
     src = 'Umrechnung mit der Näherungsformel von swisstopo, Abweichung im Meterbereich';
   } else if (p instanceof C.Cesium3DTileFeature && tlmTs && p.tileset === tlmTs) {
@@ -1680,7 +1680,8 @@ function showInfo(p, at){
   $('iTitle').textContent = title; $('iText').textContent = text; $('iSrc').textContent = src;
   $('iBadge').textContent = badge; $('iBadge').classList.toggle('rec', rec);
   $('iLink').hidden = !link; if (link) $('iLink').href = link; $('iLink').textContent = linkTxt;
-  infoStory = story; $('iShare').hidden = $('iQr').hidden = $('iTl').hidden = !story;
+  infoStory = story; infoPin = KIOSK ? null : pin; $('iShare').hidden = $('iQr').hidden = !story; $('iTl').hidden = !story && !infoPin;
+  $('iTl').title = story ? 'Entwicklung rund um diese Geschichte in Luftbildern und Karten' : 'Entwicklung rund um diesen Punkt in Luftbildern und Karten';
   $('iCoord').hidden = !infoLV; $('iCoord').textContent = 'Koordinaten kopieren';
   $('info').hidden = false;
   clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, hold);
@@ -2396,9 +2397,10 @@ $('iQr').addEventListener('click', () => {
 /* Zeitraffer von oben rund um die Geschichte (Luftbilder bis heute) */
 $('iTl').addEventListener('click', () => {
   const ent = infoStory && stories.find(e => e.story && e.story.id === infoStory);
-  if (!ent) return;
+  const ll = ent ? [ent.story.lon, ent.story.lat] : infoPin;   /* Geschichte oder markierter Punkt */
+  if (!ll) return;
   clearTimeout(infoTimer);
-  const q = new URLSearchParams({lat: ent.story.lat.toFixed(5), lon: ent.story.lon.toFixed(5), z: 16, mode: 'luft', name: $('iTitle').textContent.slice(0, 70)});
+  const q = new URLSearchParams({lat: ll[1].toFixed(5), lon: ll[0].toFixed(5), z: 16, mode: 'luft', name: $('iTitle').textContent.slice(0, 70)});
   if (STORY_NAME) q.set('stories', STORY_NAME);
   $('iTl').href = 'zeitraffer.html?' + q.toString();
 });

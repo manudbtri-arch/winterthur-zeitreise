@@ -261,5 +261,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 38. Punkte übernehmen und weiterverfolgen
 - [x] Gemeinden: Story-Werkstatt übernimmt die Lage aus einem eingefügten Link der 2D-Karte oder des 3D-Flugs (markierter Punkt `pin=`, sonst Mitte `c=`, sonst `lat`/`lon`).
-- [ ] Gemeinden und Forschung: Infokarte des markierten Punkts im 3D-Flug mit «Zeitraffer von oben» (Ausschnitt um den Punkt), wie bei Geschichten.
+- [x] Gemeinden und Forschung: Infokarte des markierten Punkts im 3D-Flug mit «Zeitraffer von oben» (Ausschnitt um den Punkt), wie bei Geschichten.
 - [ ] Methodik: Abschnitt Genauigkeit nennt den markierten Punkt (Link mit 6 Nachkommastellen, LV95 über die Näherungsformel) und die Übernahme aus einem Link in der Story-Werkstatt.
