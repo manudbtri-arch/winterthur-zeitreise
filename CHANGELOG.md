@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- Unterrichtsseite: Auftrag 4 nennt «Messung kopieren» zum Festhalten der Werte und das Messwerkzeug der 2D-Karte als Weg auf Geräten ohne 3D-Grafik.
 - 2D-Karte: Knopf «Messen» – zwei Punkte anklicken, Linie und waagrechte Distanz in der Karte, Lage beider Punkte in LV95 und «Messung kopieren» (auch ohne 3D-Grafik nutzbar).
 - 3D-Flug: Die Messung nennt die Lage beider Punkte in LV95; der Knopf «Messung kopieren» gibt Distanz, Höhenunterschied, Punkte, Ort, Jahr, Quelle und Datum als Text für Bericht oder Arbeitsblatt.
 - Zeitraffer von oben: Bei der Beschreibung des Ausschnitts steht die Mitte in LV95, mit Knopf «Koordinaten kopieren» für Bildlegende oder GIS.

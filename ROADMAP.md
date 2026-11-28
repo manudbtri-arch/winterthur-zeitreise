@@ -227,4 +227,4 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 ## 31. Messen und belegen
 - [x] Forschung und Schulen: Messung im 3D-Flug nennt die Lage beider Punkte in LV95; Knopf «Messung kopieren» gibt Distanz, Höhenunterschied, Punkte, Ort, Jahr, Quelle und Datum als Text für Bericht oder Arbeitsblatt.
 - [x] Schulen (langsame Geräte): 2D-Karte mit Messwerkzeug – zwei Punkte anklicken, Linie und waagrechte Distanz in der Karte, mit Lage in LV95.
-- [ ] Schulen: Auftrag 4 der Unterrichtsseite nennt das Messwerkzeug der 2D-Karte als Weg ohne 3D und «Messung kopieren» zum Festhalten der Werte.
+- [x] Schulen: Auftrag 4 der Unterrichtsseite nennt das Messwerkzeug der 2D-Karte als Weg ohne 3D und «Messung kopieren» zum Festhalten der Werte.
