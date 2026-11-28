@@ -125,13 +125,14 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
   <div class="places" id="places"></div>
   <label class="chk"><input type="checkbox" id="storyOn" checked> Geschichten an Orten (Marker)</label>
   <button class="btn" id="measBtn" type="button" aria-pressed="false" style="width:100%;margin-top:12px" title="Zwei Punkte in der Karte anklicken">Messen (zwei Punkte anklicken)</button>
+  <button class="btn" id="lvMid" type="button" style="width:100%;margin-top:8px" title="Lage-Fenster für den Punkt in der Kartenmitte – ohne Rechtsklick, auch mit Tastatur">Lage der Kartenmitte (LV95)</button>
   <button class="btn primary" id="to3d" style="width:100%;margin-top:12px">Hier im 3D-Flug ansehen</button>
   <button class="btn" id="toTimelapse" style="width:100%;margin-top:8px">Ausschnitt als Zeitraffer von oben</button>
   <button class="btn" id="linkBtn" style="width:100%;margin-top:8px">Link zu dieser Ansicht kopieren</button>
   <button class="btn" id="qrBtn" style="width:100%;margin-top:8px" title="Link als QR-Code zum Aushängen oder Ausdrucken">QR-Code zu dieser Ansicht</button>
   <p class="sub" id="linkMsg" aria-live="polite" style="margin:6px 0 0"></p>
 
-  <p class="note">Luftbilder gibt es nicht für jedes Jahr: Ist die Karte leer, wurde der Ort in diesem Jahr nicht beflogen. Die Zeitreihe zeigt jeweils den Kartenstand am 31. Dezember. Bei der Siegfriedkarte steht das Blatt am Kartenmittelpunkt mit seinem tatsächlichen Kartenstand dabei. Rechtsklick, Alt-Klick oder langes Drücken in die Karte zeigt die Lage in Landeskoordinaten (LV95); «Messen» gibt die waagrechte Distanz zwischen zwei Punkten.<br>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a></p>
+  <p class="note">Luftbilder gibt es nicht für jedes Jahr: Ist die Karte leer, wurde der Ort in diesem Jahr nicht beflogen. Die Zeitreihe zeigt jeweils den Kartenstand am 31. Dezember. Bei der Siegfriedkarte steht das Blatt am Kartenmittelpunkt mit seinem tatsächlichen Kartenstand dabei. Rechtsklick, Alt-Klick oder langes Drücken in die Karte (oder «Lage der Kartenmitte») zeigt die Lage in Landeskoordinaten (LV95); «Messen» gibt die waagrechte Distanz zwischen zwei Punkten.<br>Daten: © <a href="https://www.swisstopo.admin.ch">swisstopo</a></p>
 </aside>
 
 <div class="dlg" id="qrDlg" hidden role="dialog" aria-modal="true" aria-labelledby="qrH">
@@ -492,6 +493,12 @@ function showLV(ll){
 }
 map.on('popupclose', e => { if (e.popup === pinPop) { pinLL = null; pinPop = null; } });
 map.on('contextmenu', e => showLV(e.latlng));
+/* Lage der Kartenmitte: für Tastatur und Bildschirmleser ohne Rechtsklick; auf dem Handy wird die Karte frei */
+$('lvMid').addEventListener('click', () => {
+  if (matchMedia('(max-width:600px)').matches && !$('panel').classList.contains('min')) $('pTog').click();
+  const pop = showLV(map.getCenter()), el = pop.getElement && pop.getElement(), b = el && el.querySelector('button');
+  if (b) b.focus();
+});
 map.on('click', e => { if (e.originalEvent && e.originalEvent.altKey) showLV(e.latlng); else if (meas.on) measureAt(e.latlng); });
 
 /* ---------- Messen: zwei Punkte anklicken, waagrechte Distanz und Lage in LV95 (auch ohne 3D, für Schulen) ---------- */

@@ -263,3 +263,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Gemeinden: Story-Werkstatt übernimmt die Lage aus einem eingefügten Link der 2D-Karte oder des 3D-Flugs (markierter Punkt `pin=`, sonst Mitte `c=`, sonst `lat`/`lon`).
 - [x] Gemeinden und Forschung: Infokarte des markierten Punkts im 3D-Flug mit «Zeitraffer von oben» (Ausschnitt um den Punkt), wie bei Geschichten.
 - [x] Methodik: Abschnitt Genauigkeit nennt den markierten Punkt (Link mit 6 Nachkommastellen, LV95 über die Näherungsformel) und die Übernahme aus einem Link in der Story-Werkstatt.
+
+## 39. Zugänglich und teilbar
+- [x] Barrierefreiheit: 2D-Karte – Knopf «Lage der Kartenmitte (LV95)» öffnet das Lage-Fenster ohne Rechtsklick (Tastatur, Bildschirmleser); auf dem Handy wird dabei die Karte frei.
+- [ ] Handy: Infokarte des markierten Punkts im 3D-Flug mit «Link zu diesem Punkt» (auf dem Handy über das System-Teilen).
+- [ ] Bedienung: Übersicht «Tasten und Gesten» im 3D-Flug nennt die blaue Markierung (Punkt aus dem Link) und den neuen Knopf der 2D-Karte ist in der Unterrichtsseite erwähnt.
