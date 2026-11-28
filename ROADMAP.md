@@ -277,4 +277,4 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 ## 41. Orte mit Geschichten überall, Vorlagen
 - [x] Gemeinden: 2D-Karte mit der Zeile «Orte mit Geschichten» (Winterthur, Basel, Grindelwald) wie im 3D-Flug.
 - [x] Produktseite und Methodik: «Angaben kopieren» und «Orte mit Geschichten» aufführen; Methodik erklärt den kopierten Text (Lage gerundet, Abrufdatum).
-- [ ] Gemeinden: Story-Werkstatt öffnet eine der drei Beispiel-Dateien (Winterthur, Basel, Grindelwald) als Vorlage zum Anschauen und Anpassen.
+- [x] Gemeinden: Story-Werkstatt öffnet eine der drei Beispiel-Dateien (Winterthur, Basel, Grindelwald) als Vorlage zum Anschauen und Anpassen.
