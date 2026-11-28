@@ -1049,10 +1049,20 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
     const widthKm = (metersPerPixel(st.lat, st.z) * W / 1000).toFixed(1).replace('.', ',');
     const span = st.frames.length ? `${st.frames[0].label} – ${st.frames[st.frames.length - 1].label} (${st.frames.length} Stände)` : 'wird ermittelt …';
     $('placeMeta').textContent = '';
-    for (const txt of [`Ausschnitt: ca. ${widthKm} km breit`, span]) {
+    const [E, N] = toLV95(st.lon, st.lat).map(Math.round);
+    for (const txt of [`Ausschnitt: ca. ${widthKm} km breit`, span, `Mitte LV95: E ${E}, N ${N}`]) {
       const s = document.createElement('span'); s.textContent = txt;
       $('placeMeta').appendChild(s);
     }
+    /* Mitte in Landeskoordinaten kopieren, z. B. für Bildlegende oder GIS (Näherungsformel swisstopo) */
+    const cb = document.createElement('button'); cb.type = 'button'; cb.textContent = 'Koordinaten kopieren';
+    cb.style.cssText = 'font:600 13px Archivo,sans-serif;color:inherit;background:none;border:0;padding:0;min-height:28px;cursor:pointer;text-decoration:underline';
+    cb.addEventListener('click', async () => {
+      const t = `${E}, ${N}`;
+      try { await navigator.clipboard.writeText(t); cb.textContent = 'Kopiert: ' + t; }
+      catch (e) { window.prompt('Mitte des Ausschnitts, LV95 (E, N):', t); }
+    });
+    $('placeMeta').appendChild(cb);
   }
 
   /* Wiedergabe-Schleife */

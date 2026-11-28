@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- Zeitraffer von oben: Bei der Beschreibung des Ausschnitts steht die Mitte in LV95, mit Knopf «Koordinaten kopieren» für Bildlegende oder GIS.
 - 3D-Flug: Ein Häkchen in den Einstellungen («Koordinaten und Höhe anzeigen (F3)») blendet die Koordinatenanzeige auch ohne Tastatur ein; auf Touch-Geräten steht sie über dem Joystick.
 - Unterrichtsseite: Auftrag 4 hat einen neuen Schritt mit Landeskoordinaten: Lage zweier Häuser aus der Infokarte notieren, die Distanz mit dem Satz des Pythagoras nachrechnen und mit der Messung vergleichen.
 - Methodik: Unter «Genauigkeit» steht, wie die Koordinaten an allen Stellen entstehen: Herkunft der Lage je Infokarte, Rundung auf 1 m, Näherungsformel und LV03-Erkennung der Story-Werkstatt.
