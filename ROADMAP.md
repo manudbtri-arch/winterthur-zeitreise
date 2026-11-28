@@ -228,3 +228,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Forschung und Schulen: Messung im 3D-Flug nennt die Lage beider Punkte in LV95; Knopf «Messung kopieren» gibt Distanz, Höhenunterschied, Punkte, Ort, Jahr, Quelle und Datum als Text für Bericht oder Arbeitsblatt.
 - [x] Schulen (langsame Geräte): 2D-Karte mit Messwerkzeug – zwei Punkte anklicken, Linie und waagrechte Distanz in der Karte, mit Lage in LV95.
 - [x] Schulen: Auftrag 4 der Unterrichtsseite nennt das Messwerkzeug der 2D-Karte als Weg ohne 3D und «Messung kopieren» zum Festhalten der Werte.
+
+## 32. Messen erklären, auf dem Handy, teilen
+- [ ] Produktseite und Methodik: Messen in der 2D-Karte und «Messung kopieren» aufführen; Methodik erklärt, wie gemessen wird (3D-Bild bzw. Karte, waagrecht und schräg) und wie genau das ist.
+- [ ] Handy: Während des Messens im 3D-Flug eine Leiste «Messen · Punkt x von 2» mit Knopf «Beenden», da es auf Touch-Geräten keine Taste L oder Esc gibt.
+- [ ] Schulen und Forschung: 2D-Karte – Knopf «Link zu dieser Messung» (`mess=<lat>,<lon>;<lat>,<lon>` im Link zeigt die Messung beim Öffnen wieder an).
