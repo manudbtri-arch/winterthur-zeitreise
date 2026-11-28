@@ -39,6 +39,8 @@ h1{font-size:clamp(26px,4vw,38px);line-height:1.08;margin:0;font-weight:800;lett
 .search li:hover,.search li[aria-selected=true]{background:var(--tint)}
 
 /* Ortswahl-Leiste */
+.towns{margin:0 0 8px;font-size:14px;color:var(--mute)}
+.towns a{display:inline-block;padding:4px 0;font-weight:600}
 .spots{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;margin:0 0 16px;scrollbar-width:thin}
 @media(min-width:720px){.spots{flex-wrap:wrap;overflow-x:visible;padding-bottom:2px}}
 .spot{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 14px Archivo,sans-serif;padding:8px 14px;border-radius:22px;cursor:pointer;min-height:40px;white-space:nowrap;transition:border-color .15s,background .15s,color .15s}
@@ -178,6 +180,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
     </div>
   </header>
 
+  <p class="towns" id="storyTowns">Orte mit Geschichten: <a href="zeitraffer.html?stories=winterthur" data-st="winterthur">Winterthur</a> · <a href="zeitraffer.html?stories=basel" data-st="basel">Basel</a> · <a href="zeitraffer.html?stories=grindelwald" data-st="grindelwald">Grindelwald</a> · <a href="zeitraffer.html" data-st="">Ausgewählte Orte</a></p>
   <div class="spots" id="spots" role="group" aria-label="Ausgewählte Entwicklungs-Orte"></div>
 
   <div class="layout">
@@ -1236,6 +1239,8 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
   /* ?stories=<name>: Geschichten aus stories/<name>.json als Ausschnitte (wie 3D-Flug und 2D-Karte); Inhalte nur als Text */
   const STORY_Q = new URLSearchParams(location.search).get('stories');
   const STORY_NAME = /^[a-z0-9-]{1,40}$/.test(STORY_Q || '') ? STORY_Q : null;
+  /* Orte mit Geschichten: aktuellen Ort hervorheben */
+  for (const a of $('storyTowns').querySelectorAll('a')) if ((STORY_NAME || '') === a.dataset.st) { a.style.color = 'var(--ink)'; a.style.textDecoration = 'none'; a.setAttribute('aria-current', 'page'); }
   if (STORY_NAME) (async () => {
     const file = `stories/${STORY_NAME}.json`;
     let data;

@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- Zeitraffer von oben: Die Zeile «Orte mit Geschichten» führt zu den Geschichten von Winterthur, Basel und Grindelwald als Ausschnitte oder zurück zu den ausgewählten Orten; der aktuelle Ort ist hervorgehoben.
 - README: «Angaben kopieren», «Orte mit Geschichten» (3D-Flug, 2D-Karte) und die Beispiel-Vorlagen der Story-Werkstatt aufgeführt.
 - 3D-Flug: Die Übersicht «Tasten und Gesten» nennt «Angaben kopieren» bzw. «Angaben teilen» und die Zeile «Orte mit Geschichten».
 - 3D-Flug (Handy): «Angaben teilen» in der Infokarte eines belegten Gebäudes öffnet das System-Teilen (Nachricht, Mail, Notizen); am Computer bleibt «Angaben kopieren».
