@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 3D-Flug: Infokarte eines rekonstruierten Hauses (auch in der Fernsicht) nennt die Lage des angeklickten Punkts in LV95 und bietet «Koordinaten kopieren».
 - Unterrichtsseite: Hinweise für Lehrpersonen nennen «Mein Standort» für Exkursionen – vor Ort vergleichen, was im gewählten Jahr hier stand.
 - Produktseite: Funktionsliste nennt «Mein Standort» und die Lage in LV95 zum Kopieren; eingebetteter 3D-Flug und der Einbettungscode erlauben den Standort (`allow="fullscreen; geolocation"`), damit «Mein Standort» auch eingebettet funktioniert.
 - 3D-Flug: Infokarte eines belegten Gebäudes oder einer Geschichte nennt die Lage in LV95 (E/N, auf 1 m gerundet) und hat einen Knopf «Koordinaten kopieren» für GIS und Berichte; in der Methodik unter Genauigkeit erwähnt.

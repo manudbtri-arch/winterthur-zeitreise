@@ -1602,7 +1602,7 @@ $('mWalk').addEventListener('click', () => setMode(true));
 $('go').addEventListener('click', () => { try { canvas.requestPointerLock(); } catch(e){} });
 /* Klick auf ein Haus: Infokarte. Mit übernommener Maus zählt das Fadenkreuz. */
 let infoTimer, infoStory = null, infoLV = null;
-function showInfo(p){
+function showInfo(p, at){
   let title = '', text = '', badge = '', src = '', rec = false, link = '', linkTxt = 'Quelle öffnen', hold = 7000, story = null, ll = null;
   if (p && p.id instanceof C.Entity && p.id.story) {
     const st = p.id.story;
@@ -1633,12 +1633,12 @@ function showInfo(p){
   } else if (p && p.id && p.id.gen && p.id.far) {
     title = 'Haus aus der Karte';
     text = `Auf der Siegfriedkarte ${p.id.gen} eingezeichnet · noch nicht mit dem Gebäuderegister abgeglichen – näher heran, dann zeigt sich, ob es heute noch steht`;
-    badge = 'Fernsicht'; rec = true;
+    badge = 'Fernsicht'; rec = true; ll = at || null;
     src = `Quelle: Siegfriedkarte, Kartenstand ${p.id.gen} (swisstopo) · vereinfachte Darstellung, Höhe geschätzt`;
   } else if (p && p.id && p.id.gen) {
     title = p.id.hall ? 'Abgerissene Fabrikhalle' : 'Abgerissenes Haus';
     text = `Nachgebaut nach der Siegfriedkarte ${p.id.gen}` + (p.id.hall ? '' : ` · ${p.id.floors} Geschosse geschätzt`) + ' · steht heute nicht mehr';
-    badge = 'Rekonstruiert'; rec = true;
+    badge = 'Rekonstruiert'; rec = true; ll = at || null;
     src = `Quelle: Siegfriedkarte, Kartenstand ${p.id.gen} (swisstopo) · Grundriss aus der Karte, Höhe geschätzt`;
   } else return false;
   /* Lage in LV95 (Näherungsformel swisstopo, auf 1 m gerundet) für Forschung und GIS; nicht im Kiosk */
@@ -1653,11 +1653,20 @@ function showInfo(p){
   clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, hold);
   return true;
 }
+/* Lage des Klickpunkts (Oberfläche des Hauses, sonst Gelände) als [lon, lat] */
+function clickLonLat(pos){
+  let c = null;
+  try { if (scene.pickPositionSupported) c = scene.pickPosition(pos); } catch (e) {}
+  if (!c) { const ray = camera.getPickRay(pos); c = ray && globe.pick(ray, scene); }
+  if (!c) return null;
+  const cg = C.Cartographic.fromCartesian(c);
+  return cg ? [C.Math.toDegrees(cg.longitude), C.Math.toDegrees(cg.latitude)] : null;
+}
 canvas.addEventListener('click', e => {
   const pos = locked ? new C.Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2) : new C.Cartesian2(e.offsetX, e.offsetY);
   if (meas.on) { measureAt(pos); return; }
   let hit = null; try { hit = scene.pick(pos); } catch (err) {}
-  if (hit && showInfo(hit)) return;
+  if (hit && showInfo(hit, hit.id && hit.id.gen ? clickLonLat(pos) : null)) return;
   /* Themen eingeschaltet: Klick auf den Boden fragt ab, was dort verzeichnet ist */
   if (THEMES.some(t => t.on)) {
     const ray = camera.getPickRay(pos), gp = ray && globe.pick(ray, scene);
