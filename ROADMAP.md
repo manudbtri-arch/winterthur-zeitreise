@@ -307,4 +307,4 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 ## 47. Geschichten im Zeitraffer vollständig
 - [x] Zeitraffer: Ausschnitt einer Geschichte nennt den Zeitraum aus der Story-Datei und hat den Link «Quelle öffnen» (nur https).
 - [x] Zeitraffer: «Im 3D-Flug» bei einer Geschichte öffnet sie direkt mit Infokarte (`story=<id>`).
-- [ ] README und Methodik nachführen: Zeitraum, Quelle und Direktsprung bei Geschichten im Zeitraffer.
+- [x] README und Methodik nachführen: Zeitraum, Quelle und Direktsprung bei Geschichten im Zeitraffer.
