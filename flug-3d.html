@@ -164,7 +164,7 @@
     <div class="row2"><button class="btn primary" id="helpClose">Schliessen</button></div>
   </div>
 </div>
-<div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small><a id="iLink" hidden target="_blank" rel="noopener">Quelle öffnen</a><button class="ishare nokiosk" id="iShare" type="button" hidden>Link zu dieser Geschichte kopieren</button><button class="ishare nokiosk" id="iQr" type="button" hidden title="Für eine Tafel am Ort">QR-Code zu dieser Geschichte</button><a class="ishare nokiosk" id="iTl" href="zeitraffer.html" hidden title="Entwicklung rund um diese Geschichte in Luftbildern und Karten">Zeitraffer von oben</a><button class="iclose" id="iClose" type="button" aria-label="Infokarte schliessen" title="Schliessen (Esc)">✕</button></div>
+<div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small><a id="iLink" hidden target="_blank" rel="noopener">Quelle öffnen</a><button class="ishare nokiosk" id="iShare" type="button" hidden>Link zu dieser Geschichte kopieren</button><button class="ishare nokiosk" id="iQr" type="button" hidden title="Für eine Tafel am Ort">QR-Code zu dieser Geschichte</button><button class="ishare nokiosk" id="iCoord" type="button" hidden title="Lage in Schweizer Landeskoordinaten (LV95) für GIS oder Bericht">Koordinaten kopieren</button><a class="ishare nokiosk" id="iTl" href="zeitraffer.html" hidden title="Entwicklung rund um diese Geschichte in Luftbildern und Karten">Zeitraffer von oben</a><button class="iclose" id="iClose" type="button" aria-label="Infokarte schliessen" title="Schliessen (Esc)">✕</button></div>
 
 <a class="pill openfull" id="openFull" href="flug-3d.html" target="_blank" rel="noopener" hidden>↗ Im Vollbild öffnen</a>
 <button class="pill" id="pill" hidden>☰ Menü <span style="color:var(--mute)">(Tab)</span></button>
@@ -1601,15 +1601,16 @@ $('mFly').addEventListener('click', () => setMode(false));
 $('mWalk').addEventListener('click', () => setMode(true));
 $('go').addEventListener('click', () => { try { canvas.requestPointerLock(); } catch(e){} });
 /* Klick auf ein Haus: Infokarte. Mit übernommener Maus zählt das Fadenkreuz. */
-let infoTimer, infoStory = null;
+let infoTimer, infoStory = null, infoLV = null;
 function showInfo(p){
-  let title = '', text = '', badge = '', src = '', rec = false, link = '', linkTxt = 'Quelle öffnen', hold = 7000, story = null;
+  let title = '', text = '', badge = '', src = '', rec = false, link = '', linkTxt = 'Quelle öffnen', hold = 7000, story = null, ll = null;
   if (p && p.id instanceof C.Entity && p.id.story) {
     const st = p.id.story;
     title = st.titel; text = st.text; badge = 'Geschichte' + (storyRange(st) ? ' · ' + storyRange(st) : ''); hold = KIOSK ? 60000 : 20000;   /* im Kiosk-Rundgang bis zur nächsten Station */
     src = 'Quelle: ' + st.quelle;
     link = !KIOSK && /^https:\/\//.test(st.url || '') ? st.url : '';
     story = STORY_ID_RE.test(String(st.id || '')) ? String(st.id) : null;
+    if (Number.isFinite(st.lon) && Number.isFinite(st.lat)) ll = [st.lon, st.lat];
   } else if (p instanceof C.Cesium3DTileFeature && tlmTs && p.tileset === tlmTs) {
     title = isBridge(p) ? 'Brücke' : 'Bauwerk';
     text = 'Heutiger Stand aus dem Landschaftsmodell swissTLM3D. Ob es im gewählten Jahr schon stand, zeigt die Karte darunter.';
@@ -1628,6 +1629,7 @@ function showInfo(p){
     src = `Quelle: swissBUILDINGS3D (swisstopo), Gebäuderegister GWR (BFS)${egid ? ` · EGID ${egid}` : ''}`;
     /* zum Nachprüfen: Gebäuderegister auf map.geo.admin.ch an der Lage des Gebäudes (nicht im Kiosk) */
     if (r && !KIOSK) { link = gwrLink(r.lon, r.lat); linkTxt = 'Im Gebäuderegister prüfen ↗'; hold = 15000; }
+    if (r && Number.isFinite(r.lon) && Number.isFinite(r.lat)) ll = [r.lon, r.lat];
   } else if (p && p.id && p.id.gen && p.id.far) {
     title = 'Haus aus der Karte';
     text = `Auf der Siegfriedkarte ${p.id.gen} eingezeichnet · noch nicht mit dem Gebäuderegister abgeglichen – näher heran, dann zeigt sich, ob es heute noch steht`;
@@ -1639,10 +1641,14 @@ function showInfo(p){
     badge = 'Rekonstruiert'; rec = true;
     src = `Quelle: Siegfriedkarte, Kartenstand ${p.id.gen} (swisstopo) · Grundriss aus der Karte, Höhe geschätzt`;
   } else return false;
+  /* Lage in LV95 (Näherungsformel swisstopo, auf 1 m gerundet) für Forschung und GIS; nicht im Kiosk */
+  infoLV = ll && !KIOSK ? toLV95(ll[0], ll[1]).map(Math.round) : null;
+  if (infoLV) src += ` · Lage LV95: E ${infoLV[0]}, N ${infoLV[1]}`;
   $('iTitle').textContent = title; $('iText').textContent = text; $('iSrc').textContent = src;
   $('iBadge').textContent = badge; $('iBadge').classList.toggle('rec', rec);
   $('iLink').hidden = !link; if (link) $('iLink').href = link; $('iLink').textContent = linkTxt;
   infoStory = story; $('iShare').hidden = $('iQr').hidden = $('iTl').hidden = !story;
+  $('iCoord').hidden = !infoLV; $('iCoord').textContent = 'Koordinaten kopieren';
   $('info').hidden = false;
   clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, hold);
   return true;
@@ -2266,6 +2272,14 @@ $('iShare').addEventListener('click', async () => {
   if (!infoStory) return;
   clearTimeout(infoTimer);
   shareLink(storyUrl(infoStory), `Zeitreise Schweiz – ${$('iTitle').textContent}`, 'Link zur Geschichte');
+});
+/* Koordinaten (LV95, E/N in Metern) in die Zwischenablage, z. B. für QGIS oder einen Bericht */
+$('iCoord').addEventListener('click', async () => {
+  if (!infoLV) return;
+  clearTimeout(infoTimer);
+  const t = `${infoLV[0]}, ${infoLV[1]}`;
+  try { await navigator.clipboard.writeText(t); $('iCoord').textContent = 'Kopiert: ' + t + ' (LV95)'; }
+  catch (e) { window.prompt('Koordinaten LV95 (E, N):', t); }
 });
 /* QR-Code zur Geschichte, z. B. für eine Tafel am Ort: öffnet den 3D-Flug dort mit Infokarte */
 $('iQr').addEventListener('click', () => {
