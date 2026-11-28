@@ -278,3 +278,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Gemeinden: 2D-Karte mit der Zeile «Orte mit Geschichten» (Winterthur, Basel, Grindelwald) wie im 3D-Flug.
 - [x] Produktseite und Methodik: «Angaben kopieren» und «Orte mit Geschichten» aufführen; Methodik erklärt den kopierten Text (Lage gerundet, Abrufdatum).
 - [x] Gemeinden: Story-Werkstatt öffnet eine der drei Beispiel-Dateien (Winterthur, Basel, Grindelwald) als Vorlage zum Anschauen und Anpassen.
+
+## 42. Handy, Übersicht, Anleitung
+- [x] Handy: «Angaben kopieren» öffnet auf Touch-Geräten das System-Teilen (Nachricht, Mail, Notizen), sonst wie bisher kopieren.
+- [ ] Bedienung: Übersicht «Tasten und Gesten» nennt «Angaben kopieren» und «Orte mit Geschichten».
+- [ ] README nachführen: «Angaben kopieren», «Orte mit Geschichten» (3D-Flug, 2D-Karte) und Beispiel-Vorlage der Story-Werkstatt.

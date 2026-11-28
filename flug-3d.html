@@ -1683,7 +1683,7 @@ function showInfo(p, at){
   if (infoLV) src += ` · Lage LV95: E ${infoLV[0]}, N ${infoLV[1]}`;
   infoCite = cite && !KIOSK ? [...cite, infoLV ? `Lage LV95: E ${infoLV[0]}, N ${infoLV[1]} (Näherungsformel swisstopo, gerundet auf 1 m)` : '',
     link ? `Nachprüfen: ${link}` : '', `Quelle: swissBUILDINGS3D (swisstopo), Gebäuderegister GWR (BFS); abgerufen am ${today()} über Zeitreise Schweiz`].filter(Boolean).join('\n') : null;
-  $('iCite').hidden = !infoCite; $('iCite').textContent = 'Angaben kopieren';
+  $('iCite').hidden = !infoCite; $('iCite').textContent = CAN_SHARE ? 'Angaben teilen' : 'Angaben kopieren';
   $('iTitle').textContent = title; $('iText').textContent = text; $('iSrc').textContent = src;
   $('iBadge').textContent = badge; $('iBadge').classList.toggle('rec', rec);
   $('iLink').hidden = !link; if (link) $('iLink').href = link; $('iLink').textContent = linkTxt;
@@ -2407,6 +2407,11 @@ $('iCoord').addEventListener('click', async () => {
 $('iCite').addEventListener('click', async () => {
   clearTimeout(infoTimer);
   if (!infoCite) return;
+  /* Handy: System-Teilen (Nachricht, Mail, Notizen), sonst Zwischenablage */
+  if (CAN_SHARE) {
+    try { await navigator.share({title: 'Zeitreise Schweiz – ' + $('iTitle').textContent, text: infoCite}); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; }
+  }
   try { await navigator.clipboard.writeText(infoCite); $('iCite').textContent = 'Angaben kopiert'; }
   catch (e) { window.prompt('Angaben zum Gebäude:', infoCite.replace(/\n/g, ' · ')); }
 });

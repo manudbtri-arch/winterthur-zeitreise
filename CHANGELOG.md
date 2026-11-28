@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 3D-Flug (Handy): «Angaben teilen» in der Infokarte eines belegten Gebäudes öffnet das System-Teilen (Nachricht, Mail, Notizen); am Computer bleibt «Angaben kopieren».
 - Story-Werkstatt: «Beispiel öffnen» lädt die Datei von Winterthur, Basel oder Grindelwald als Vorlage, um Aufbau und Quellenangaben anzusehen und anzupassen; in der Partner-Anleitung erwähnt.
 - Produktseite und Methodik: «Angaben kopieren» und «Orte mit Geschichten» aufgeführt; die Methodik erklärt, was der kopierte Text enthält und wie genau die Lage ist.
 - 2D-Karte: Unter «Geschichten an Orten» führt die Zeile «Orte mit Geschichten» zu Winterthur, Basel und Grindelwald samt Markern und Sprungzielen.
