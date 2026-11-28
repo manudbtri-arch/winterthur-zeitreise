@@ -273,3 +273,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Forschung und Gemeinden: Infokarte eines belegten Gebäudes mit Knopf «Angaben kopieren» (Adresse, EGID, Baujahr, Lage LV95, Link zum Gebäuderegister, Quelle und Abrufdatum) als Text für Bericht oder Inventar.
 - [x] Gemeinden und Museen: Reiter «Ort» im 3D-Flug mit Auswahl «Orte mit Geschichten» (Winterthur, Basel, Grindelwald), die den Ort samt Story-Datei öffnet.
 - [x] Schulen: Unterrichtsseite nennt die drei Orte mit Geschichten als Wahl für Gruppenarbeit (Links mit `stories=`), damit Gruppen verschiedene Orte vergleichen.
+
+## 41. Orte mit Geschichten überall, Vorlagen
+- [x] Gemeinden: 2D-Karte mit der Zeile «Orte mit Geschichten» (Winterthur, Basel, Grindelwald) wie im 3D-Flug.
+- [ ] Produktseite und Methodik: «Angaben kopieren» und «Orte mit Geschichten» aufführen; Methodik erklärt den kopierten Text (Lage gerundet, Abrufdatum).
+- [ ] Gemeinden: Story-Werkstatt öffnet eine der drei Beispiel-Dateien (Winterthur, Basel, Grindelwald) als Vorlage zum Anschauen und Anpassen.

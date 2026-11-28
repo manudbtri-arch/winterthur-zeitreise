@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 2D-Karte: Unter «Geschichten an Orten» führt die Zeile «Orte mit Geschichten» zu Winterthur, Basel und Grindelwald samt Markern und Sprungzielen.
 - Unterrichtsseite: Hinweis «Gruppenarbeit mit Geschichten» mit Links zu Winterthur, Basel und Grindelwald; Auftrag 2 nennt «Angaben kopieren».
 - 3D-Flug: Im Reiter «Ort» führt die Zeile «Orte mit Geschichten» zu Winterthur, Basel und Grindelwald samt deren Geschichten und Rundgang; der aktuelle Ort ist hervorgehoben.
 - 3D-Flug: Die Infokarte eines belegten Gebäudes hat den Knopf «Angaben kopieren» – Adresse, EGID, Baujahr, Lage in LV95, Link zum Gebäuderegister, Quelle und Abrufdatum als Text für Bericht oder Inventar.
