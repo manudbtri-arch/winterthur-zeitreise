@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 2D-Karte (Handy): Beim Start des Messens klappt die Seitenleiste ein, damit die Karte frei ist; der Knopf zum Aufklappen zeigt «Messen läuft».
 - 2D-Karte: Knopf «Link zu dieser Messung» – der Link (`mess=<lat>,<lon>;<lat>,<lon>`) öffnet die Karte mit derselben Messung; auf dem Handy über das System-Teilen.
 - 3D-Flug: Während des Messens zeigt oben eine Leiste «Messen · Punkt x von 2» mit Knopf «Beenden» – auch auf Touch-Geräten ohne Taste L oder Esc.
 - Produktseite und Methodik: «Messung kopieren» und das Messen in der 2D-Karte aufgeführt; die Methodik erklärt schräge und waagrechte Distanz, Höhenunterschied und die Genauigkeit beider Messwerkzeuge.

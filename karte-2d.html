@@ -350,8 +350,9 @@ $('storyOn').addEventListener('change', e => { if (e.target.checked) storyLayer.
 $('pTog').addEventListener('click', () => {
   const min = $('panel').classList.toggle('min');
   $('pTog').setAttribute('aria-expanded', !min);
-  $('pTog').textContent = min ? `Steuerung zeigen ▴ · ${$('yBig').textContent}` : 'Karte ganz zeigen ▾';
+  $('pTog').textContent = ptogText(min);
 });
+function ptogText(min){ return min ? `Steuerung zeigen ▴ · ${meas.on ? 'Messen läuft' : $('yBig').textContent}` : 'Karte ganz zeigen ▾'; }
 
 /* ---------- Ortssuche ganze Schweiz (geo.admin.ch); Ergebnisse nur als Text ---------- */
 {
@@ -491,6 +492,9 @@ function setMeasure(on){
   $('measBtn').textContent = on ? 'Messen beenden' : 'Messen (zwei Punkte anklicken)';
   $('map').style.cursor = on ? 'crosshair' : '';
   $('linkMsg').textContent = on ? 'Messen: ersten Punkt in der Karte anklicken.' : '';
+  /* Handy: Seitenleiste einklappen, damit die Karte zum Messen frei ist */
+  if (on && matchMedia('(max-width:600px)').matches && !$('panel').classList.contains('min')) $('pTog').click();
+  else if ($('panel').classList.contains('min')) $('pTog').textContent = ptogText(true);
 }
 function measureAt(ll){
   if (meas.pts.length >= 2) { meas.pts = []; meas.layer.clearLayers(); }
