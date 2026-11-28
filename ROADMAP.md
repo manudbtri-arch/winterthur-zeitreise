@@ -203,3 +203,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Produktseite: «Mein Standort» und «Koordinaten kopieren» in der Funktionsliste; Einbettungscode erlaubt den Standort (`allow="fullscreen; geolocation"`), damit «Mein Standort» auch auf Partner-Websites funktioniert.
 - [x] Schulen: Unterrichtsseite nennt «Mein Standort» für Exkursionen (vor Ort nachsehen, was hier im gewählten Jahr stand).
 - [x] Forschung: Infokarte eines rekonstruierten Hauses nennt ebenfalls die Lage in LV95 (Klickpunkt) mit «Koordinaten kopieren».
+
+## 27. Vor Ort erfassen und nachschlagen
+- [x] Handy: Knopf «Mein Standort» auch auf dem Startbildschirm des 3D-Flugs, damit man vor Ort ohne Menü direkt hinkommt.
+- [ ] Gemeinden: Story-Werkstatt setzt die Lage einer Geschichte auf Wunsch an den eigenen Standort (Erfassen vor Ort mit dem Handy).
+- [ ] Forschung: 2D-Karte zeigt nach Klick mit gedrückter Alt-Taste bzw. langem Drücken die Lage in LV95 mit «Koordinaten kopieren».

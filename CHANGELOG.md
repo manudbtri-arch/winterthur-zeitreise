@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 3D-Flug: Startbildschirm mit Knopf «Mein Standort» neben «Von oben ansehen»; Hinweise erscheinen dort, solange er offen ist.
 - 3D-Flug: Infokarte eines rekonstruierten Hauses (auch in der Fernsicht) nennt die Lage des angeklickten Punkts in LV95 und bietet «Koordinaten kopieren».
 - Unterrichtsseite: Hinweise für Lehrpersonen nennen «Mein Standort» für Exkursionen – vor Ort vergleichen, was im gewählten Jahr hier stand.
 - Produktseite: Funktionsliste nennt «Mein Standort» und die Lage in LV95 zum Kopieren; eingebetteter 3D-Flug und der Einbettungscode erlauben den Standort (`allow="fullscreen; geolocation"`), damit «Mein Standort» auch eingebettet funktioniert.

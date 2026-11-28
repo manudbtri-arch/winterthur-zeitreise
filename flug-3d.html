@@ -200,6 +200,7 @@
     <div class="row">
       <button class="btn primary" id="introWalk">Durch die Gassen gehen</button>
       <button class="btn ghost" id="introFly">Von oben ansehen</button>
+      <button class="btn ghost" id="introGeo" type="button" hidden title="Ihren Standort nur für diesen Sprung abfragen; er wird nicht gespeichert">Mein Standort</button>
     </div>
     <div class="prog" aria-hidden="true"><i id="introBar"></i></div>
     <p class="st" id="introSt">Lade Gelände und Häuser …</p>
@@ -1387,21 +1388,24 @@ attachSearch($('q2'), $('qres2'), goPlace);
 
 /* «Mein Standort»: einmalig abfragen (nur auf Knopfdruck), nur innerhalb der Schweiz, nichts wird gespeichert oder übermittelt */
 if (navigator.geolocation && window.isSecureContext && !KIOSK) {
-  $('geoMe').hidden = false;
+  $('geoMe').hidden = $('introGeo').hidden = false;
+  /* Meldung als Einblendung, solange der Startbildschirm offen ist zusätzlich dort (er liegt über der Einblendung) */
+  const geoMsg = (t, ms) => { toast(t, ms); if (!$('intro').classList.contains('off')) $('introSt').textContent = t; };
+  $('introGeo').addEventListener('click', () => $('geoMe').click());
   $('geoMe').addEventListener('click', () => {
-    const b = $('geoMe'); b.disabled = true; b.textContent = 'Standort wird abgefragt …';
-    const done = () => { b.disabled = false; b.textContent = 'Mein Standort'; };
+    const b = $('geoMe'), ib = $('introGeo'); b.disabled = ib.disabled = true; b.textContent = 'Standort wird abgefragt …';
+    const done = () => { b.disabled = ib.disabled = false; b.textContent = 'Mein Standort'; };
     navigator.geolocation.getCurrentPosition(pos => {
       done();
       const lon = pos.coords.longitude, lat = pos.coords.latitude;
-      if (!(lon > 5.95 && lon < 10.5 && lat > 45.8 && lat < 47.82)) { toast('Ihr Standort liegt ausserhalb der Schweiz.', 3000); return; }
+      if (!(lon > 5.95 && lon < 10.5 && lat > 45.8 && lat < 47.82)) { geoMsg('Ihr Standort liegt ausserhalb der Schweiz.', 3000); return; }
       closeIntro && closeIntro();
       if (present) { camera.flyTo({destination: C.Cartesian3.fromDegrees(lon, lat - 0.0055, 1050), orientation: {heading: 0, pitch: C.Math.toRadians(-38), roll: 0}, duration: flyDur(2.5)}); resolvePlace(lon, lat); }
       else teleport(lon, lat);
       toast('Ihr Standort' + (pos.coords.accuracy > 200 ? ` (ungenau, ± ${Math.round(pos.coords.accuracy)} m)` : ''), 3000);
     }, err => {
       done();
-      toast(err.code === 1 ? 'Standort nicht freigegeben – bitte im Browser erlauben.' : 'Standort nicht verfügbar.', 3500);
+      geoMsg(err.code === 1 ? 'Standort nicht freigegeben – bitte im Browser erlauben.' : 'Standort nicht verfügbar.', 3500);
     }, {enableHighAccuracy: true, timeout: 15000, maximumAge: 60000});
   });
 }
