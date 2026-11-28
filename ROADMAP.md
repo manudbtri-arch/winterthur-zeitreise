@@ -281,5 +281,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 42. Handy, Übersicht, Anleitung
 - [x] Handy: «Angaben kopieren» öffnet auf Touch-Geräten das System-Teilen (Nachricht, Mail, Notizen), sonst wie bisher kopieren.
-- [ ] Bedienung: Übersicht «Tasten und Gesten» nennt «Angaben kopieren» und «Orte mit Geschichten».
+- [x] Bedienung: Übersicht «Tasten und Gesten» nennt «Angaben kopieren» und «Orte mit Geschichten».
 - [ ] README nachführen: «Angaben kopieren», «Orte mit Geschichten» (3D-Flug, 2D-Karte) und Beispiel-Vorlage der Story-Werkstatt.
