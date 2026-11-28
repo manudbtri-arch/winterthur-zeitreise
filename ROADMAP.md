@@ -293,3 +293,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Produktseite: Funktionsliste nennt die Geschichten im Zeitraffer («Orte mit Geschichten») und «Messung teilen» auf dem Handy.
 - [x] Handy: «Koordinaten kopieren» im Zeitraffer öffnet auf Touch-Geräten das System-Teilen, sonst wie bisher kopieren.
 - [x] Barrierefreiheit: Zeile «Orte mit Geschichten» (3D-Flug, 2D-Karte, Zeitraffer) als benannte Navigation, damit Bildschirmleser sie als Ortswahl ansagen.
+
+## 45. Geschichten zitieren, Koordinaten teilen
+- [ ] Forschung und Schulen: Infokarte einer Geschichte mit «Angaben kopieren» (Titel, Zeitraum, Text, Quelle, Lage LV95, Direktlink, Abrufdatum), wie bei belegten Gebäuden.
+- [ ] Handy: «Koordinaten kopieren» (Infokarte im 3D-Flug, Lage-Fenster der 2D-Karte) öffnet auf Touch-Geräten das System-Teilen, sonst wie bisher kopieren.
+- [ ] Bedienung und README nachführen: «Angaben kopieren» bei Geschichten, «Koordinaten teilen» auf dem Handy.
