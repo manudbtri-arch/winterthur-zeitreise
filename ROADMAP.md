@@ -253,3 +253,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Forschung: Methodik-Seite – Inhaltsverzeichnis vollständig (Themen aus Bundesdaten und Statistik fehlen, Nummern stimmen nicht) und Druckansicht, damit die Seite sauber als PDF einer Arbeit beiliegt.
 - [x] Gemeinden und Schulen: Lage-Fenster der 2D-Karte mit Knopf «Diesen Punkt im 3D-Flug ansehen» (Blick von Süden auf den Punkt statt auf die Kartenmitte; auch auf dem Handy nach langem Drücken).
 - [x] Forschung: 3D-Flug zeigt einen Punkt aus dem Link (`pin=<lat>,<lon>`, z. B. aus der 2D-Karte) als Markierung mit Lage in LV95.
+
+## 37. Markierte Punkte im Alltag
+- [x] Gemeinden: 3D-Flug – ein Link nur mit `pin=<lat>,<lon>` (ohne Blickangaben, z. B. von Hand aus dem GIS) blickt von Süden auf den Punkt, Höhe aus dem Gelände, und baut dort die Häuser.
+- [ ] Schulen: Hinweise für Lehrpersonen – einen Punkt in der 2D-Karte markieren und als Link oder QR-Code verteilen; die Klasse sieht ihn im 3D-Flug als Markierung.
+- [ ] README und Produktseite nachführen: markierter Punkt (2D-Karte → 3D-Flug), Druckansicht der Methodik.

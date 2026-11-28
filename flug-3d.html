@@ -235,6 +235,7 @@ const showNoWebgl = (msg) => {
   const lon = Number(q.get('lon')), lat = Number(q.get('lat')), yr = Math.round(Number(q.get('year')));
   if (lon > 5.5 && lon < 11 && lat > 45.5 && lat < 48) { out.set('lat', lat.toFixed(5)); out.set('lon', lon.toFixed(5)); out.set('z', '16'); }
   if (yr >= 1870 && yr <= 1949) { out.set('t', 'sieg'); out.set('y', String(yr)); }
+  if (/^4[5-8]\.\d{1,8},\d{1,2}\.\d{1,8}$/.test(q.get('pin') || '')) out.set('pin', q.get('pin'));   /* 2D-Karte zeigt den markierten Punkt */
   if (/^[a-z0-9-]{1,40}$/.test(q.get('stories') || '')) out.set('stories', q.get('stories'));
   $('noWebgl2d').href = 'karte-2d.html?' + out.toString();
   if (msg) $('noWebglTxt').textContent = msg;
@@ -279,13 +280,19 @@ const PHONE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, 
 /* Permalink: ?lon=&lat=&h=&hdg=&pitch=&year=&mode=(fly|walk|now)&c=lon,lat (Mitte des gebauten Gebiets) */
 const LINK = (() => {
   const q = new URLSearchParams(location.search), num = k => (q.has(k) && q.get(k) !== '' ? Number(q.get(k)) : NaN);
-  const lon = num('lon'), lat = num('lat');
-  if (!(lon > 5.5 && lon < 11 && lat > 45.5 && lat < 48)) return null;
-  const h = num('h'), hdg = num('hdg'), pitch = num('pitch'), year = Math.round(num('year'));
+  let lon = num('lon'), lat = num('lat'), fromPin = null;
+  /* nur pin=<lat>,<lon> (z. B. von Hand aus dem GIS): Blick von Süden auf den Punkt, Höhe folgt aus dem Gelände */
+  if (!(lon > 5.5 && lon < 11 && lat > 45.5 && lat < 48)) {
+    const pm = /^(4[5-8]\.\d{1,8}),(\d{1,2}\.\d{1,8})$/.exec(q.get('pin') || '');
+    const pl = pm ? [Number(pm[2]), Number(pm[1])] : null;
+    if (!(pl && pl[0] > 5.5 && pl[0] < 11 && pl[1] > 45.5 && pl[1] < 48)) return null;
+    fromPin = pl; lon = pl[0]; lat = pl[1] - 0.0055;
+  }
+  const h = fromPin ? 1400 : num('h'), hdg = fromPin ? 0 : num('hdg'), pitch = fromPin ? -38 : num('pitch'), year = Math.round(num('year'));
   const cc = String(q.get('c') || '').split(',').map(Number);
-  const c = cc.length === 2 && cc[0] > 5.5 && cc[0] < 11 && cc[1] > 45.5 && cc[1] < 48 ? cc : [lon, lat];
+  const c = fromPin || (cc.length === 2 && cc[0] > 5.5 && cc[0] < 11 && cc[1] > 45.5 && cc[1] < 48 ? cc : [lon, lat]);
   const ort = (q.get('ort') || '').trim().slice(0, 80);
-  return {lon, lat, c, ort,
+  return {lon, lat, c, ort, fromPin,
     h: Number.isFinite(h) ? Math.min(20000, Math.max(200, h)) : 1000,
     hdg: Number.isFinite(hdg) ? hdg : 0,
     pitch: Number.isFinite(pitch) ? Math.min(90, Math.max(-90, pitch)) : -30,
@@ -330,6 +337,11 @@ if (location.protocol === 'file:') {
 C.CesiumTerrainProvider.fromUrl('https://3d.geo.admin.ch/ch.swisstopo.terrain.3d/v1/', {requestVertexNormals:true})
   .then(tp => {
     viewer.terrainProvider = tp; terrainOk = true; globe.enableLighting = false;
+    /* Link nur mit pin=: Kamera 600 m über dem Gelände am Punkt */
+    if (LINK && LINK.fromPin && LINK.mode !== 'walk') C.sampleTerrainMostDetailed(tp, [C.Cartographic.fromDegrees(LINK.c[0], LINK.c[1])]).then(([g]) => {
+      if (g && Number.isFinite(g.height)) camera.setView({destination: C.Cartesian3.fromDegrees(LINK.lon, LINK.lat, g.height + 600),
+        orientation: {heading: 0, pitch: C.Math.toRadians(-38), roll: 0}});
+    }).catch(() => {});
     buildHouses(LINK ? LINK.c : (STORY_NAME && stories.length ? [stories[0].story.lon, stories[0].story.lat] : [8.7290, 47.4997]));
     bridgeLayer();
     if (KIOSK_TOUR && kiosk.auto && tourIdx >= 0 && stories[tourIdx] && !Number.isFinite(stories[tourIdx].story._gh)) tourGo(tourIdx, true, 0);
