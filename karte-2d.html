@@ -513,7 +513,14 @@ function measureAt(ll){
     try { await navigator.clipboard.writeText(txt); c.textContent = 'Messung kopiert'; }
     catch (e) { window.prompt('Messung:', txt.replace(/\n/g, ' · ')); }
   });
-  box.append(t, p, q, c);
+  const lk = document.createElement('button'); lk.type = 'button'; lk.textContent = 'Link zu dieser Messung';
+  lk.addEventListener('click', async () => {
+    const url = permalink();
+    if (SHARE) { try { await navigator.share({title: `Zeitreise Schweiz – Messung ${fmtM(d)}`, url}); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+    try { await navigator.clipboard.writeText(url); lk.textContent = 'Link kopiert'; }
+    catch (e) { window.prompt('Link zu dieser Messung:', url); }
+  });
+  box.append(t, p, q, c, document.createElement('br'), lk);
   L.popup({maxWidth: 300, autoClose: false, closeOnClick: false}).setLatLng(b).setContent(box).addTo(meas.layer);
   $('linkMsg').textContent = `Distanz waagrecht ${fmtM(d)}.`;
 }
@@ -557,6 +564,8 @@ function permalink(){
   else { q.set('t', $('tSrc').value); q.set('y', $('tYear').value); q.set('op', $('tOp').value); }
   if (STORY_NAME) q.set('stories', STORY_NAME);
   if (pinLL) q.set('pin', pinLL.lat.toFixed(6) + ',' + pinLL.lng.toFixed(6));
+  /* fertige Messung: beide Punkte in den Link (mess=<lat>,<lon>;<lat>,<lon>) */
+  if (meas.on && meas.pts.length === 2) q.set('mess', meas.pts.map(x => x.lat.toFixed(6) + ',' + x.lng.toFixed(6)).join(';'));
   return location.origin + location.pathname + '?' + q.toString();
 }
 /* auf Touch-Geräten mit Teilen-Funktion: System-Teilen (Nachricht, Mail), sonst kopieren */
@@ -641,6 +650,7 @@ $('qrSave').addEventListener('click', () => {
 $('qrClose').addEventListener('click', () => { $('qrDlg').hidden = true; $('qrBtn').focus(); });
 $('qrDlg').addEventListener('click', e => { if (e.target === $('qrDlg')) $('qrDlg').hidden = true; });
 $('qrDlg').addEventListener('keydown', e => { if (e.key === 'Escape') $('qrDlg').hidden = true; });
+let measPending = null;
 const Q = new URLSearchParams(location.search), qn = k => (Q.get(k) !== null && Q.get(k) !== '' ? Number(Q.get(k)) : NaN);
 {
   const lat = qn('lat'), lon = qn('lon'), z = qn('z');
@@ -652,6 +662,13 @@ const Q = new URLSearchParams(location.search), qn = k => (Q.get(k) !== null && 
     if (!(lat > 45.5 && lat < 48)) map.setView(ll, 17);
     pinLL = ll; pinPop = showLV(ll);
   }
+  /* Messung aus dem Link: beide Punkte wieder setzen, Distanz anzeigen */
+  const mm = /^(4[5-8]\.\d{1,8}),(\d{1,2}\.\d{1,8});(4[5-8]\.\d{1,8}),(\d{1,2}\.\d{1,8})$/.exec(Q.get('mess') || '');
+  if (mm && [mm[2], mm[4]].every(v => +v > 5.5 && +v < 11)) {
+    const a = L.latLng(+mm[1], +mm[2]), b = L.latLng(+mm[3], +mm[4]);
+    if (!(lat > 45.5 && lat < 48)) map.fitBounds(L.latLngBounds(a, b), {padding: [60, 60], maxZoom: 18});
+    measPending = [a, b];
+  }
   if (tKeys.includes(Q.get('t'))) { $('tSrc').value = Q.get('t'); setRange($('tYear'), Q.get('t'), qn('y')); }
   else if (Number.isFinite(qn('y'))) setRange($('tYear'), $('tSrc').value, qn('y'));
   if (qn('op') >= 0 && qn('op') <= 100) { $('tOp').value = Math.round(qn('op')); $('opV').textContent = $('tOp').value + ' %'; }
@@ -661,6 +678,7 @@ const Q = new URLSearchParams(location.search), qn = k => (Q.get(k) !== null && 
   }
 }
 if (Q.get('mode') === 'cmp') mode(true); else showTime();
+if (measPending) { setMeasure(true); measureAt(measPending[0]); measureAt(measPending[1]); }
 }
 </script>
 </body>
