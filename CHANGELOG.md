@@ -1,6 +1,8 @@
 # Änderungen
 
 ## 2026-11-28
+- Zeitraffer von oben: Der Ausschnitt einer Geschichte nennt den Zeitraum aus der Story-Datei und hat den Link «Quelle öffnen».
+- Zeitraffer von oben: «Im 3D-Flug» öffnet beim Ausschnitt einer Geschichte diese direkt mit Infokarte (`story=<id>`).
 - Unterrichtsseite: Die Gruppenarbeit mit Geschichten nennt «Angaben kopieren» als Quellenbeleg fürs Arbeitsblatt.
 - Produktseite und Methodik: «Angaben kopieren» bei Geschichten aufgeführt; die Methodik erklärt, was der Text enthält und dass die genannte Quelle massgebend ist.
 - 2D-Karte: Das Fenster einer Geschichte nennt den Zeitraum und hat «Angaben kopieren» (auf dem Handy «Angaben teilen») mit Titel, Text, Quelle, Lage in LV95, Direktlink in den 3D-Flug und Abrufdatum.

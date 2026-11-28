@@ -99,6 +99,7 @@ h1{font-size:clamp(26px,4vw,38px);line-height:1.08;margin:0;font-weight:800;lett
 .rail{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:16px}
 .rail h2{font-size:20px;line-height:1.2;margin:0;font-weight:800}
 .rail .desc{font-size:14px;color:var(--mute);margin:6px 0 0}
+.rail .src{font-size:13px;margin:4px 0 0}.rail .src a{color:var(--blue);display:inline-block;min-height:28px;padding-top:4px}
 .meta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px;color:var(--brick);font-weight:600;margin-top:8px;font-variant-numeric:tabular-nums}
 .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;background:var(--tint);border:1px solid var(--line);padding:3px;border-radius:9px}
 .tabs button{border:0;background:transparent;color:var(--ink);font:600 13px Archivo,sans-serif;padding:8px 4px;border-radius:6px;cursor:pointer;min-height:40px}
@@ -222,6 +223,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
       <div>
         <h2 id="placeTitle">Sulzer-Areal Winterthur</h2>
         <p class="desc" id="placeDesc"></p>
+        <p class="src" id="placeSrc" hidden><a id="placeSrcLink" target="_blank" rel="noopener">Quelle öffnen ↗</a></p>
         <div class="meta" id="placeMeta"></div>
       </div>
 
@@ -1049,6 +1051,9 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
   function updatePlaceMeta(){
     $('placeTitle').textContent = st.title;
     $('placeDesc').textContent = st.desc;
+    const ss = st.storyRef && st.storyRef.id === st.spotId ? st.storyRef.story : null;
+    $('placeSrc').hidden = !(ss && ss.url);
+    if (ss && ss.url) $('placeSrcLink').href = ss.url;
     const widthKm = (metersPerPixel(st.lat, st.z) * W / 1000).toFixed(1).replace('.', ',');
     const span = st.frames.length ? `${st.frames[0].label} – ${st.frames[st.frames.length - 1].label} (${st.frames.length} Stände)` : 'wird ermittelt …';
     $('placeMeta').textContent = '';
@@ -1225,6 +1230,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
   }
   function selectSpot(sp, autoPlay = false){
     st.spotId = sp.id;
+    st.storyRef = sp.story ? sp : null;
     st.title = sp.title;
     st.desc = sp.desc;
     st.lat = sp.lat;
@@ -1266,10 +1272,14 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
       }
       if (!ll || !(ll[0] > 45.7 && ll[0] < 47.9 && ll[1] > 5.8 && ll[1] < 10.6)) continue;
       const titel = g.titel.trim().slice(0, 70);
+      /* Zeitraum, Link zur Quelle (nur https) und Kennung für den Direktsprung in den 3D-Flug */
+      const von = Number.isFinite(g.von) ? g.von : null, bis = Number.isFinite(g.bis) ? g.bis : null;
+      const span = von != null && bis != null ? `${von}–${bis}` : von != null ? `ab ${von}` : bis != null ? `bis ${bis}` : '';
       spots.push({
+        story: {id: /^[A-Za-z0-9_-]{1,60}$/.test(String(g.id || '')) ? String(g.id) : '', url: /^https:\/\/[^\s]+$/.test(g.url || '') ? g.url : ''},
         id: 's:' + spots.length, short: titel.length > 32 ? titel.slice(0, 31) + '…' : titel,
         title: (ort ? ort + ' – ' : '') + titel, lat: ll[0], lon: ll[1], z: 16,
-        desc: g.text.trim().slice(0, 400) + ' (Quelle: ' + g.quelle.trim().slice(0, 200) + ')'
+        desc: (span ? `Zeitraum: ${span}. ` : '') + g.text.trim().slice(0, 400) + ' (Quelle: ' + g.quelle.trim().slice(0, 200) + ')'
       });
     }
     if (!spots.length) { $('status').textContent = `In ${file} keine Geschichte mit Lage gefunden.`; return; }
@@ -1609,6 +1619,9 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
     else if (Number.isFinite(fy) && fy > 1949) { q3.set('mode', 'now'); q3.delete('year'); }
     if (st.title && st.title !== 'Gewählter Ausschnitt') q3.set('ort', st.title);
     if (STORY_NAME) q3.set('stories', STORY_NAME);
+    /* Ausschnitt einer Geschichte: direkt zur Geschichte mit Infokarte (der 3D-Flug wählt bei Bedarf ein passendes Jahr) */
+    const ss = st.storyRef && st.storyRef.id === st.spotId ? st.storyRef.story : null;
+    if (ss && ss.id) q3.set('story', ss.id);
     location.href = 'flug-3d.html?' + q3.toString();
   });
   window.addEventListener('pageshow', () => { $('to3d').disabled = false; });

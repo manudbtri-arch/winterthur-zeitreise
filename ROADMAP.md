@@ -303,3 +303,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] 2D-Karte: Geschichte im Fenster nennt den Zeitraum und hat «Angaben kopieren» (auf dem Handy «teilen») wie im 3D-Flug.
 - [x] Produktseite und Methodik: «Angaben kopieren» bei Geschichten aufführen; Methodik erklärt, was der kopierte Text enthält.
 - [x] Schulen: Unterrichtsseite nennt «Angaben kopieren» bei Geschichten als Quellenbeleg fürs Arbeitsblatt.
+
+## 47. Geschichten im Zeitraffer vollständig
+- [x] Zeitraffer: Ausschnitt einer Geschichte nennt den Zeitraum aus der Story-Datei und hat den Link «Quelle öffnen» (nur https).
+- [x] Zeitraffer: «Im 3D-Flug» bei einer Geschichte öffnet sie direkt mit Infokarte (`story=<id>`).
+- [ ] README und Methodik nachführen: Zeitraum, Quelle und Direktsprung bei Geschichten im Zeitraffer.
