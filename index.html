@@ -181,14 +181,14 @@ footer a{color:var(--mute)}
       <ul>
         <li><b>Durch die Gassen gehen</b><span>Auf Augenhöhe wie in einem Spiel, Wände halten beim Gehen auf.</span></li>
         <li><b>Zeitregler 1880 bis 1940</b><span>Häuser erscheinen und verschwinden, ohne Neuladen.</span></li>
-        <li><b>Jeder Ort der Schweiz</b><span>Gemeinde oder Adresse suchen, die Seite baut den Ort.</span></li>
+        <li><b>Jeder Ort der Schweiz</b><span>Gemeinde oder Adresse suchen, die Seite baut den Ort. Vor Ort führt «Mein Standort» direkt hin; der Standort wird nur auf Knopfdruck abgefragt und nicht gespeichert.</span></li>
         <li><b>Heute im Vergleich</b><span>Ein Klick zeigt Luftbild, alle Gebäude und Bäume von heute. Als Vorher-Nachher-Bild nebeneinander speichern, mit Jahr, Ort und Quellen.</span></li>
         <li><b>Messen und Orientieren</b><span>Zwei Punkte anklicken: Distanz, Höhenunterschied und Steigung als Richtwert. Der Kompass dreht den Blick nach Norden.</span></li>
         <li><b>Zeitraffer von oben</b><span class="tag">Luftbilder &amp; Karten</span><span>Zeigt für einen gewählten Bereich die Entwicklung über alle Epochen bis heute – mit 8 Schweizer Beispielorten, beliebigen eigenen Ausschnitten, Vorher/Jetzt-Wischvergleich sowie PNG- und Video-Export. <a href="zeitraffer.html" style="color:inherit">Zeitraffer öffnen</a></span></li>
       </ul>
       <ul>
         <li><b>Karte mit Teleport</b><span>Siegfriedkarte von oben, ein Klick versetzt die Ansicht an diese Stelle.</span></li>
-        <li><b>Infos zu jedem Haus</b><span>Adresse, Baujahr und ob es heute noch steht, mit Link zum Nachprüfen im Gebäuderegister.</span></li>
+        <li><b>Infos zu jedem Haus</b><span>Adresse, Baujahr und ob es heute noch steht, mit Link zum Nachprüfen im Gebäuderegister und Lage in Landeskoordinaten (LV95) zum Kopieren.</span></li>
         <li><b>Themen aus Bundesdaten</b><span>Historische Verkehrswege, ISOS, Kulturgüter, Luftbild-Aufnahmeorte, Ortsnamen, Gewässer und Bodennutzung einblenden; ein Klick zeigt den Eintrag mit Quelle. Unter dem Zeitregler steht der tatsächliche Kartenstand des Blatts.</span></li>
         <li><b>Export und Zitieren</b><span>Link auf Ort und Jahr (auf dem Handy direkt teilen), Bild mit Quellenangabe, Gebäudeliste als CSV und GeoJSON, Einbettungscode, QR-Code zum Aushängen.</span></li>
         <li><b>Analyse nach Bauepoche</b><span>Gebäude nach Baujahr eingefärbt, mit Statistik für das Gebiet, als CSV für Tabellenkalkulation und Statistikprogramme.</span></li>
@@ -287,7 +287,7 @@ footer a{color:var(--mute)}
     const f = document.createElement('iframe');
     f.src = 'flug-3d.html?embed=1&lon=7.5930&lat=47.5545&h=600&hdg=330&pitch=-30&year=1900&stories=basel&ort=Basel&t=' + Date.now();   /* passende Ansicht zum Vorschaubild */
     f.title = 'Zeitreise Schweiz – 3D-Flug';
-    f.allow = 'fullscreen';
+    f.allow = 'fullscreen; geolocation';
     f.setAttribute('allowfullscreen', '');
     poster.replaceWith(f);
     f.focus();

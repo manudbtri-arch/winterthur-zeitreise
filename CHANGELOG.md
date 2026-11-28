@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- Produktseite: Funktionsliste nennt «Mein Standort» und die Lage in LV95 zum Kopieren; eingebetteter 3D-Flug und der Einbettungscode erlauben den Standort (`allow="fullscreen; geolocation"`), damit «Mein Standort» auch eingebettet funktioniert.
 - 3D-Flug: Infokarte eines belegten Gebäudes oder einer Geschichte nennt die Lage in LV95 (E/N, auf 1 m gerundet) und hat einen Knopf «Koordinaten kopieren» für GIS und Berichte; in der Methodik unter Genauigkeit erwähnt.
 - 2D-Karte und Zeitraffer von oben: Knopf «Mein Standort» unter bzw. neben der Ortssuche – die 2D-Karte zeigt den Standort als blauen Punkt, der Zeitraffer legt den Ausschnitt (ca. 1,5 km) darum; nur auf Knopfdruck, nur in der Schweiz, nichts wird gespeichert.
 - 3D-Flug: Knopf «Mein Standort» im Reiter «Ort» springt an den eigenen Standort (nur auf Knopfdruck, nur in der Schweiz, nichts wird gespeichert) und baut dort die Häuser; im Kiosk ausgeblendet.

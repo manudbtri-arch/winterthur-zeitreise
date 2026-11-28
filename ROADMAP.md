@@ -198,3 +198,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Handy: Knopf «Mein Standort» im 3D-Flug (Reiter «Ort») – fragt den Standort nur auf Knopfdruck ab, nur innerhalb der Schweiz, nichts wird gespeichert; setzt einen dorthin und baut die Häuser.
 - [x] Handy: «Mein Standort» auch in der 2D-Karte und im Zeitraffer von oben.
 - [x] Forschung: Infokarte eines Gebäudes nennt die Lage in LV95 (E/N, gerundet auf 1 m) mit Knopf «Koordinaten kopieren».
+
+## 26. Standort und Lage weiterführen
+- [x] Produktseite: «Mein Standort» und «Koordinaten kopieren» in der Funktionsliste; Einbettungscode erlaubt den Standort (`allow="fullscreen; geolocation"`), damit «Mein Standort» auch auf Partner-Websites funktioniert.
+- [ ] Schulen: Unterrichtsseite nennt «Mein Standort» für Exkursionen (vor Ort nachsehen, was hier im gewählten Jahr stand).
+- [ ] Forschung: Infokarte eines rekonstruierten Hauses nennt ebenfalls die Lage in LV95 (Klickpunkt) mit «Koordinaten kopieren».

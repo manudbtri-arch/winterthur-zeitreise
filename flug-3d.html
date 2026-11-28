@@ -2477,7 +2477,7 @@ $('geoBtn').addEventListener('click', () => {
 $('embedBtn').addEventListener('click', () => {
   if (document.pointerLockElement) document.exitPointerLock();
   const url = permalink().replace('?', '?embed=1&').replace(/&/g, '&amp;');
-  $('embedCode').value = `<iframe src="${url}" width="100%" height="560" style="border:0;border-radius:8px" allow="fullscreen" allowfullscreen loading="lazy" title="Zeitreise Schweiz – 3D-Ansicht"></iframe>`;
+  $('embedCode').value = `<iframe src="${url}" width="100%" height="560" style="border:0;border-radius:8px" allow="fullscreen; geolocation" allowfullscreen loading="lazy" title="Zeitreise Schweiz – 3D-Ansicht"></iframe>`;
   $('embedDlg').hidden = false;
   $('embedCode').focus(); $('embedCode').select();
 });
