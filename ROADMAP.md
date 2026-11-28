@@ -243,3 +243,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Gemeinden: Story-Werkstatt speichert die Geschichten auch als Tabelle (CSV mit den Spalten der Anleitung), damit sie in Excel weiterbearbeitet und wieder importiert werden können.
 - [x] Forschung: Lage-Fenster der 2D-Karte (Rechtsklick/langes Drücken) nennt die Geländehöhe über Meer (Höhendienst geo.admin.ch, swissALTI3D).
 - [x] README und Produktseite nachführen: Messen in der 2D-Karte, Link zu einer Messung, Geländehöhe, Story-Tabelle.
+
+## 35. Richtige Höhen, Vorschau, Unterricht
+- [ ] Vertrauen in die Daten: Koordinatenanzeige (F3) nennt die Höhe über Meer aus dem Höhendienst von swisstopo (Gelände am Standort plus Höhe über Boden) statt der Höhe über dem Ellipsoid des 3D-Geländes (in der Schweiz rund 50 m mehr).
+- [ ] Gemeinden: Story-Werkstatt zeigt beim Bearbeiten eine Vorschau «So erscheint die Infokarte» (Zeitraum, Titel, Text, Quelle).
+- [ ] Schulen: Auftrag 4 der Unterrichtsseite – Geländehöhen beider Punkte mit dem gemessenen Höhenunterschied vergleichen (Dach oder Boden?).
