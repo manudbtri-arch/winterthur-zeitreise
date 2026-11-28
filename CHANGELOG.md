@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- README: Zeitraum, «Angaben kopieren», «Zeitraffer von oben» und blasse Marker bei Geschichten in der 2D-Karte aufgeführt.
 - 2D-Karte: Marker von Geschichten, die im gezeigten Jahr nicht gelten, erscheinen blass; der Hinweis beim Darüberfahren nennt ihren Zeitraum.
 - 2D-Karte: Das Fenster einer Geschichte hat den Link «Zeitraffer von oben» mit dem Ausschnitt um die Geschichte.
 - README und Methodik: Zeitraum, «Quelle öffnen» und Direktsprung in den 3D-Flug bei Geschichten im Zeitraffer beschrieben.
