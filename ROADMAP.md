@@ -208,3 +208,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Handy: Knopf «Mein Standort» auch auf dem Startbildschirm des 3D-Flugs, damit man vor Ort ohne Menü direkt hinkommt.
 - [x] Gemeinden: Story-Werkstatt setzt die Lage einer Geschichte auf Wunsch an den eigenen Standort (Erfassen vor Ort mit dem Handy).
 - [x] Forschung: 2D-Karte zeigt nach Rechtsklick, Klick mit gedrückter Alt-Taste bzw. langem Drücken die Lage in LV95 mit «Koordinaten kopieren».
+
+## 28. Landeskoordinaten für Gemeinden
+- [x] Gemeinden: Story-Werkstatt nimmt die Lage auch als LV95-Koordinaten an (Feld «E, N», z. B. aus dem GIS der Gemeinde) und zeigt die gesetzte Lage zusätzlich in LV95.
+- [ ] Gemeinden: Story-Werkstatt übernimmt beim CSV-Import auch die Spalten `e_lv95` und `n_lv95`, wenn `lon`/`lat` fehlen; in der Partner-Anleitung erklärt.
+- [ ] Bedienung: Übersicht «Tasten und Gesten» im 3D-Flug nennt «Mein Standort» und «Koordinaten kopieren».
