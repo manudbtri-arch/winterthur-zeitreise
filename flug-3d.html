@@ -142,6 +142,10 @@
   <button class="btn" id="tourNext" aria-label="Nächste Station">›</button>
   <button class="btn" id="tourEnd" aria-label="Rundgang beenden"><b class="tendx" aria-hidden="true">✕</b><span class="tend">Beenden</span></button>
 </div>
+<div class="tour measbar" id="measBar" hidden role="group" aria-label="Messen">
+  <span id="measLbl" aria-live="polite">Messen · Punkt 1 von 2 antippen</span>
+  <button class="btn" id="measEnd" type="button">Beenden</button>
+</div>
 <div class="dlg" id="embedDlg" hidden role="dialog" aria-modal="true" aria-labelledby="embedH">
   <div class="box">
     <h2 id="embedH">Auf der eigenen Website einbetten</h2>
@@ -1766,8 +1770,14 @@ function setMeasure(on){
   meas.on = on; measClear();
   $('measBtn').setAttribute('aria-pressed', on);
   $('measBtn').textContent = on ? 'Messen beenden (L)' : 'Messen (L)';
+  /* Leiste mit «Beenden», auch für Touch-Geräte ohne Taste L oder Esc */
+  $('measBar').hidden = !on; if (on) measLabel();
   if (on) { if (!locked) setPanel(false); toast('Messen: zwei Punkte im Bild anklicken'); }
   else $('info').hidden = true;
+}
+function measLabel(){
+  const n = meas.pts.length, verb = COARSE ? 'antippen' : 'anklicken';
+  $('measLbl').textContent = n === 0 ? `Messen · Punkt 1 von 2 ${verb}` : n === 1 ? `Messen · Punkt 2 von 2 ${verb}` : `Messen · fertig – nächster Punkt startet neu`;
 }
 function measureAt(pos){
   let p = null;
@@ -1777,6 +1787,7 @@ function measureAt(pos){
   if (meas.pts.length >= 2) measClear();
   meas.pts.push(p);
   meas.ents.push(viewer.entities.add({position: p, point: {pixelSize: 11, color: MEAS_C, outlineColor: C.Color.WHITE, outlineWidth: 2, disableDepthTestDistance: Number.POSITIVE_INFINITY}}));
+  measLabel();
   if (meas.pts.length < 2) { toast('Erster Punkt gesetzt – jetzt den zweiten'); return; }
   const [a, b] = meas.pts;
   meas.ents.push(viewer.entities.add({polyline: {positions: [a, b], width: 3, arcType: C.ArcType.NONE,
@@ -1802,6 +1813,7 @@ function measureAt(pos){
   clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, 30000);
 }
 $('measBtn').addEventListener('click', () => setMeasure(!meas.on));
+$('measEnd').addEventListener('click', () => setMeasure(false));
 $('iClose').addEventListener('click', () => { clearTimeout(infoTimer); $('info').hidden = true; });
 
 function setPanel(show){

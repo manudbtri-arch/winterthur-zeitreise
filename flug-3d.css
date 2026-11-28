@@ -127,6 +127,9 @@ body.intro-on .panel,body.intro-on .keys,body.intro-on .hud,body.intro-on .timel
 .tour .btn{width:auto;margin:0;min-height:40px;padding:6px 14px;border-radius:20px}
 .tour #tourLbl{font-size:14px;font-weight:600;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto}
 .tour .tendx{display:none}
+.measbar{z-index:13}.measbar #measLbl{font-size:14px;font-weight:600;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto}
+.tour:not([hidden]) ~ .measbar{top:72px}
+@media(max-width:700px){.tour:not([hidden]) ~ .measbar{top:108px}.measbar #measLbl{font-size:13px}}
 @media(max-width:700px){
   .tour{top:52px;left:8px;right:8px;transform:none;max-width:none;gap:6px;padding:4px 6px}
   .tour .btn{min-height:44px;min-width:44px;padding:4px 10px;flex:none;font-size:18px}
