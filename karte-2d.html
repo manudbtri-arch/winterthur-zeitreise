@@ -333,6 +333,12 @@ async function loadStories(file){
       const a3 = document.createElement('a'); a3.href = 'flug-3d.html?story=' + encodeURIComponent(st.id) + (STORY_NAME ? '&stories=' + encodeURIComponent(STORY_NAME) : ''); a3.textContent = 'Im 3D-Flug ansehen';
       box.appendChild(a3); direct = a3.href;
     }
+    /* Zeitraffer von oben rund um die Geschichte (Luftbilder bis heute), wie im 3D-Flug */
+    const tq = new URLSearchParams({lat: ll[0].toFixed(5), lon: ll[1].toFixed(5), z: 16, mode: 'luft', name: st.titel.slice(0, 70)});
+    if (STORY_NAME) tq.set('stories', STORY_NAME);
+    const at = document.createElement('a'); at.href = 'zeitraffer.html?' + tq.toString(); at.textContent = 'Zeitraffer von oben';
+    at.title = 'Entwicklung rund um diese Geschichte in Luftbildern und Karten';
+    box.appendChild(at);
     /* «Angaben kopieren»: Titel, Zeitraum, Text, Quelle, Lage LV95, Direktlink und Abrufdatum für Bericht oder Arbeitsblatt */
     const cb = document.createElement('button'); cb.type = 'button'; cb.textContent = SHARE ? 'Angaben teilen' : 'Angaben kopieren';
     cb.addEventListener('click', async () => {
