@@ -221,5 +221,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 30. Koordinaten im Unterricht und auf dem Handy
 - [x] Schulen: Auftrag 4 der Unterrichtsseite um Landeskoordinaten ergänzen (Lage zweier Orte aus der Infokarte notieren, Distanz mit dem Satz des Pythagoras nachrechnen, mit der Messung vergleichen).
-- [ ] Handy: Koordinatenanzeige (sonst F3) auch ohne Tastatur – Häkchen «Koordinaten anzeigen» in den Einstellungen.
+- [x] Handy: Koordinatenanzeige (sonst F3) auch ohne Tastatur – Häkchen «Koordinaten anzeigen» in den Einstellungen.
 - [ ] Forschung: Zeitraffer nennt die Mitte des Ausschnitts in LV95 bei der Beschreibung, mit «Koordinaten kopieren».

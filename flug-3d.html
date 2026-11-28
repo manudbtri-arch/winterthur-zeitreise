@@ -95,6 +95,7 @@
     <label class="chk"><input type="checkbox" id="veg"> Heutige Bäume</label>
     <label class="chk"><input type="checkbox" id="bridgeOn" checked> Brücken (heutiger Stand, swisstopo)</label>
     <label class="chk"><input type="checkbox" id="miniOn" checked> Minikarte (breiter Bildschirm)</label>
+    <label class="chk"><input type="checkbox" id="f3On"> Koordinaten und Höhe anzeigen (F3)</label>
     <label class="chk"><input type="checkbox" id="storyOn" checked> Geschichten an Orten (Marker)</label>
 
     <label>Qualität</label>
@@ -1847,7 +1848,7 @@ document.addEventListener('keydown', e => {
   if (e.code === 'KeyI') { speedIdx = Math.min(SPEEDS.length - 1, speedIdx + 1); toast(`Fluggeschwindigkeit ${SPEEDS[speedIdx]}×`); }
   if (e.code === 'KeyU') { speedIdx = Math.max(0, speedIdx - 1); toast(`Fluggeschwindigkeit ${SPEEDS[speedIdx]}×`); }
   if (e.code === 'KeyJ') { setFarView(!farView); toast(`Fernsicht ${farView ? 'an' : 'aus'}`); }
-  if (e.code === 'F3') { e.preventDefault(); $('f3').hidden = !$('f3').hidden; }
+  if (e.code === 'F3') { e.preventDefault(); $('f3').hidden = !$('f3').hidden; $('f3On').checked = !$('f3').hidden; }
   if (e.code === 'KeyM') { e.preventDefault(); $('mapov').hidden ? openMap() : closeMap(); }
   if (e.code === 'KeyP') { saveShot(); }
   if (e.code === 'KeyL') { setMeasure(!meas.on); }
@@ -1934,6 +1935,8 @@ function showHelp(){
   $('helpDlg').hidden = false; $('helpClose').focus();
 }
 $('helpBtn').addEventListener('click', showHelp);
+/* Koordinatenanzeige auch ohne Tastatur (Handy, Tablet) */
+$('f3On').addEventListener('change', () => { $('f3').hidden = !$('f3On').checked; });
 $('helpClose').addEventListener('click', () => { $('helpDlg').hidden = true; });
 $('helpDlg').addEventListener('click', e => { if (e.target === $('helpDlg')) $('helpDlg').hidden = true; });
 $('helpDlg').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape' || e.code === 'KeyH') $('helpDlg').hidden = true; });

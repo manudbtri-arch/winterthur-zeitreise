@@ -148,6 +148,7 @@ body.kiosk .places button{min-height:48px;font-size:16px;padding:8px 16px}
 .joy i{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none}
 .joy span{position:absolute;left:0;right:0;top:-24px;text-align:center;font-size:12px;font-weight:600;color:#fff;text-shadow:0 1px 3px #000;pointer-events:none}
 @media(pointer:coarse){.joy{display:block}}
+@media(pointer:coarse){.f3{bottom:262px;font-size:12px}}   /* über dem Joystick */
 body.intro-on .joy{visibility:hidden}
 @media(max-width:700px){.joy{left:12px;bottom:100px;width:104px;height:104px}}
 @media(max-width:700px){.panel:not(.off) ~ .joy{visibility:hidden}}
