@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 2D-Karte und Zeitraffer von oben: Knopf «Mein Standort» unter bzw. neben der Ortssuche – die 2D-Karte zeigt den Standort als blauen Punkt, der Zeitraffer legt den Ausschnitt (ca. 1,5 km) darum; nur auf Knopfdruck, nur in der Schweiz, nichts wird gespeichert.
 - 3D-Flug: Knopf «Mein Standort» im Reiter «Ort» springt an den eigenen Standort (nur auf Knopfdruck, nur in der Schweiz, nichts wird gespeichert) und baut dort die Häuser; im Kiosk ausgeblendet.
 
 ## 2026-11-27

@@ -169,9 +169,12 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
       <h1>Zeitraffer für bestimmte Bereiche</h1>
       <p class="lead">Wählen Sie einen prägnanten Schweizer Ort – oder suchen Sie Ihren eigenen Ausschnitt. Der Zeitraffer zeigt nur diesen Bereich über alle verfügbaren Epochen bis heute.</p>
     </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end">
     <div class="search">
       <input id="q" type="search" placeholder="Beliebigen Ort in der Schweiz suchen …" autocomplete="off" aria-label="Ort in der Schweiz suchen" role="combobox" aria-controls="qres" aria-expanded="false">
       <ul id="qres" role="listbox" hidden></ul>
+    </div>
+    <button class="btn" id="geoMe" type="button" hidden title="Ihren Standort nur für diesen Ausschnitt abfragen; er wird nicht gespeichert">Mein Standort</button>
     </div>
   </header>
 
@@ -1313,6 +1316,31 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
       if (e.key === 'Escape') { list.hidden = true; }
     });
     inp.addEventListener('blur', () => setTimeout(() => { list.hidden = true; }, 150));
+  }
+
+  /* «Mein Standort»: nur auf Knopfdruck, nur innerhalb der Schweiz; nichts wird gespeichert oder übermittelt */
+  if (navigator.geolocation && window.isSecureContext) {
+    $('geoMe').hidden = false;
+    $('geoMe').addEventListener('click', () => {
+      const b = $('geoMe'); b.disabled = true; b.textContent = 'Standort wird abgefragt …';
+      const done = () => { b.disabled = false; b.textContent = 'Mein Standort'; };
+      navigator.geolocation.getCurrentPosition(pos => {
+        done();
+        const lon = pos.coords.longitude, lat = pos.coords.latitude;
+        if (!(lon > 5.95 && lon < 10.5 && lat > 45.8 && lat < 47.82)) { $('status').textContent = ('Ihr Standort liegt ausserhalb der Schweiz.'); return; }
+        $('status').textContent = ('Ihr Standort' + (pos.coords.accuracy > 200 ? ` (ungenau, ± ${Math.round(pos.coords.accuracy)} m)` : '') + '.');
+        st.spotId = '';
+        st.title = 'Mein Standort';
+        st.desc = 'Ausschnitt rund um Ihren Standort. Ziehen Sie die Karte, um den Kernbereich fein auszurichten.';
+        st.lat = lat; st.lon = lon; st.z = 16;
+        $('zoomSel').value = String(st.z);
+        updateSpotButtons();
+        loadArea(false);
+      }, err => {
+        done();
+        $('status').textContent = (err.code === 1 ? 'Standort nicht freigegeben – bitte im Browser erlauben.' : 'Standort nicht verfügbar.');
+      }, {enableHighAccuracy: true, timeout: 15000, maximumAge: 60000});
+    });
   }
 
   /* Steuerungs-Events */

@@ -82,6 +82,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
   <p class="sub"><a href="./" style="color:var(--blue)">← Übersicht</a> · <a href="flug-3d.html" style="color:var(--blue)">3D-Flug</a> · <a href="zeitraffer.html" style="color:var(--blue)">Zeitraffer</a></p>
   <p class="sub">Historische Karten und Luftbilder von swisstopo, 1844 bis heute</p>
   <div class="search"><input id="q" type="search" placeholder="Ort oder Adresse suchen …" autocomplete="off" aria-label="Ort suchen" role="combobox" aria-controls="qres" aria-expanded="false"><ul id="qres" role="listbox" hidden></ul></div>
+  <button class="btn" id="geoMe" type="button" hidden style="width:100%;margin:-6px 0 14px" title="Ihren Standort nur für diesen Sprung abfragen; er wird nicht gespeichert">Mein Standort</button>
 
   <div class="tabs" role="group" aria-label="Modus">
     <button id="mTime" aria-pressed="true">Zeitregler</button>
@@ -503,6 +504,27 @@ $('linkBtn').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(url); $('linkMsg').textContent = 'Link kopiert.'; }
   catch (e) { window.prompt('Link zu dieser Ansicht:', url); }
 });
+/* «Mein Standort»: nur auf Knopfdruck, nur innerhalb der Schweiz; nichts wird gespeichert oder übermittelt */
+let meDot = null;
+if (navigator.geolocation && window.isSecureContext) {
+  $('geoMe').hidden = false;
+  $('geoMe').addEventListener('click', () => {
+    const b = $('geoMe'); b.disabled = true; b.textContent = 'Standort wird abgefragt …';
+    const done = () => { b.disabled = false; b.textContent = 'Mein Standort'; };
+    navigator.geolocation.getCurrentPosition(pos => {
+      done();
+      const lon = pos.coords.longitude, lat = pos.coords.latitude;
+      if (!(lon > 5.95 && lon < 10.5 && lat > 45.8 && lat < 47.82)) { $('linkMsg').textContent = ('Ihr Standort liegt ausserhalb der Schweiz.'); return; }
+      $('linkMsg').textContent = ('Ihr Standort' + (pos.coords.accuracy > 200 ? ` (ungenau, ± ${Math.round(pos.coords.accuracy)} m)` : '') + '.');
+      map.setView([lat, lon], 17);
+      if (meDot) map.removeLayer(meDot);
+      meDot = L.circleMarker([lat, lon], {radius: 8, color: '#fff', weight: 3, fillColor: '#2b6cb0', fillOpacity: 1, interactive: false}).addTo(map);
+    }, err => {
+      done();
+      $('linkMsg').textContent = (err.code === 1 ? 'Standort nicht freigegeben – bitte im Browser erlauben.' : 'Standort nicht verfügbar.');
+    }, {enableHighAccuracy: true, timeout: 15000, maximumAge: 60000});
+  });
+}
 /* ---------- QR-Code zur Ansicht (Bibliothek qrcode-generator, erst beim ersten Gebrauch geladen), wie im 3D-Flug ---------- */
 let qrLib = null, qrFile = '';
 const loadQrLib = () => qrLib || (qrLib = new Promise((res, rej) => {
