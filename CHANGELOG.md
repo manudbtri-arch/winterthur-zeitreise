@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 3D-Flug: Die Messung nennt die Lage beider Punkte in LV95; der Knopf «Messung kopieren» gibt Distanz, Höhenunterschied, Punkte, Ort, Jahr, Quelle und Datum als Text für Bericht oder Arbeitsblatt.
 - Zeitraffer von oben: Bei der Beschreibung des Ausschnitts steht die Mitte in LV95, mit Knopf «Koordinaten kopieren» für Bildlegende oder GIS.
 - 3D-Flug: Ein Häkchen in den Einstellungen («Koordinaten und Höhe anzeigen (F3)») blendet die Koordinatenanzeige auch ohne Tastatur ein; auf Touch-Geräten steht sie über dem Joystick.
 - Unterrichtsseite: Auftrag 4 hat einen neuen Schritt mit Landeskoordinaten: Lage zweier Häuser aus der Infokarte notieren, die Distanz mit dem Satz des Pythagoras nachrechnen und mit der Messung vergleichen.

@@ -1606,7 +1606,7 @@ $('mFly').addEventListener('click', () => setMode(false));
 $('mWalk').addEventListener('click', () => setMode(true));
 $('go').addEventListener('click', () => { try { canvas.requestPointerLock(); } catch(e){} });
 /* Klick auf ein Haus: Infokarte. Mit übernommener Maus zählt das Fadenkreuz. */
-let infoTimer, infoStory = null, infoLV = null;
+let infoTimer, infoStory = null, infoLV = null, infoMeas = null;
 function showInfo(p, at){
   let title = '', text = '', badge = '', src = '', rec = false, link = '', linkTxt = 'Quelle öffnen', hold = 7000, story = null, ll = null;
   if (p && p.id instanceof C.Entity && p.id.story) {
@@ -1647,6 +1647,7 @@ function showInfo(p, at){
     src = `Quelle: Siegfriedkarte, Kartenstand ${p.id.gen} (swisstopo) · Grundriss aus der Karte, Höhe geschätzt`;
   } else return false;
   /* Lage in LV95 (Näherungsformel swisstopo, auf 1 m gerundet) für Forschung und GIS; nicht im Kiosk */
+  infoMeas = null;
   infoLV = ll && !KIOSK ? toLV95(ll[0], ll[1]).map(Math.round) : null;
   if (infoLV) src += ` · Lage LV95: E ${infoLV[0]}, N ${infoLV[1]}`;
   $('iTitle').textContent = title; $('iText').textContent = text; $('iSrc').textContent = src;
@@ -1732,6 +1733,7 @@ async function themeInfo(lon, lat){
   $('iTitle').textContent = 'Abfrage läuft …'; $('iText').textContent = on.map(t => t.name).join(' · ');
   $('iSrc').textContent = ''; $('iBadge').textContent = 'Bundesdaten'; $('iBadge').classList.remove('rec');
   $('iLink').hidden = true; $('iShare').hidden = $('iQr').hidden = $('iTl').hidden = true; infoStory = null; $('info').hidden = false;
+  infoLV = infoMeas = null; $('iCoord').hidden = true;
   clearTimeout(infoTimer);
   const res = await Promise.all(on.map(t => identifyAt(lon, lat, t.ask, t.identTime ? `&timeInstant=${t.identTime}` : '', 12).then(r => r.map(x => ({t, x})))));
   const hits = res.flat();
@@ -1785,9 +1787,18 @@ function measureAt(pos){
   const slope = flat > 1 ? ` · Steigung ${Math.round(dz / flat * 100)} %` : '';
   $('iTitle').textContent = m(d3);
   $('iText').textContent = `waagrecht ${m(flat)} · Höhenunterschied ${dz >= 0 ? '+' : '−'}${Math.round(Math.abs(dz))} m${slope}`;
-  $('iSrc').textContent = 'Gemessen im 3D-Bild (Gelände und Gebäude von swisstopo). Richtwert, keine amtliche Vermessung.';
+  /* Lage beider Punkte in LV95 (Näherungsformel, auf 1 m gerundet) */
+  const lv = [ca, cb].map(c => toLV95(C.Math.toDegrees(c.longitude), C.Math.toDegrees(c.latitude)).map(Math.round));
+  const lvTxt = `Punkt 1: E ${lv[0][0]}, N ${lv[0][1]} · Punkt 2: E ${lv[1][0]}, N ${lv[1][1]} (LV95)`;
+  $('iSrc').textContent = `${lvTxt} · Gemessen im 3D-Bild (Gelände und Gebäude von swisstopo). Richtwert, keine amtliche Vermessung.`;
   $('iBadge').textContent = 'Messung'; $('iBadge').classList.remove('rec');
   $('iLink').hidden = true; $('iShare').hidden = $('iQr').hidden = $('iTl').hidden = true; infoStory = null; $('info').hidden = false;
+  /* «Messung kopieren»: alle Werte als Text für Bericht oder Arbeitsblatt (nicht im Kiosk) */
+  infoLV = null; infoMeas = KIOSK ? null : [
+    `Messung Zeitreise Schweiz – ${placeName}, ${present ? 'heute' : 'Jahr ' + (+$('yr').value || 1880)}`,
+    `Distanz ${m(d3)} · ${$('iText').textContent}`, lvTxt,
+    `Quelle: Gelände und Gebäude © swisstopo, gemessen im 3D-Bild am ${today()}; Richtwert, keine amtliche Vermessung`].join('\n');
+  $('iCoord').hidden = !infoMeas; $('iCoord').textContent = 'Messung kopieren';
   clearTimeout(infoTimer); infoTimer = setTimeout(() => { $('info').hidden = true; }, 30000);
 }
 $('measBtn').addEventListener('click', () => setMeasure(!meas.on));
@@ -2292,8 +2303,13 @@ $('iShare').addEventListener('click', async () => {
 });
 /* Koordinaten (LV95, E/N in Metern) in die Zwischenablage, z. B. für QGIS oder einen Bericht */
 $('iCoord').addEventListener('click', async () => {
-  if (!infoLV) return;
   clearTimeout(infoTimer);
+  if (infoMeas) {
+    try { await navigator.clipboard.writeText(infoMeas); $('iCoord').textContent = 'Messung kopiert'; }
+    catch (e) { window.prompt('Messung:', infoMeas.replace(/\n/g, ' · ')); }
+    return;
+  }
+  if (!infoLV) return;
   const t = `${infoLV[0]}, ${infoLV[1]}`;
   try { await navigator.clipboard.writeText(t); $('iCoord').textContent = 'Kopiert: ' + t + ' (LV95)'; }
   catch (e) { window.prompt('Koordinaten LV95 (E, N):', t); }
