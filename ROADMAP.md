@@ -301,5 +301,5 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 
 ## 46. Geschichten belegen in 2D und im Unterricht
 - [x] 2D-Karte: Geschichte im Fenster nennt den Zeitraum und hat «Angaben kopieren» (auf dem Handy «teilen») wie im 3D-Flug.
-- [ ] Produktseite und Methodik: «Angaben kopieren» bei Geschichten aufführen; Methodik erklärt, was der kopierte Text enthält.
+- [x] Produktseite und Methodik: «Angaben kopieren» bei Geschichten aufführen; Methodik erklärt, was der kopierte Text enthält.
 - [ ] Schulen: Unterrichtsseite nennt «Angaben kopieren» bei Geschichten als Quellenbeleg fürs Arbeitsblatt.
