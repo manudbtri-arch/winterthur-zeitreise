@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2026-11-28
+- 3D-Flug: Die Infokarte eines belegten Gebäudes hat den Knopf «Angaben kopieren» – Adresse, EGID, Baujahr, Lage in LV95, Link zum Gebäuderegister, Quelle und Abrufdatum als Text für Bericht oder Inventar.
 - 3D-Flug: Die Übersicht «Tasten und Gesten» nennt die blaue Markierung (Punkt aus dem Link); die Unterrichtsseite nennt «Lage der Kartenmitte» als Weg ohne Rechtsklick.
 - 3D-Flug: Die Infokarte des markierten Punkts hat den Knopf «Link zu diesem Punkt» (aktueller Blick samt Markierung); auf dem Handy öffnet er das System-Teilen.
 - 2D-Karte: Knopf «Lage der Kartenmitte (LV95)» öffnet das Lage-Fenster ohne Rechtsklick – mit Tastatur und Bildschirmleser bedienbar, auf dem Handy klappt die Seitenleiste dafür ein.

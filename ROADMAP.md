@@ -268,3 +268,8 @@ wird er aufgeteilt und nur der erste Teil umgesetzt.
 - [x] Barrierefreiheit: 2D-Karte – Knopf «Lage der Kartenmitte (LV95)» öffnet das Lage-Fenster ohne Rechtsklick (Tastatur, Bildschirmleser); auf dem Handy wird dabei die Karte frei.
 - [x] Handy: Infokarte des markierten Punkts im 3D-Flug mit «Link zu diesem Punkt» (auf dem Handy über das System-Teilen).
 - [x] Bedienung: Übersicht «Tasten und Gesten» im 3D-Flug nennt die blaue Markierung (Punkt aus dem Link); die Unterrichtsseite nennt den Knopf «Lage der Kartenmitte».
+
+## 40. Zitieren, andere Orte, Unterricht
+- [x] Forschung und Gemeinden: Infokarte eines belegten Gebäudes mit Knopf «Angaben kopieren» (Adresse, EGID, Baujahr, Lage LV95, Link zum Gebäuderegister, Quelle und Abrufdatum) als Text für Bericht oder Inventar.
+- [ ] Gemeinden und Museen: Reiter «Ort» im 3D-Flug mit Auswahl «Orte mit Geschichten» (Winterthur, Basel, Grindelwald), die den Ort samt Story-Datei öffnet.
+- [ ] Schulen: Unterrichtsseite nennt die drei Orte mit Geschichten als Wahl für Gruppenarbeit (Links mit `stories=`), damit Gruppen verschiedene Orte vergleichen.

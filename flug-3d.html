@@ -169,7 +169,7 @@
     <div class="row2"><button class="btn primary" id="helpClose">Schliessen</button></div>
   </div>
 </div>
-<div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small><a id="iLink" hidden target="_blank" rel="noopener">Quelle öffnen</a><button class="ishare nokiosk" id="iShare" type="button" hidden>Link zu dieser Geschichte kopieren</button><button class="ishare nokiosk" id="iQr" type="button" hidden title="Für eine Tafel am Ort">QR-Code zu dieser Geschichte</button><button class="ishare nokiosk" id="iCoord" type="button" hidden title="Lage in Schweizer Landeskoordinaten (LV95) für GIS oder Bericht">Koordinaten kopieren</button><a class="ishare nokiosk" id="iTl" href="zeitraffer.html" hidden title="Entwicklung rund um diese Geschichte in Luftbildern und Karten">Zeitraffer von oben</a><button class="iclose" id="iClose" type="button" aria-label="Infokarte schliessen" title="Schliessen (Esc)">✕</button></div>
+<div class="info" id="info" hidden role="status"><em id="iBadge"></em><b id="iTitle"></b><span id="iText"></span><small id="iSrc"></small><a id="iLink" hidden target="_blank" rel="noopener">Quelle öffnen</a><button class="ishare nokiosk" id="iShare" type="button" hidden>Link zu dieser Geschichte kopieren</button><button class="ishare nokiosk" id="iQr" type="button" hidden title="Für eine Tafel am Ort">QR-Code zu dieser Geschichte</button><button class="ishare nokiosk" id="iCoord" type="button" hidden title="Lage in Schweizer Landeskoordinaten (LV95) für GIS oder Bericht">Koordinaten kopieren</button><button class="ishare nokiosk" id="iCite" type="button" hidden title="Adresse, EGID, Baujahr, Lage und Quelle als Text für Bericht oder Inventar">Angaben kopieren</button><a class="ishare nokiosk" id="iTl" href="zeitraffer.html" hidden title="Entwicklung rund um diese Geschichte in Luftbildern und Karten">Zeitraffer von oben</a><button class="iclose" id="iClose" type="button" aria-label="Infokarte schliessen" title="Schliessen (Esc)">✕</button></div>
 
 <a class="pill openfull" id="openFull" href="flug-3d.html" target="_blank" rel="noopener" hidden>↗ Im Vollbild öffnen</a>
 <button class="pill" id="pill" hidden>☰ Menü <span style="color:var(--mute)">(Tab)</span></button>
@@ -1629,9 +1629,9 @@ $('mFly').addEventListener('click', () => setMode(false));
 $('mWalk').addEventListener('click', () => setMode(true));
 $('go').addEventListener('click', () => { try { canvas.requestPointerLock(); } catch(e){} });
 /* Klick auf ein Haus: Infokarte. Mit übernommener Maus zählt das Fadenkreuz. */
-let infoTimer, infoStory = null, infoLV = null, infoMeas = null, infoPin = null;
+let infoTimer, infoStory = null, infoLV = null, infoMeas = null, infoPin = null, infoCite = null;
 function showInfo(p, at){
-  let title = '', text = '', badge = '', src = '', rec = false, link = '', linkTxt = 'Quelle öffnen', hold = 7000, story = null, ll = null, pin = null;
+  let title = '', text = '', badge = '', src = '', rec = false, link = '', linkTxt = 'Quelle öffnen', hold = 7000, story = null, ll = null, pin = null, cite = null;
   if (p && p.id instanceof C.Entity && p.id.story) {
     const st = p.id.story;
     title = st.titel; text = st.text; badge = 'Geschichte' + (storyRange(st) ? ' · ' + storyRange(st) : ''); hold = KIOSK ? 60000 : 20000;   /* im Kiosk-Rundgang bis zur nächsten Station */
@@ -1662,6 +1662,9 @@ function showInfo(p, at){
     /* zum Nachprüfen: Gebäuderegister auf map.geo.admin.ch an der Lage des Gebäudes (nicht im Kiosk) */
     if (r && !KIOSK) { link = gwrLink(r.lon, r.lat); linkTxt = 'Im Gebäuderegister prüfen ↗'; hold = 15000; }
     if (r && Number.isFinite(r.lon) && Number.isFinite(r.lat)) ll = [r.lon, r.lat];
+    /* «Angaben kopieren»: Zeilen für Bericht oder Inventar, mit Quelle und Abrufdatum */
+    cite = [`${title}${r && r.adr ? '' : ' (ohne Adresse im Gebäuderegister)'}`, `${kind} · ${bj} · steht heute noch${hgt ? ` · ${hgt} m hoch` : ''}`,
+      egid ? `EGID ${egid}` : ''];
   } else if (p && p.id && p.id.gen && p.id.far) {
     title = 'Haus aus der Karte';
     text = `Auf der Siegfriedkarte ${p.id.gen} eingezeichnet · noch nicht mit dem Gebäuderegister abgeglichen – näher heran, dann zeigt sich, ob es heute noch steht`;
@@ -1677,6 +1680,9 @@ function showInfo(p, at){
   infoMeas = null;
   infoLV = ll && !KIOSK ? toLV95(ll[0], ll[1]).map(Math.round) : null;
   if (infoLV) src += ` · Lage LV95: E ${infoLV[0]}, N ${infoLV[1]}`;
+  infoCite = cite && !KIOSK ? [...cite, infoLV ? `Lage LV95: E ${infoLV[0]}, N ${infoLV[1]} (Näherungsformel swisstopo, gerundet auf 1 m)` : '',
+    link ? `Nachprüfen: ${link}` : '', `Quelle: swissBUILDINGS3D (swisstopo), Gebäuderegister GWR (BFS); abgerufen am ${today()} über Zeitreise Schweiz`].filter(Boolean).join('\n') : null;
+  $('iCite').hidden = !infoCite; $('iCite').textContent = 'Angaben kopieren';
   $('iTitle').textContent = title; $('iText').textContent = text; $('iSrc').textContent = src;
   $('iBadge').textContent = badge; $('iBadge').classList.toggle('rec', rec);
   $('iLink').hidden = !link; if (link) $('iLink').href = link; $('iLink').textContent = linkTxt;
@@ -1763,7 +1769,7 @@ async function themeInfo(lon, lat){
   $('iTitle').textContent = 'Abfrage läuft …'; $('iText').textContent = on.map(t => t.name).join(' · ');
   $('iSrc').textContent = ''; $('iBadge').textContent = 'Bundesdaten'; $('iBadge').classList.remove('rec');
   $('iLink').hidden = true; $('iShare').hidden = $('iQr').hidden = $('iTl').hidden = true; infoStory = null; $('info').hidden = false;
-  infoLV = infoMeas = null; $('iCoord').hidden = true;
+  infoLV = infoMeas = infoCite = null; $('iCoord').hidden = $('iCite').hidden = true;
   clearTimeout(infoTimer);
   const res = await Promise.all(on.map(t => identifyAt(lon, lat, t.ask, t.identTime ? `&timeInstant=${t.identTime}` : '', 12).then(r => r.map(x => ({t, x})))));
   const hits = res.flat();
@@ -1832,7 +1838,7 @@ function measureAt(pos){
   $('iBadge').textContent = 'Messung'; $('iBadge').classList.remove('rec');
   $('iLink').hidden = true; $('iShare').hidden = $('iQr').hidden = $('iTl').hidden = true; infoStory = null; $('info').hidden = false;
   /* «Messung kopieren»: alle Werte als Text für Bericht oder Arbeitsblatt (nicht im Kiosk) */
-  infoLV = null; infoMeas = KIOSK ? null : [
+  infoLV = infoCite = null; $('iCite').hidden = true; infoMeas = KIOSK ? null : [
     `Messung Zeitreise Schweiz – ${placeName}, ${present ? 'heute' : 'Jahr ' + (+$('yr').value || 1880)}`,
     `Distanz ${m(d3)} · ${$('iText').textContent}`, lvTxt,
     `Quelle: Gelände und Gebäude © swisstopo, gemessen im 3D-Bild am ${today()}; Richtwert, keine amtliche Vermessung`].join('\n');
@@ -2388,6 +2394,13 @@ $('iCoord').addEventListener('click', async () => {
   const t = `${infoLV[0]}, ${infoLV[1]}`;
   try { await navigator.clipboard.writeText(t); $('iCoord').textContent = 'Kopiert: ' + t + ' (LV95)'; }
   catch (e) { window.prompt('Koordinaten LV95 (E, N):', t); }
+});
+/* Angaben eines belegten Gebäudes (Adresse, EGID, Baujahr, Lage, Quelle, Abrufdatum) als Text */
+$('iCite').addEventListener('click', async () => {
+  clearTimeout(infoTimer);
+  if (!infoCite) return;
+  try { await navigator.clipboard.writeText(infoCite); $('iCite').textContent = 'Angaben kopiert'; }
+  catch (e) { window.prompt('Angaben zum Gebäude:', infoCite.replace(/\n/g, ' · ')); }
 });
 /* QR-Code zur Geschichte, z. B. für eine Tafel am Ort: öffnet den 3D-Flug dort mit Infokarte */
 $('iQr').addEventListener('click', () => {
